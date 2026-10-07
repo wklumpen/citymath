@@ -5,7 +5,7 @@ property tax raised with the cost of the road pavement inside it.
 
 ## What it does
 
-`citymath.py` runs five steps against a PostGIS database. The spatial work is
+`citymath.py` runs six steps against a PostGIS database. The spatial work is
 plain SQL in `sql/`; every assumption is in `config.yaml`.
 
 | Step | What it produces |
@@ -15,6 +15,7 @@ plain SQL in `sql/`; every assumption is in `config.yaml`.
 | `roads` | Length of City-maintained, paved road per hex by class |
 | `assessments` | Assessed value per hex by class, allocated from parcels by area, with tax-exempt property removed |
 | `summary` | `hex_summary` (one row per hex) and `hex_scenario` (one row per hex per pavement scenario) |
+| `export` | `docs/data/hexes.geojson`, the per-hex file the website reads |
 
 ## Method in brief
 
@@ -40,8 +41,14 @@ tables named in `config.yaml`.
     uv run citymath.py summary  # just re-run some steps after a config change
 
 `load_assessment_csv.py` loads a City of Calgary "Historical Property
-Assessments (Parcel)" CSV into the spatial database. `mockup/build.py` builds
-the draft web page from the results.
+Assessments (Parcel)" CSV into the spatial database.
+
+## Website
+
+`docs/` is a static site served by GitHub Pages: `index.html` reads
+`data/hexes.geojson` and recomputes road cost in the browser as the reader
+changes the scenario. Preview it locally with
+`python3 -m http.server -d docs`.
 
 Source data (the hex grid, assessment rolls and street width samples) is not
-included in this repository.
+included in this repository; only the derived per-hex file for the website is.

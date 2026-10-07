@@ -163,7 +163,6 @@ details summary { cursor: pointer; font-weight: 600; }
 <div id="tip" hidden></div>
 
 <script>
-const D = /*DATA*/;
 const ORDER = ['CENTRE CITY','INNER CITY','1950s','1960s/1970s','1980s/1990s','2000s','2010s','2020s','BUILDING OUT','EMPLOYMENT'];
 const NICE = {'CENTRE CITY':'Centre City','INNER CITY':'Inner city','BUILDING OUT':'Still building out','EMPLOYMENT':'Employment areas','OTHER':'Special district','PARKS':'Park','UNDEVELOPED':'Undeveloped'};
 const BINS = [0.10, 0.25, 0.50, 0.75, 1.0];
@@ -175,16 +174,33 @@ const HINTS = {
   crack: 'Crack sealing and microsurfacing, at $1.00 to $2.50 per square metre a year. The minimum to slow the decline.'};
 const state = {treat: 'recon', sel: null};
 const $ = id => document.getElementById(id);
-const H = D.hex.map(h => ({id: h[0], d: h[1], st: D.structs[h[2]], special: !!h[3], rev: h[4], res: h[5], ter: h[6], sh: h[7], name: h[8]}));
+let H = [], byId = new Map();
 const money = v => v >= 1e9 ? '$' + (v / 1e9).toFixed(2) + 'B' : v >= 1e6 ? '$' + (v / 1e6).toFixed(v >= 1e7 ? 0 : 1) + 'M' : '$' + Math.round(v / 1e3).toLocaleString() + 'K';
 const pct = v => v == null || !isFinite(v) ? 'n/a' : (v > 9.99 ? 'over 1,000' : Math.round(v * 100)) + '%';
 const nice = s => NICE[s] || s;
 
 const svg = $('map');
-svg.setAttribute('viewBox', `-20 -20 ${D.w + 40} ${D.h + 40}`);
 const NS = 'http://www.w3.org/2000/svg';
-H.forEach(h => { const p = document.createElementNS(NS, 'path'); p.setAttribute('d', h.d); p.dataset.id = h.id; svg.appendChild(p); h.el = p; });
-const byId = new Map(H.map(h => [String(h.id), h]));
+
+// Draw the hexes as SVG, on a flat projection that is accurate enough at city scale.
+function draw(geojson) {
+  const K = 11132;  // SVG units per degree of latitude (1 unit is about 10 m)
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  const rings = f => (f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates : [f.geometry.coordinates]).flat();
+  geojson.features.forEach(f => rings(f).forEach(r => r.forEach(([x, y]) => {
+    x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); })));
+  const kx = K * Math.cos((y0 + y1) / 2 * Math.PI / 180);
+  svg.setAttribute('viewBox', `-20 -20 ${Math.round((x1 - x0) * kx) + 40} ${Math.round((y1 - y0) * K) + 40}`);
+  H = geojson.features.map(f => {
+    const p = f.properties, el = document.createElementNS(NS, 'path');
+    el.setAttribute('d', rings(f).map(r => 'M' + r.slice(0, -1).map(([x, y]) =>
+      Math.round((x - x0) * kx) + ' ' + Math.round((y1 - y) * K)).join('L') + 'Z').join(''));
+    el.dataset.id = p.id; svg.appendChild(el);
+    return {id: p.id, st: p.structure || 'OTHER', special: p.special, rev: p.revenue,
+            res: p.m2_sampled, ter: p.m2_local, sh: p.m2_shared, name: p.name, el};
+  });
+  byId = new Map(H.map(h => [String(h.id), h]));
+}
 
 function compute() {
   const resLife = +$('res').value, mainLife = +$('main').value, cost = +$('cost').value, mode = $('sharemode').value;
@@ -230,5 +246,6 @@ svg.addEventListener('pointermove', e => { const h = e.pointerType === 'mouse' &
 svg.addEventListener('pointerleave', () => { tip.hidden = true; });
 $('treat').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.treat = b.dataset.t; [...$('treat').children].forEach(x => x.setAttribute('aria-pressed', x === b)); render(); });
 ['res', 'main', 'cost', 'sharemode'].forEach(k => $(k).addEventListener('input', render));
-render();
+fetch('data/hexes.geojson').then(r => r.json()).then(g => { draw(g); render(); })
+  .catch(() => { $('maphint').textContent = 'The map data could not be loaded.'; });
 </script>

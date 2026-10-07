@@ -4,11 +4,12 @@
     uv run citymath.py                 # everything
     uv run citymath.py roads summary   # just re-run some steps
 
-Steps: load, community, roads, assessments, summary. Settings are in config.yaml,
+Steps: load, community, roads, assessments, summary, export. Settings are in config.yaml,
 database credentials in .env, and the actual spatial work in sql/.
 """
 import argparse
 import csv
+import json
 import os
 import re
 import sqlite3
@@ -301,8 +302,45 @@ def summary(cfg, dst):
         from hex_summary""")
 
 
+def export(cfg, dst):
+    """Write the per-hex file the website reads: tax revenue plus pavement area
+    split three ways, so the page can recompute any scenario itself."""
+    sampled = cfg["roads"]["width_samples"]["applies_to"]
+    rows = dst.execute("""
+        with m as (
+            select l.hex_id,
+                   sum(l.length_m * coalesce(w.width_median, k.width_m))
+                       filter (where not k.shared and l.road_class = %(sampled)s) as sampled,
+                   sum(l.length_m * k.width_m)
+                       filter (where not k.shared and l.road_class <> %(sampled)s) as local,
+                   sum(l.length_m * k.width_m) filter (where k.shared) as shared
+            from hex_road_length l
+            join cfg_road_class k using (road_class)
+            join hex_community hc using (hex_id)
+            left join comm_structure_width w on w.comm_structure = hc.comm_structure
+            group by l.hex_id
+        )
+        select s.hex_id, initcap(s.comm_name), s.comm_structure, s.is_special,
+               s.revenue_total, coalesce(m.sampled, 0), coalesce(m.local, 0),
+               coalesce(m.shared, 0), ST_AsGeoJSON(ST_Transform(s.geom, 4326), 5)
+        from hex_summary s left join m using (hex_id)
+        order by s.hex_id""", {"sampled": sampled}).fetchall()
+    features = [{
+        "type": "Feature",
+        "properties": {"id": hex_id, "name": name, "structure": structure, "special": special,
+                       "revenue": round(revenue), "m2_sampled": round(m2_sampled),
+                       "m2_local": round(m2_local), "m2_shared": round(m2_shared)},
+        "geometry": json.loads(geom),
+    } for hex_id, name, structure, special, revenue, m2_sampled, m2_local, m2_shared, geom in rows]
+    path = ROOT / cfg["output"]["site_data"]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({"type": "FeatureCollection", "features": features},
+                               separators=(",", ":")))
+    print(f"  {len(features)} hexes -> {path.relative_to(ROOT)} ({path.stat().st_size // 1024} KB)")
+
+
 STEPS = {"load": load, "community": community, "roads": roads,
-         "assessments": assessments, "summary": summary}
+         "assessments": assessments, "summary": summary, "export": export}
 
 
 def main():

@@ -7,6 +7,7 @@ srid: 26912 # NAD83 / UTM 12N; all staging tables are stored in this CRS
 output:
   database: projects
   schema: strongtowns_citymath
+  site_data: docs/data/hexes.geojson # written by the `export` step for the website
 
 hex:
   gpkg: citymath.gpkg
