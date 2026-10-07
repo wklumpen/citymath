@@ -1,0 +1,175 @@
+# CityMath pipeline settings. Edit and re-run `uv run citymath.py`.
+# Changes under `roads` / `tax_rates` only need the later steps, e.g.
+#   uv run citymath.py roads summary
+
+srid: 26912 # NAD83 / UTM 12N; all staging tables are stored in this CRS
+
+output:
+  database: projects
+  schema: strongtowns_citymath
+
+hex:
+  gpkg: citymath.gpkg
+  layer: hex_800m_clipped
+  id_column: id
+
+sources:
+  database: spatial
+  communities: na_ca_ab_cgy.community_boundaries_2025
+  roads: na_ca_ab_cgy.roads_osm_2025
+  # Assessment roll to use, with its column names. To switch back to the 2026
+  # roll, swap which block is commented out, then re-run everything.
+  assessments:
+    table: na_ca_ab_cgy.assessments_2025 # 2025 roll
+    columns:
+      roll_number: roll_number
+      parcel_id: cpid
+      class: assessment_class
+      sub_use: sub_property_use
+      comm_code: comm_code
+      res: re_assessed_value
+      nonres: nr_assessed_value
+      farm: fl_assessed_value
+    # Tax-exempt code groups, matched on the start of the sub-type code:
+    # institutional (hospitals, schools, universities, ...) and recreation
+    # (parks, recreation centres, Stampede, ...). With these out, taxable
+    # value is within ~1% of the City's reported 2025 totals.
+    exempt_prefixes: [IS, RC]
+  # assessments:
+  #   table: na_ca_ab_cgy.assessments_20260818 # 2026 roll
+  #   columns:
+  #     roll_number: roll_numbe
+  #     parcel_id: cpid
+  #     class: assessment
+  #     sub_use: sub_proper
+  #     comm_code: comm_code
+  #     res: re_assesse
+  #     nonres: nr_assesse
+  #     farm: fl_assesse
+  #   # Same two groups under the 2026 code scheme (S = institutional, P = recreation)
+  #   exempt_prefixes: [S, P]
+
+assessments:
+  # Extra tax-exempt properties, on top of the exempt_prefixes set with the
+  # roll under `sources`. Match by exact sub-type code and/or roll number
+  # (leading zeros ignored). Exempt value earns no revenue, in any class, and
+  # is reported as value_exempt; the land area is still counted.
+  # Changing any exemption needs: uv run citymath.py load assessments summary
+  exempt:
+    sub_property_codes: []
+    roll_numbers: []
+
+# Community structures that are not ordinary neighbourhoods. Hexes tagged with
+# one of these stay in the analysis and the city totals, but get
+# is_special = true so maps can grey them out or hide them.
+special_structures: [PARKS, UNDEVELOPED, OTHER]
+
+roads:
+  # OSM `highway` values grouped into costing classes. Anything not listed
+  # (service, unclassified, footway, cycleway, track, ...) is ignored.
+  #
+  # width_m is PER OSM WAY: divided roads are drawn as two ways, so use the
+  # width of one carriageway for the bigger classes.
+  #
+  # life_years is how often the class is fully reconstructed; one-off costs
+  # in the scenarios below are divided by this to get an annual cost.
+  #
+  # !! width_m values are PLACEHOLDERS, not sourced figures (the residential
+  # one is only a fallback; see width_samples below).
+  classes:
+    highway:
+      osm: [motorway, trunk, motorway_link, trunk_link]
+      width_m: 11.0
+      life_years: 21
+    primary:
+      osm: [primary, primary_link]
+      width_m: 11.0
+      life_years: 21
+    secondary:
+      osm: [secondary, secondary_link]
+      width_m: 11.0
+      life_years: 21
+    tertiary:
+      osm: [tertiary, tertiary_link]
+      width_m: 11.0
+      life_years: 21
+    residential:
+      osm: [residential, living_street]
+      width_m: 9.0
+      life_years: 40
+
+  # Roads everyone uses: the pavement of these classes is pooled citywide and
+  # handed back to hexes instead of being charged to the hex it sits in.
+  #   basis: equal   - the same amount to every hex
+  #          area    - in proportion to hex area (edge hexes are smaller)
+  #          revenue - in proportion to municipal tax revenue
+  # Use `classes: []` to charge every road to the hex it is in.
+  shared:
+    classes: [highway, primary, secondary]
+    basis: equal
+
+  # Pavement treatment scenarios. Each gives a low / high cost, either
+  #   cost_per_m2:      one-off cost, spread over each class's life_years, or
+  #   cost_per_m2_year: a flat annual cost on all pavement.
+  # Every scenario is written to hex_scenario; `default_scenario` is the one
+  # behind road_cost / net / road_share in hex_summary. The midpoint of low and
+  # high is used for the unsuffixed columns.
+  default_scenario: reconstruction
+  scenarios:
+    reconstruction:
+      label: Full reconstruction
+      cost_per_m2: {low: 300, high: 350} # = $14.29-16.67 per m2 per year over 21 years
+    repave:
+      label: Repave (minor or major)
+      cost_per_m2_year: {low: 2.92, high: 4.17}
+    crack_seal:
+      label: Crack sealing or microsurfacing
+      cost_per_m2_year: {low: 1.00, high: 2.50}
+
+  # Costs above are in base_year dollars and are inflated to target_year:
+  #   factor = (1 + annual_inflation) ^ (target_year - base_year)
+  cost_inflation:
+    base_year: 2024
+    target_year: 2025
+    annual_inflation: 0.0 # e.g. 0.03 for 3% a year; 0 = no adjustment
+
+  # Sampled street widths by community structure (min / avg / max). For the
+  # class named here, the sampled width replaces width_m above wherever the
+  # hex's community structure has samples (the median is used).
+  width_samples:
+    csv: data/street_width_samples.csv
+    applies_to: residential
+
+  # "Paved": drop ways whose OSM surface tag is one of these. Ways with no
+  # surface tag (about a third of the network) are assumed paved.
+  unpaved_surfaces: [unpaved, gravel, fine_gravel, compacted, dirt, earth, ground, grass, sand, mud]
+
+  # "Corporate owned": OSM has no ownership, so provincial roads are dropped by
+  # highway number. 201 = Stoney Trail, 2 = Deerfoot Trail.
+  provincial_refs: ["201", "2"]
+  # Ramps (*_link) rarely carry a ref, so links within this distance of a
+  # provincial road are treated as provincial too. 0 = only links that touch.
+  provincial_link_buffer_m: 300
+
+# City of Calgary tax rates, as supplied by Willem (2026-10-07). Use the year
+# that matches the assessment roll above.
+# Revenue and net use the municipal rates only. The provincial rates produce
+# tax_provincial / tax_total, for checking against the City's reported totals.
+tax_rates: # tax year 2025
+  municipal:
+    res: 0.0038706
+    nonres: 0.0179731
+    farm: 0.0372838
+  provincial:
+    res: 0.0023097
+    nonres: 0.0038555
+    farm: 0.0023097
+# tax_rates: # tax year 2026
+#   municipal:
+#     res: 0.0038906
+#     nonres: 0.0179986
+#     farm: 0.0339557
+#   provincial:
+#     res: 0.0027593
+#     nonres: 0.0041502
+#     farm: 0.0027593

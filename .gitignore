@@ -1,0 +1,12 @@
+# credentials
+.env
+
+# data stays out of the repository for now
+data/
+*.gpkg
+*.gpkg-shm
+*.gpkg-wal
+mockup/calgary-street-math.html
+
+.venv/
+__pycache__/

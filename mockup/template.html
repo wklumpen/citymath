@@ -1,0 +1,234 @@
+<title>Calgary Street Math</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+/* Layout: navy masthead, then one working screen: map beside (or above, on phones) a panel
+   of story text, scenario controls and the tapped hex. Evidence chart and method notes below. */
+:root {
+  --bg: #f4f6f9; --surface: #ffffff; --ink: #101b2d; --muted: #586579; --line: #dde2ea;
+  --band: #12305c; --band-ink: #ffffff; --band-muted: #b9c8de; --accent: #e8751a;
+  --r0: #fde9d0; --r1: #fbc98f; --r2: #f5a04c; --r3: #e2751f; --r4: #b3500f; --r5: #6f2c07;
+  --special: #d5dae2; --hexline: #ffffff; --select: #101b2d;
+  --display: "Archivo", "Arial Narrow", Arial, sans-serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b131f; --surface: #121d2d; --ink: #e9eef5; --muted: #9aa8ba; --line: #24334b;
+  --band: #0e2547; --band-ink: #ffffff; --band-muted: #a9bbd6; --accent: #f08a35;
+  --r0: #3f2410; --r1: #6b3a12; --r2: #9c4f12; --r3: #d06c1c; --r4: #f29a4a; --r5: #fddcb0;
+  --special: #263143; --hexline: #0b131f; --select: #ffffff; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0b131f; --surface: #121d2d; --ink: #e9eef5; --muted: #9aa8ba; --line: #24334b;
+  --band: #0e2547; --band-ink: #ffffff; --band-muted: #a9bbd6; --accent: #f08a35;
+  --r0: #3f2410; --r1: #6b3a12; --r2: #9c4f12; --r3: #d06c1c; --r4: #f29a4a; --r5: #fddcb0;
+  --special: #263143; --hexline: #0b131f; --select: #ffffff; color-scheme: dark }
+
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.5; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.15; }
+p { margin: 0; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 16px; }
+
+.band { background: var(--band); color: var(--band-ink); }
+.band .wrap { padding-block: 22px 26px; display: flex; flex-direction: column; gap: 10px; }
+.draft { font-family: var(--display); font-weight: 700; font-size: 12px; letter-spacing: .09em; text-transform: uppercase; color: var(--band-muted); display: flex; gap: 10px; flex-wrap: wrap; }
+.draft b { color: var(--accent); }
+h1 { font-weight: 800; font-size: clamp(28px, 5.2vw, 46px); letter-spacing: -.01em; }
+.lede { color: var(--band-muted); max-width: 62ch; font-size: 17px; }
+
+main.wrap { padding-block: 20px 40px; display: flex; flex-direction: column; gap: 28px; }
+.work { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 880px) { .work { grid-template-columns: minmax(0, 1fr) 380px; align-items: start; } }
+
+.mapcard { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.maphead { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.maphead h2 { font-size: 17px; font-weight: 700; }
+.maphead span { color: var(--muted); font-size: 14px; }
+#map { width: 100%; height: auto; max-height: 78vh; display: block; touch-action: manipulation; }
+#map path { stroke: var(--hexline); stroke-width: 5; cursor: pointer; }
+#map path.sel { stroke: var(--select); stroke-width: 22; }
+.b0 { fill: var(--r0); } .b1 { fill: var(--r1); } .b2 { fill: var(--r2); } .b3 { fill: var(--r3); } .b4 { fill: var(--r4); } .b5 { fill: var(--r5); }
+.bs { fill: var(--special); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); }
+.legend i { display: inline-block; width: 14px; height: 14px; border-radius: 2px; vertical-align: -2px; margin-right: 5px; border: 1px solid var(--line); }
+
+.panel { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.block { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.block h3 { font-size: 13px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.stat b { display: block; font-family: var(--display); font-weight: 800; font-size: clamp(22px, 5.5vw, 28px); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.stat span { font-size: 13px; color: var(--muted); line-height: 1.3; display: block; }
+
+.seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { font: 600 14px/1.25 var(--body); padding: 10px 6px; background: var(--surface); color: var(--ink); border: 0; border-left: 1px solid var(--line); cursor: pointer; }
+.seg button:first-child { border-left: 0; }
+.seg button[aria-pressed="true"] { background: var(--band); color: var(--band-ink); }
+.seg button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.hint { font-size: 14px; color: var(--muted); }
+details summary { cursor: pointer; font-weight: 600; }
+.ctl { display: flex; flex-direction: column; gap: 12px; padding-top: 12px; }
+.ctl label { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; font-size: 14px; }
+.ctl label output { font-variant-numeric: tabular-nums; font-weight: 600; }
+.ctl input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); }
+.ctl select { grid-column: 1 / -1; font: inherit; padding: 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.ctl label.off { opacity: .45; }
+
+#hex h4 { font-family: var(--display); font-size: 19px; font-weight: 700; margin: 0; }
+#hex .tag { color: var(--muted); font-size: 14px; }
+.kv { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; font-size: 15px; }
+.kv dt { color: var(--muted); } .kv dd { margin: 0; font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
+.dollar { height: 14px; border-radius: 3px; background: var(--r0); border: 1px solid var(--line); overflow: hidden; }
+.dollar div { height: 100%; background: var(--r3); }
+
+.evidence { display: flex; flex-direction: column; gap: 12px; }
+.evidence h2 { font-size: 22px; font-weight: 800; }
+.evidence > p { max-width: 65ch; color: var(--muted); }
+.bars { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; gap: 8px 12px; align-items: center; font-size: 15px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px; }
+.bars .track { height: 16px; }
+.bars .bar { height: 100%; background: var(--r3); border-radius: 0 4px 4px 0; min-width: 2px; }
+.bars .v { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.notes div { display: flex; flex-direction: column; gap: 4px; font-size: 15px; color: var(--muted); }
+.notes b { color: var(--ink); font-family: var(--display); }
+#tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 13px; padding: 5px 8px; border-radius: 4px; z-index: 5; max-width: 220px; }
+@media (prefers-reduced-motion: no-preference) { #map path { transition: fill .25s; } }
+</style>
+
+<header class="band"><div class="wrap">
+  <div class="draft"><b>Draft mockup</b><span>Calgary · 2025 tax year · sample layout, numbers not final</span></div>
+  <h1>Do Calgary's streets pay for themselves?</h1>
+  <p class="lede">Every block has pavement the city must one day rebuild, and every block pays property tax. This map sets one against the other, 800 metres at a time.</p>
+</div></header>
+
+<main class="wrap">
+  <section class="work">
+    <div class="mapcard">
+      <div class="maphead"><h2>Share of local property tax needed for roads</h2><span id="maphint">Tap a hexagon for its numbers</span></div>
+      <svg id="map" role="img" aria-label="Hexagon map of Calgary shaded by the share of municipal property tax needed to pay for roads"></svg>
+      <div class="legend" id="legend"></div>
+    </div>
+
+    <div class="panel">
+      <div class="block">
+        <h3>Citywide, this scenario</h3>
+        <div class="stats">
+          <div class="stat"><b id="s-share">–</b><span>of municipal property tax goes to pavement</span></div>
+          <div class="stat"><b id="s-cost">–</b><span>road cost per year</span></div>
+          <div class="stat"><b id="s-red">–</b><span>neighbourhood hexes where roads take over half the tax</span></div>
+        </div>
+      </div>
+
+      <div class="block">
+        <h3>What do we do to the roads?</h3>
+        <div class="seg" id="treat">
+          <button type="button" data-t="recon" aria-pressed="true">Rebuild them</button>
+          <button type="button" data-t="repave" aria-pressed="false">Repave only</button>
+          <button type="button" data-t="crack" aria-pressed="false">Seal cracks only</button>
+        </div>
+        <p class="hint" id="treat-hint"></p>
+        <details id="custom">
+          <summary>Change the assumptions</summary>
+          <div class="ctl">
+            <label id="l-res">Rebuild residential streets every <output id="o-res"></output>
+              <input type="range" id="res" min="20" max="60" step="1" value="40"></label>
+            <label id="l-main">Rebuild main roads every <output id="o-main"></output>
+              <input type="range" id="main" min="15" max="40" step="1" value="21"></label>
+            <label id="l-cost">Cost to rebuild a square metre <output id="o-cost"></output>
+              <input type="range" id="cost" min="250" max="400" step="5" value="325"></label>
+            <label>Who pays for the main roads everyone uses?
+              <select id="sharemode">
+                <option value="revenue">Everyone, in proportion to tax paid</option>
+                <option value="equal">Every hexagon pays the same</option>
+                <option value="local">Only the hexagon the road sits in</option>
+              </select></label>
+          </div>
+        </details>
+      </div>
+
+      <div class="block" id="hex"></div>
+    </div>
+  </section>
+
+  <section class="evidence">
+    <h2>Older and denser places carry their roads more easily</h2>
+    <p>The same measure, added up by when each area was built. Parks, undeveloped land and special districts such as the airport are left out here and shown in grey on the map.</p>
+    <div class="bars" id="bars"></div>
+  </section>
+
+  <section class="notes">
+    <div><b>What is counted</b>Road pavement only. Pipes, transit, parks, police and everything else the city pays for are not in this picture.</div>
+    <div><b>Where the tax number comes from</b>The 2025 assessment roll times the 2025 municipal tax rate. Hospitals, schools, parks and other exempt property are removed. The total lands within about 1% of the City's reported figure.</div>
+    <div><b>Where the road number comes from</b>Street lengths from OpenStreetMap, widths measured on a sample of residential streets in each era of neighbourhood, and rebuild costs of $300 to $350 per square metre.</div>
+    <div><b>What a live version adds</b>A street basemap underneath, zoom and search by address, and a printable report built from the same text and maps.</div>
+  </section>
+</main>
+<div id="tip" hidden></div>
+
+<script>
+const D = /*DATA*/;
+const ORDER = ['CENTRE CITY','INNER CITY','1950s','1960s/1970s','1980s/1990s','2000s','2010s','2020s','BUILDING OUT','EMPLOYMENT'];
+const NICE = {'CENTRE CITY':'Centre City','INNER CITY':'Inner city','BUILDING OUT':'Still building out','EMPLOYMENT':'Employment areas','OTHER':'Special district','PARKS':'Park','UNDEVELOPED':'Undeveloped'};
+const BINS = [0.10, 0.25, 0.50, 0.75, 1.0];
+const BIN_LABELS = ['Under 10%','10–25%','25–50%','50–75%','75–100%','Over 100%'];
+const FLAT = {repave: 3.545, crack: 1.75};
+const HINTS = {
+  recon: 'Full reconstruction when a road wears out: residential streets every 40 years, main roads every 21.',
+  repave: 'A new surface only, at $2.92 to $4.17 per square metre a year. Cheaper now; the road underneath keeps ageing.',
+  crack: 'Crack sealing and microsurfacing, at $1.00 to $2.50 per square metre a year. The minimum to slow the decline.'};
+const state = {treat: 'recon', sel: null};
+const $ = id => document.getElementById(id);
+const H = D.hex.map(h => ({id: h[0], d: h[1], st: D.structs[h[2]], special: !!h[3], rev: h[4], res: h[5], ter: h[6], sh: h[7], name: h[8]}));
+const money = v => v >= 1e9 ? '$' + (v / 1e9).toFixed(2) + 'B' : v >= 1e6 ? '$' + (v / 1e6).toFixed(v >= 1e7 ? 0 : 1) + 'M' : '$' + Math.round(v / 1e3).toLocaleString() + 'K';
+const pct = v => v == null || !isFinite(v) ? 'n/a' : (v > 9.99 ? 'over 1,000' : Math.round(v * 100)) + '%';
+const nice = s => NICE[s] || s;
+
+const svg = $('map');
+svg.setAttribute('viewBox', `-20 -20 ${D.w + 40} ${D.h + 40}`);
+const NS = 'http://www.w3.org/2000/svg';
+H.forEach(h => { const p = document.createElementNS(NS, 'path'); p.setAttribute('d', h.d); p.dataset.id = h.id; svg.appendChild(p); h.el = p; });
+const byId = new Map(H.map(h => [String(h.id), h]));
+
+function compute() {
+  const resLife = +$('res').value, mainLife = +$('main').value, cost = +$('cost').value, mode = $('sharemode').value;
+  const sharedTotal = H.reduce((a, h) => a + h.sh, 0), revTotal = H.reduce((a, h) => a + h.rev, 0);
+  H.forEach(h => {
+    const shared = mode === 'local' ? h.sh : mode === 'equal' ? sharedTotal / H.length : sharedTotal * h.rev / revTotal;
+    h.cost = state.treat === 'recon' ? cost * (h.res / resLife + (h.ter + shared) / mainLife) : FLAT[state.treat] * (h.res + h.ter + shared);
+    h.share = h.rev > 0 ? h.cost / h.rev : null;
+  });
+}
+function bin(h) { if (h.special || h.share == null) return 'bs'; let i = 0; while (i < BINS.length && h.share >= BINS[i]) i++; return 'b' + i; }
+
+function render() {
+  compute();
+  const recon = state.treat === 'recon';
+  $('o-res').textContent = $('res').value + ' years'; $('o-main').textContent = $('main').value + ' years'; $('o-cost').textContent = '$' + $('cost').value;
+  ['res', 'main', 'cost'].forEach(k => { $(k).disabled = !recon; $('l-' + k).classList.toggle('off', !recon); });
+  $('treat-hint').textContent = HINTS[state.treat];
+  H.forEach(h => { h.el.setAttribute('class', bin(h) + (state.sel === h ? ' sel' : '')); });
+  const cost = H.reduce((a, h) => a + h.cost, 0), rev = H.reduce((a, h) => a + h.rev, 0);
+  $('s-share').textContent = pct(cost / rev); $('s-cost').textContent = money(cost);
+  $('s-red').textContent = H.filter(h => !h.special && h.share != null && h.share > 0.5).length.toLocaleString();
+  const rows = ORDER.map(s => { const g = H.filter(h => h.st === s); return [s, g.reduce((a, h) => a + h.cost, 0) / g.reduce((a, h) => a + h.rev, 0)]; });
+  const max = Math.max(...rows.map(r => r[1]), 0.01);
+  $('bars').innerHTML = rows.map(r => `<div>${nice(r[0])}</div><div class="track"><div class="bar" style="width:${(100 * r[1] / max).toFixed(1)}%"></div></div><div class="v">${pct(r[1])}</div>`).join('');
+  renderHex();
+}
+function renderHex() {
+  const h = state.sel, el = $('hex');
+  if (!h) { el.innerHTML = '<h3>One hexagon</h3><p class="hint">Tap any hexagon on the map to see what it pays in tax and what its roads cost.</p>'; return; }
+  const cents = h.share == null ? null : Math.min(100, Math.round(h.share * 100));
+  el.innerHTML = `<h3>One hexagon</h3><div><h4>${h.name || 'Unnamed area'}</h4><div class="tag">${nice(h.st)}${h.special ? ' · not expected to pay for itself' : ''}</div></div>
+    <dl class="kv"><dt>Municipal tax raised</dt><dd>${money(h.rev)}</dd><dt>Road cost per year</dt><dd>${money(h.cost)}</dd><dt>Share of tax needed for roads</dt><dd>${pct(h.share)}</dd></dl>
+    ${cents == null ? '<p class="hint">No taxable property here.</p>' : `<div class="dollar" aria-hidden="true"><div style="width:${cents}%"></div></div><p class="hint">${h.share > 1 ? 'Roads here cost more than all the municipal tax the area raises.' : `Of every tax dollar raised here, about ${cents}¢ would go to pavement.`}</p>`}`;
+}
+$('legend').innerHTML = BIN_LABELS.map((l, i) => `<span><i class="b${i}" style="background:var(--r${i})"></i>${l}</span>`).join('') + '<span><i style="background:var(--special)"></i>Park, undeveloped or special district</span>';
+
+svg.addEventListener('click', e => { const h = byId.get(e.target.dataset && e.target.dataset.id); if (!h) return; state.sel = state.sel === h ? null : h; if (state.sel) svg.appendChild(h.el); render(); });
+const tip = $('tip');
+svg.addEventListener('pointermove', e => { const h = e.pointerType === 'mouse' && byId.get(e.target.dataset && e.target.dataset.id); if (!h) { tip.hidden = true; return; }
+  tip.textContent = `${h.name || nice(h.st)}: ${h.special ? nice(h.st).toLowerCase() : pct(h.share) + ' of tax'}`; tip.hidden = false;
+  tip.style.left = Math.min(e.clientX + 12, innerWidth - 230) + 'px'; tip.style.top = (e.clientY + 14) + 'px'; });
+svg.addEventListener('pointerleave', () => { tip.hidden = true; });
+$('treat').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.treat = b.dataset.t; [...$('treat').children].forEach(x => x.setAttribute('aria-pressed', x === b)); render(); });
+['res', 'main', 'cost', 'sharemode'].forEach(k => $(k).addEventListener('input', render));
+render();
+</script>
