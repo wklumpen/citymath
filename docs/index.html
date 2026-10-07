@@ -1,4 +1,11 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Calgary Street Math</title>
+<meta name="description" content="What share of Calgary's municipal property tax each area needs to pay for its road pavement.">
+<link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600&display=swap">
 <style>
 /* Layout: navy masthead, then one working screen: map beside (or above, on phones) a panel
@@ -22,7 +29,9 @@
   --r0: #3f2410; --r1: #6b3a12; --r2: #9c4f12; --r3: #d06c1c; --r4: #f29a4a; --r5: #fddcb0;
   --special: #263143; --hexline: #0b131f; --select: #ffffff; color-scheme: dark }
 
-body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.5; }
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.5; }
 h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.15; }
 p { margin: 0; }
 .wrap { max-width: 1120px; margin: 0 auto; padding-inline: 16px; }
@@ -42,11 +51,12 @@ main.wrap { padding-block: 20px 40px; display: flex; flex-direction: column; gap
 .maphead { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .maphead h2 { font-size: 17px; font-weight: 700; }
 .maphead span { color: var(--muted); font-size: 14px; }
-#map { width: 100%; height: auto; max-height: 78vh; display: block; touch-action: manipulation; }
-#map path { stroke: var(--hexline); stroke-width: 5; cursor: pointer; }
-#map path.sel { stroke: var(--select); stroke-width: 22; }
-.b0 { fill: var(--r0); } .b1 { fill: var(--r1); } .b2 { fill: var(--r2); } .b3 { fill: var(--r3); } .b4 { fill: var(--r4); } .b5 { fill: var(--r5); }
-.bs { fill: var(--special); }
+#map { width: 100%; height: 62vh; min-height: 380px; border-radius: 4px; overflow: hidden; background: var(--special); }
+@media (min-width: 880px) { #map { height: min(78vh, 760px); } }
+.search { display: flex; gap: 8px; }
+.search input { flex: 1; min-width: 0; font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
+.search button { font: 600 15px var(--body); padding: 8px 14px; border: 0; border-radius: 6px; background: var(--band); color: var(--band-ink); cursor: pointer; }
+.search button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); }
 .legend i { display: inline-block; width: 14px; height: 14px; border-radius: 2px; vertical-align: -2px; margin-right: 5px; border: 1px solid var(--line); }
 
@@ -89,8 +99,9 @@ details summary { cursor: pointer; font-weight: 600; }
 .notes div { display: flex; flex-direction: column; gap: 4px; font-size: 15px; color: var(--muted); }
 .notes b { color: var(--ink); font-family: var(--display); }
 #tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 13px; padding: 5px 8px; border-radius: 4px; z-index: 5; max-width: 220px; }
-@media (prefers-reduced-motion: no-preference) { #map path { transition: fill .25s; } }
 </style>
+</head>
+<body>
 
 <header class="band"><div class="wrap">
   <div class="draft"><b>Draft mockup</b><span>Calgary · 2025 tax year · sample layout, numbers not final</span></div>
@@ -101,8 +112,12 @@ details summary { cursor: pointer; font-weight: 600; }
 <main class="wrap">
   <section class="work">
     <div class="mapcard">
-      <div class="maphead"><h2>Share of local property tax needed for roads</h2><span id="maphint">Tap a hexagon for its numbers</span></div>
-      <svg id="map" role="img" aria-label="Hexagon map of Calgary shaded by the share of municipal property tax needed to pay for roads"></svg>
+      <div class="maphead"><h2>Share of local property tax needed for roads</h2><span id="maphint">Tap a hexagon for its numbers. Use two fingers to move the map.</span></div>
+      <form class="search" id="search">
+        <input id="q" type="search" placeholder="Find an address or neighbourhood" aria-label="Find an address or neighbourhood" autocomplete="off">
+        <button type="submit">Find</button>
+      </form>
+      <div id="map" role="application" aria-label="Map of Calgary in hexagons, shaded by the share of municipal property tax needed to pay for roads"></div>
       <div class="legend" id="legend"></div>
     </div>
 
@@ -157,12 +172,14 @@ details summary { cursor: pointer; font-weight: 600; }
     <div><b>What is counted</b>Road pavement only. Pipes, transit, parks, police and everything else the city pays for are not in this picture.</div>
     <div><b>Where the tax number comes from</b>The 2025 assessment roll times the 2025 municipal tax rate. Hospitals, schools, parks and other exempt property are removed. The total lands within about 1% of the City's reported figure.</div>
     <div><b>Where the road number comes from</b>Street lengths from OpenStreetMap, widths measured on a sample of residential streets in each era of neighbourhood, and rebuild costs of $300 to $350 per square metre.</div>
-    <div><b>What a live version adds</b>A street basemap underneath, zoom and search by address, and a printable report built from the same text and maps.</div>
+    <div><b>Still to come</b>A guided walk through the findings above the map, and a printable report built from the same text and maps.</div>
   </section>
 </main>
 <div id="tip" hidden></div>
 
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.js"></script>
 <script>
+const MAPBOX_TOKEN = 'pk.eyJ1Ijoid2tsdW1wZW4iLCJhIjoiY211eWVyeXg5MGlqcTJ4b3RycWJwOHRkMCJ9.uF0fIM1cJwxGwrEdw0_-EA';  // public token
 const ORDER = ['CENTRE CITY','INNER CITY','1950s','1960s/1970s','1980s/1990s','2000s','2010s','2020s','BUILDING OUT','EMPLOYMENT'];
 const NICE = {'CENTRE CITY':'Centre City','INNER CITY':'Inner city','BUILDING OUT':'Still building out','EMPLOYMENT':'Employment areas','OTHER':'Special district','PARKS':'Park','UNDEVELOPED':'Undeveloped'};
 const BINS = [0.10, 0.25, 0.50, 0.75, 1.0];
@@ -179,27 +196,51 @@ const money = v => v >= 1e9 ? '$' + (v / 1e9).toFixed(2) + 'B' : v >= 1e6 ? '$' 
 const pct = v => v == null || !isFinite(v) ? 'n/a' : (v > 9.99 ? 'over 1,000' : Math.round(v * 100)) + '%';
 const nice = s => NICE[s] || s;
 
-const svg = $('map');
-const NS = 'http://www.w3.org/2000/svg';
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const dark = () => { const t = document.documentElement.dataset.theme; return t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches; };
+let map = null, ready = false, bounds = null;
+const rings = g => (g.type === 'MultiPolygon' ? g.coordinates : [g.coordinates]);
 
-// Draw the hexes as SVG, on a flat projection that is accurate enough at city scale.
 function draw(geojson) {
-  const K = 11132;  // SVG units per degree of latitude (1 unit is about 10 m)
-  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-  const rings = f => (f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates : [f.geometry.coordinates]).flat();
-  geojson.features.forEach(f => rings(f).forEach(r => r.forEach(([x, y]) => {
-    x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); })));
-  const kx = K * Math.cos((y0 + y1) / 2 * Math.PI / 180);
-  svg.setAttribute('viewBox', `-20 -20 ${Math.round((x1 - x0) * kx) + 40} ${Math.round((y1 - y0) * K) + 40}`);
-  H = geojson.features.map(f => {
-    const p = f.properties, el = document.createElementNS(NS, 'path');
-    el.setAttribute('d', rings(f).map(r => 'M' + r.slice(0, -1).map(([x, y]) =>
-      Math.round((x - x0) * kx) + ' ' + Math.round((y1 - y) * K)).join('L') + 'Z').join(''));
-    el.dataset.id = p.id; svg.appendChild(el);
-    return {id: p.id, st: p.structure || 'OTHER', special: p.special, rev: p.revenue,
-            res: p.m2_sampled, ter: p.m2_local, sh: p.m2_shared, name: p.name, el};
-  });
+  H = geojson.features.map(f => { const p = f.properties; return {id: p.id, st: p.structure || 'OTHER', special: p.special,
+    rev: p.revenue, res: p.m2_sampled, ter: p.m2_local, sh: p.m2_shared, name: p.name, geom: f.geometry}; });
   byId = new Map(H.map(h => [String(h.id), h]));
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  H.forEach(h => rings(h.geom).forEach(poly => poly[0].forEach(([x, y]) => {
+    x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); })));
+  bounds = [[x0, y0], [x1, y1]];
+
+  mapboxgl.accessToken = MAPBOX_TOKEN;
+  map = new mapboxgl.Map({container: 'map', style: 'mapbox://styles/mapbox/' + (dark() ? 'dark-v11' : 'light-v11'),
+    bounds, fitBoundsOptions: {padding: 16}, maxBounds: [[x0 - 0.35, y0 - 0.25], [x1 + 0.35, y1 + 0.25]],
+    minZoom: 8, cooperativeGestures: true, attributionControl: true});
+  map.addControl(new mapboxgl.NavigationControl({showCompass: false}), 'top-right');
+  map.on('error', e => { if (!ready) $('maphint').textContent = 'The map could not be loaded.'; });
+  map.on('load', () => {
+    map.addSource('hex', {type: 'geojson', data: geojson, promoteId: 'id'});
+    // under the basemap's roads and labels, so streets and place names stay readable
+    const under = (map.getStyle().layers.find(l => l['source-layer'] === 'road' || l.type === 'symbol') || {}).id;
+    const fill = ['match', ['coalesce', ['feature-state', 'bin'], 6]];
+    for (let i = 0; i < 6; i++) fill.push(i, css('--r' + i));
+    fill.push(css('--special'));
+    map.addLayer({id: 'hex-fill', type: 'fill', source: 'hex', paint: {'fill-color': fill, 'fill-opacity': 0.78}}, under);
+    map.addLayer({id: 'hex-line', type: 'line', source: 'hex', paint: {'line-color': css('--hexline'), 'line-width': 0.6, 'line-opacity': 0.6}}, under);
+    map.addLayer({id: 'hex-sel', type: 'line', source: 'hex', filter: ['==', ['get', 'id'], -1], paint: {'line-color': css('--select'), 'line-width': 3}});
+    map.on('click', 'hex-fill', e => select(byId.get(String(e.features[0].properties.id)), true));
+    map.on('mousemove', 'hex-fill', e => { const h = byId.get(String(e.features[0].properties.id)); if (!h) return;
+      map.getCanvas().style.cursor = 'pointer';
+      tip.textContent = `${h.name || nice(h.st)}: ${h.special ? nice(h.st).toLowerCase() : pct(h.share) + ' of tax'}`; tip.hidden = false;
+      tip.style.left = Math.min(e.originalEvent.clientX + 12, innerWidth - 230) + 'px'; tip.style.top = (e.originalEvent.clientY + 14) + 'px'; });
+    map.on('mouseleave', 'hex-fill', () => { map.getCanvas().style.cursor = ''; tip.hidden = true; });
+    ready = true; render();
+  });
+}
+function select(h, toggle) { if (!h) return; state.sel = toggle && state.sel === h ? null : h; render(); }
+function inside([px, py], geom) {  // is a lon/lat point inside a hex?
+  return rings(geom).some(poly => { const r = poly[0]; let hit = false;
+    for (let i = 0, j = r.length - 1; i < r.length; j = i++) { const [xi, yi] = r[i], [xj, yj] = r[j];
+      if ((yi > py) !== (yj > py) && px < (xj - xi) * (py - yi) / (yj - yi) + xi) hit = !hit; }
+    return hit; });
 }
 
 function compute() {
@@ -211,15 +252,17 @@ function compute() {
     h.share = h.rev > 0 ? h.cost / h.rev : null;
   });
 }
-function bin(h) { if (h.special || h.share == null) return 'bs'; let i = 0; while (i < BINS.length && h.share >= BINS[i]) i++; return 'b' + i; }
+function bin(h) { if (h.special || h.share == null) return 6; let i = 0; while (i < BINS.length && h.share >= BINS[i]) i++; return i; }
 
 function render() {
+  if (!ready) return;
   compute();
   const recon = state.treat === 'recon';
   $('o-res').textContent = $('res').value + ' years'; $('o-main').textContent = $('main').value + ' years'; $('o-cost').textContent = '$' + $('cost').value;
   ['res', 'main', 'cost'].forEach(k => { $(k).disabled = !recon; $('l-' + k).classList.toggle('off', !recon); });
   $('treat-hint').textContent = HINTS[state.treat];
-  H.forEach(h => { h.el.setAttribute('class', bin(h) + (state.sel === h ? ' sel' : '')); });
+  H.forEach(h => map.setFeatureState({source: 'hex', id: h.id}, {bin: bin(h)}));
+  map.setFilter('hex-sel', ['==', ['get', 'id'], state.sel ? state.sel.id : -1]);
   const cost = H.reduce((a, h) => a + h.cost, 0), rev = H.reduce((a, h) => a + h.rev, 0);
   $('s-share').textContent = pct(cost / rev); $('s-cost').textContent = money(cost);
   $('s-red').textContent = H.filter(h => !h.special && h.share != null && h.share > 0.5).length.toLocaleString();
@@ -236,16 +279,24 @@ function renderHex() {
     <dl class="kv"><dt>Municipal tax raised</dt><dd>${money(h.rev)}</dd><dt>Road cost per year</dt><dd>${money(h.cost)}</dd><dt>Share of tax needed for roads</dt><dd>${pct(h.share)}</dd></dl>
     ${cents == null ? '<p class="hint">No taxable property here.</p>' : `<div class="dollar" aria-hidden="true"><div style="width:${cents}%"></div></div><p class="hint">${h.share > 1 ? 'Roads here cost more than all the municipal tax the area raises.' : `Of every tax dollar raised here, about ${cents}¢ would go to pavement.`}</p>`}`;
 }
-$('legend').innerHTML = BIN_LABELS.map((l, i) => `<span><i class="b${i}" style="background:var(--r${i})"></i>${l}</span>`).join('') + '<span><i style="background:var(--special)"></i>Park, undeveloped or special district</span>';
+$('legend').innerHTML = BIN_LABELS.map((l, i) => `<span><i style="background:var(--r${i})"></i>${l}</span>`).join('') + '<span><i style="background:var(--special)"></i>Park, undeveloped or special district</span>';
 
-svg.addEventListener('click', e => { const h = byId.get(e.target.dataset && e.target.dataset.id); if (!h) return; state.sel = state.sel === h ? null : h; if (state.sel) svg.appendChild(h.el); render(); });
 const tip = $('tip');
-svg.addEventListener('pointermove', e => { const h = e.pointerType === 'mouse' && byId.get(e.target.dataset && e.target.dataset.id); if (!h) { tip.hidden = true; return; }
-  tip.textContent = `${h.name || nice(h.st)}: ${h.special ? nice(h.st).toLowerCase() : pct(h.share) + ' of tax'}`; tip.hidden = false;
-  tip.style.left = Math.min(e.clientX + 12, innerWidth - 230) + 'px'; tip.style.top = (e.clientY + 14) + 'px'; });
-svg.addEventListener('pointerleave', () => { tip.hidden = true; });
+$('search').addEventListener('submit', e => { e.preventDefault();
+  const q = $('q').value.trim(); if (!q || !ready) return;
+  const url = 'https://api.mapbox.com/search/geocode/v6/forward?q=' + encodeURIComponent(q) + '&limit=1&country=ca&bbox=' + bounds.flat().join(',') +
+    '&proximity=' + map.getCenter().toArray().join(',') + '&access_token=' + MAPBOX_TOKEN;
+  fetch(url).then(r => r.json()).then(g => { const f = g.features && g.features[0];
+    if (!f) { $('maphint').textContent = 'No match found in Calgary for that search.'; return; }
+    const pt = f.geometry.coordinates, h = H.find(x => inside(pt, x.geom));
+    $('maphint').textContent = h ? 'Showing ' + (f.properties.name || q) : 'That place is outside the mapped area.';
+    map.flyTo({center: pt, zoom: 12.5, essential: true}); if (h) select(h, false);
+  }).catch(() => { $('maphint').textContent = 'Search is unavailable right now.'; });
+});
 $('treat').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.treat = b.dataset.t; [...$('treat').children].forEach(x => x.setAttribute('aria-pressed', x === b)); render(); });
 ['res', 'main', 'cost', 'sharemode'].forEach(k => $(k).addEventListener('input', render));
 fetch('data/hexes.geojson').then(r => r.json()).then(g => { draw(g); render(); })
   .catch(() => { $('maphint').textContent = 'The map data could not be loaded.'; });
 </script>
+</body>
+</html>
