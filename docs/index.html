@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Send the full page address to Mapbox: its token is restricted to this site's /citymath path,
+     and browsers otherwise send only the domain. -->
+<meta name="referrer" content="no-referrer-when-downgrade">
 <title>Calgary Street Math</title>
 <meta name="description" content="What share of Calgary's municipal property tax each area needs to pay for its road pavement.">
 <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.css">
@@ -215,7 +218,7 @@ function draw(geojson) {
     bounds, fitBoundsOptions: {padding: 16}, maxBounds: [[x0 - 0.35, y0 - 0.25], [x1 + 0.35, y1 + 0.25]],
     minZoom: 8, cooperativeGestures: true, attributionControl: true});
   map.addControl(new mapboxgl.NavigationControl({showCompass: false}), 'top-right');
-  map.on('error', e => { if (!ready) $('maphint').textContent = 'The map could not be loaded.'; });
+  map.on('error', e => { console.error(e.error || e); if (!ready) $('maphint').textContent = 'The map could not be loaded.'; });
   map.on('load', () => {
     map.addSource('hex', {type: 'geojson', data: geojson, promoteId: 'id'});
     // under the basemap's roads and labels, so streets and place names stay readable
@@ -232,7 +235,7 @@ function draw(geojson) {
       tip.textContent = `${h.name || nice(h.st)}: ${h.special ? nice(h.st).toLowerCase() : pct(h.share) + ' of tax'}`; tip.hidden = false;
       tip.style.left = Math.min(e.originalEvent.clientX + 12, innerWidth - 230) + 'px'; tip.style.top = (e.originalEvent.clientY + 14) + 'px'; });
     map.on('mouseleave', 'hex-fill', () => { map.getCanvas().style.cursor = ''; tip.hidden = true; });
-    ready = true; render();
+    ready = true; $('maphint').textContent = 'Tap a hexagon for its numbers. Use two fingers to move the map.'; render();
   });
 }
 function select(h, toggle) { if (!h) return; state.sel = toggle && state.sel === h ? null : h; render(); }
