@@ -203,11 +203,11 @@ table.wards { width: 100%; border-collapse: collapse; font-size: 15px; font-vari
   </section>
 
   <section class="notes">
-    <div><b>What is counted</b>Road pavement only. The mobility budget also pays for <span id="items-note"></span>, and the city budget pays for pipes, transit, parks, police and much more.</div>
-    <div><b>Revenue</b>The <span class="yr">2026</span> assessment roll times the <span class="yr">2026</span> municipal tax rates. Hospitals, schools, parks and other exempt property are removed. Checked against 2025, the same method lands within about 1% of the City's reported total.</div>
-    <div><b>Road cost</b>Citywide budgets are shared out by each area's paved area. Per-square-metre plans use street lengths from OpenStreetMap and widths measured on sampled streets. Main roads everyone uses are pooled citywide.</div>
-    <div><b>Median household</b>The median <span class="yr">2026</span> assessment of a single residential property, <span id="home-note"></span>, and the municipal property tax on it.</div>
-    <div><b>Mobility budget</b>The share of each tax dollar assumed to go to mobility, <span id="mob-note"></span>.</div>
+    <div><b>What is counted</b><p>Road pavement only. The mobility budget also pays for <span id="items-note"></span>, and the city budget pays for pipes, transit, parks, police and much more.</p></div>
+    <div><b>Revenue</b><p>The <span class="yr">2026</span> assessment roll times the <span class="yr">2026</span> municipal tax rates. Hospitals, schools, parks and other exempt property are removed. Checked against 2025, the same method lands within about 1% of the City's reported total.</p></div>
+    <div><b>Road cost</b><p>Citywide budgets are shared out by each area's paved area. Per-square-metre plans use street lengths from OpenStreetMap and widths measured on sampled streets. Main roads everyone uses are pooled citywide.</p></div>
+    <div><b>Median household</b><p>The median <span class="yr">2026</span> assessment of a single residential property, <span id="home-note"></span>, and the municipal property tax on it.</p></div>
+    <div><b>Mobility budget</b><p>Mobility gets <span id="mob-note"></span>.</p></div>
   </section>
 </main>
 <div id="tip" hidden></div>
@@ -441,7 +441,7 @@ Promise.all(['scenarios.json', 'hexes.geojson', 'wards.geojson'].map(f => fetch(
   $('year').textContent = S.tax_year; document.querySelectorAll('.yr').forEach(e => { e.textContent = S.tax_year; });
   $('home-note').textContent = '$' + S.typical_home_value.toLocaleString();
   $('items-note').textContent = S.mobility_items.join(', ');
-  $('mob-note').textContent = cents(S.mobility_share) + ' of every dollar';
+  $('mob-note').textContent = cents(S.mobility_share) + ' of every property tax dollar';
   const rec = S.scenarios.find(s => s.id === 'recommended'), full = S.scenarios.find(s => s.id === 'reconstruction');
   if (rec) {
     const mob = tot.rev * S.mobility_share;
