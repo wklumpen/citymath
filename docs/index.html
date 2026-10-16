@@ -332,17 +332,24 @@ function startMap(geojson) {
   map.on('error', e => { console.error(e.error || e); if (!ready) $('maphint').textContent = 'The map could not be loaded.'; });
   map.on('load', () => {
     map.addSource('hex', {type: 'geojson', data: geojson, promoteId: 'id'});
-    // above the basemap's roads, below its labels: streets show faintly through the colour
-    // and place names stay on top
-    const under = (map.getStyle().layers.find(l => l.type === 'symbol') || {}).id;
+    // Basemap: drop place, landmark and water names (street names stay), and soften the roads.
+    const layers = map.getStyle().layers;
+    layers.forEach(l => {
+      if (l.type === 'symbol' && /place|poi|airport|natural|water|transit|settlement/.test(l.id + ' ' + (l['source-layer'] || '')))
+        map.setLayoutProperty(l.id, 'visibility', 'none');
+      else if (l['source-layer'] === 'road' && l.type === 'line') map.setPaintProperty(l.id, 'line-opacity', 0.45);
+      else if (l['source-layer'] === 'road' && l.type === 'symbol') map.setPaintProperty(l.id, 'text-opacity', 0.75);
+    });
+    // hexes go under the roads, so streets draw over the colour
+    const under = (layers.find(l => l['source-layer'] === 'road' || l.type === 'symbol') || {}).id;
     const fill = ['match', ['coalesce', ['feature-state', 'c'], 6]];
     COLORS.forEach((c, i) => fill.push(i, css(c)));
     fill.push(css('--special'));
-    map.addLayer({id: 'hex-fill', type: 'fill', source: 'hex', paint: {'fill-color': fill, 'fill-opacity': 0.86}}, under);
+    map.addLayer({id: 'hex-fill', type: 'fill', source: 'hex', paint: {'fill-color': fill, 'fill-opacity': 0.88}}, under);
     map.addLayer({id: 'hex-line', type: 'line', source: 'hex', paint: {'line-color': css('--hexline'), 'line-width': 0.6, 'line-opacity': 0.6}}, under);
     map.addSource('wards', {type: 'geojson', data: W});
     map.addLayer({id: 'ward-line', type: 'line', source: 'wards', filter: ['==', ['get', 'kind'], 'outline'],
-      paint: {'line-color': css('--ward'), 'line-width': ['interpolate', ['linear'], ['zoom'], 9, 1.4, 13, 2.6]}}, under);
+      paint: {'line-color': css('--ward'), 'line-width': ['interpolate', ['linear'], ['zoom'], 9, 1.4, 13, 2.6]}});
     map.addLayer({id: 'ward-label', type: 'symbol', source: 'wards', filter: ['==', ['get', 'kind'], 'label'],
       layout: {'text-field': ['get', 'label'], 'text-size': 12, 'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'], 'text-allow-overlap': false},
       paint: {'text-color': css('--ward'), 'text-halo-color': css('--surface'), 'text-halo-width': 1.6}});
@@ -371,7 +378,7 @@ $('search').addEventListener('submit', e => { e.preventDefault();
 });
 
 // ---- start ---------------------------------------------------------------
-Promise.all(['scenarios.json', 'hexes.geojson', 'wards.geojson'].map(f => fetch('data/' + f).then(r => r.json()))).then(([s, g, w]) => {
+Promise.all(['scenarios.json', 'hexes.geojson', 'wards.geojson'].map(f => fetch('data/' + f, {cache: 'no-cache'}).then(r => r.json()))).then(([s, g, w]) => {
   S = s; W = w; state.scenario = S.default;
   H = g.features.map(f => ({...f.properties, st: f.properties.structure || 'OTHER', rev: f.properties.rev_res + f.properties.rev_com, geom: f.geometry}));
   byId = new Map(H.map(h => [String(h.id), h]));
