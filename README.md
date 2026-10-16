@@ -10,12 +10,12 @@ plain SQL in `sql/`; every assumption is in `config.yaml`.
 
 | Step | What it produces |
 |---|---|
-| `load` | Staging copies of the hex grid, communities, OSM roads and the assessment roll |
-| `community` | Each hex tagged with the community its centroid falls in, plus the mix of community structures by area and dissolved hex outlines per community |
+| `load` | Staging copies of the hex grid, communities, wards, OSM roads and the assessment roll |
+| `community` | Each hex tagged with the community its centroid falls in, plus the mix of community structures by area, the ward (also by centroid), and dissolved hex outlines per community and per ward |
 | `roads` | Length of City-maintained, paved road per hex by class |
 | `assessments` | Assessed value per hex by class, allocated from parcels by area, with tax-exempt property removed |
-| `summary` | `hex_summary` (one row per hex) and `hex_scenario` (one row per hex per pavement scenario) |
-| `export` | `docs/data/hexes.geojson` and `docs/data/scenarios.json`, the files the website reads |
+| `summary` | `hex_summary` (one row per hex), `hex_scenario` (one row per hex per pavement scenario) and `ward_scenario` (ward totals per scenario) |
+| `export` | `docs/data/hexes.geojson`, `wards.geojson` and `scenarios.json`, the files the website reads |
 
 ## Method in brief
 

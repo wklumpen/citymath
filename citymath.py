@@ -95,6 +95,7 @@ def load(cfg, dst):
     with connect(sources["database"]) as src:
         pipe(src, dst, "src_community.sql", "src_community",
              table=sources["communities"], srid=srid)
+        pipe(src, dst, "src_ward.sql", "src_ward", table=sources["wards"], srid=srid)
         pipe(src, dst, "src_road.sql", "src_road",
              table=sources["roads"], srid=srid)
         pipe(src, dst, "src_parcel.sql", "src_parcel",
@@ -107,6 +108,7 @@ def load(cfg, dst):
     show(dst, "staging rows", """
         select 'src_hex', count(*) from src_hex union all
         select 'src_community', count(*) from src_community union all
+        select 'src_ward', count(*) from src_ward union all
         select 'src_road', count(*) from src_road union all
         select 'src_parcel', count(*) from src_parcel""")
 
@@ -264,7 +266,7 @@ def summary(cfg, dst):
     run_sql(dst, "04_hex_summary.sql", params, road_cols=road_cols,
             cost_basis={"life": "pavement_m2_per_year", "flat": "pavement_m2",
                         "budget": "(pavement_m2 / sum(pavement_m2) over ())"}[kind])
-    run_sql(dst, "05_hex_scenario.sql")
+    run_sql(dst, "05_hex_scenario.sql", {"mobility_share": cfg["site"]["mobility_budget_share"]})
     show(dst, "scenarios: road cost $M (low, mid, high), % of municipal tax "
               "(low, mid, high), hexes with net <= 0 (mid)", """
         select scenario, sum(road_cost_low) / 1e6, sum(road_cost) / 1e6,
@@ -296,6 +298,12 @@ def summary(cfg, dst):
                100 * sum(road_cost) / nullif(sum(revenue_total), 0),
                100 * sum(road_cost_high) / nullif(sum(revenue_total), 0)
         from hex_summary group by rollup (comm_structure) order by 1""")
+    show(dst, "by ward, default scenario: hexes, revenue $M, road cost $M, "
+              "cents per tax dollar, x mobility budget", """
+        select ward_num, n_hexes, revenue_total / 1e6, road_cost / 1e6,
+               100 * road_share, mobility_ratio
+        from ward_scenario where scenario = %(s)s order by ward_num""".replace(
+                  "%(s)s", "'" + cfg["roads"]["default_scenario"] + "'"))
     show(dst, "ordinary vs special hexes: hexes, % of area, revenue $M, "
               "road cost $M, local pavement km2, hexes with net <= 0", """
         select case when is_special then 'special' else 'ordinary' end, count(*),
@@ -329,18 +337,18 @@ def export(cfg, dst):
                    on w.comm_structure = hc.comm_structure and l.road_class = %(sampled)s
             group by l.hex_id
         )
-        select s.hex_id, initcap(s.comm_name), s.comm_structure, s.is_special, s.hex_area_ha,
+        select s.hex_id, initcap(s.comm_name), s.comm_structure, s.ward_num, s.is_special, s.hex_area_ha,
                s.revenue_res, s.revenue_nonres + s.revenue_farm,
                coalesce(m.m2, 0), coalesce(m.m2y, 0), coalesce(m.m2_sh, 0), coalesce(m.m2y_sh, 0),
                ST_AsGeoJSON(ST_Transform(s.geom, 4326), 5)
         from hex_summary s left join m using (hex_id)
         order by s.hex_id""", {"sampled": cfg["roads"]["width_samples"]["applies_to"]}).fetchall()
-    keys = ["id", "name", "structure", "special", "area_ha", "rev_res", "rev_com",
+    keys = ["id", "name", "structure", "ward", "special", "area_ha", "rev_res", "rev_com",
             "m2", "m2y", "m2_sh", "m2y_sh"]
     features = []
     for row in rows:
         props = dict(zip(keys, row[:-1]))
-        for k in keys[4:]:
+        for k in keys[5:]:
             props[k] = round(props[k], 2 if k in ("area_ha", "m2y", "m2y_sh") else None)
         features.append({"type": "Feature", "properties": props, "geometry": json.loads(row[-1])})
     path = ROOT / cfg["output"]["site_data"]
@@ -348,6 +356,20 @@ def export(cfg, dst):
     path.write_text(json.dumps({"type": "FeatureCollection", "features": features},
                                separators=(",", ":")))
     print(f"  {len(features)} hexes -> {path.relative_to(ROOT)} ({path.stat().st_size // 1024} KB)")
+
+    # Ward outlines on the hex grid, plus a label point inside each.
+    wards = []
+    for num, label, outline, point in dst.execute("""
+            select ward_num, initcap(ward_label),
+                   ST_AsGeoJSON(ST_Transform(geom, 4326), 5),
+                   ST_AsGeoJSON(ST_Transform(ST_PointOnSurface(geom), 4326), 5)
+            from ward_hex_outline order by ward_num"""):
+        for kind, geom in (("outline", outline), ("label", point)):
+            wards.append({"type": "Feature", "properties": {"ward": num, "label": label, "kind": kind},
+                          "geometry": json.loads(geom)})
+    wpath = path.parent / "wards.geojson"
+    wpath.write_text(json.dumps({"type": "FeatureCollection", "features": wards}, separators=(",", ":")))
+    print(f"  {len(wards) // 2} wards -> {wpath.relative_to(ROOT)}")
 
     costs = load_scenarios(cfg, dst)
     scenarios = []

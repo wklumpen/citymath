@@ -16,6 +16,14 @@ create table src_community (
     geom           geometry(MultiPolygon, {srid})
 );
 
+drop table if exists src_ward cascade;
+create table src_ward (
+    ward_num   integer primary key,
+    label      text,
+    councillor text,
+    geom       geometry(MultiPolygon, {srid})
+);
+
 drop table if exists src_road cascade;
 create table src_road (
     road_id bigint primary key,

@@ -3,7 +3,7 @@
 drop table if exists hex_scenario cascade;
 create table hex_scenario as
 with x as (
-    select s.hex_id, c.scenario, c.label, s.comm_structure, s.is_special, s.revenue_total,
+    select s.hex_id, c.scenario, c.label, s.ward_num, s.comm_structure, s.is_special, s.revenue_total,
            s.hex_area_ha, s.geom,
            c.cost_low * b.m2 as road_cost_low,
            (c.cost_low + c.cost_high) / 2 * b.m2 as road_cost,
@@ -19,7 +19,7 @@ with x as (
                            else s.pavement_m2 / t.m2 end as m2
     ) b
 )
-select hex_id, scenario, label, comm_structure, is_special, revenue_total,
+select hex_id, scenario, label, ward_num, comm_structure, is_special, revenue_total,
        road_cost_low, road_cost, road_cost_high,
        revenue_total - road_cost_high as net_low,
        revenue_total - road_cost as net,
@@ -32,3 +32,18 @@ select hex_id, scenario, label, comm_structure, is_special, revenue_total,
 from x;
 alter table hex_scenario add primary key (hex_id, scenario);
 create index on hex_scenario using gist (geom);
+
+-- Ward totals for every scenario, with the ward's hex outline for mapping.
+drop table if exists ward_scenario cascade;
+create table ward_scenario as
+select x.ward_num, x.scenario, x.label, o.ward_label, count(*) as n_hexes,
+       sum(x.revenue_total) as revenue_total,
+       sum(x.road_cost_low) as road_cost_low, sum(x.road_cost) as road_cost,
+       sum(x.road_cost_high) as road_cost_high,
+       sum(x.road_cost) / nullif(sum(x.revenue_total), 0) as road_share,
+       sum(x.road_cost) / nullif(sum(x.revenue_total) * %(mobility_share)s::float8, 0) as mobility_ratio,
+       o.geom
+from hex_scenario x
+join ward_hex_outline o using (ward_num)
+group by x.ward_num, x.scenario, x.label, o.ward_label, o.geom;
+alter table ward_scenario add primary key (ward_num, scenario);

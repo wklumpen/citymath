@@ -32,6 +32,7 @@ j as (
     select *
     from src_hex
     join hex_community using (hex_id)
+    join hex_ward using (hex_id)
     join hex_assessment using (hex_id)
     join r using (hex_id)
     join hex_structure_pct using (hex_id)

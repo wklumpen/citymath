@@ -19,7 +19,7 @@
   --band: #12305c; --band-ink: #ffffff; --band-muted: #b9c8de; --accent: #e8751a;
   --u0: #1f7a8c; --u1: #9fd3db; --o0: #fbd3a6; --o1: #f29b4b; --o2: #d1611a; --o3: #8a3608;
   --good: #1f7a8c; --bad: #c2410c;
-  --special: #d5dae2; --hexline: #ffffff; --select: #101b2d;
+  --special: #d5dae2; --hexline: #ffffff; --select: #101b2d; --ward: #12305c;
   --display: "Archivo", "Arial Narrow", Arial, sans-serif;
   --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
 }
@@ -28,13 +28,13 @@
   --band: #0e2547; --band-ink: #ffffff; --band-muted: #a9bbd6; --accent: #f08a35;
   --u0: #5cc3d3; --u1: #24606b; --o0: #6b3a12; --o1: #b3561a; --o2: #e8822e; --o3: #fdc58c;
   --good: #5cc3d3; --bad: #f29b4b;
-  --special: #263143; --hexline: #0b131f; --select: #ffffff; color-scheme: dark } }
+  --special: #263143; --hexline: #0b131f; --select: #ffffff; --ward: #c9d6ea; color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #0b131f; --surface: #121d2d; --ink: #e9eef5; --muted: #9aa8ba; --line: #24334b;
   --band: #0e2547; --band-ink: #ffffff; --band-muted: #a9bbd6; --accent: #f08a35;
   --u0: #5cc3d3; --u1: #24606b; --o0: #6b3a12; --o1: #b3561a; --o2: #e8822e; --o3: #fdc58c;
   --good: #5cc3d3; --bad: #f29b4b;
-  --special: #263143; --hexline: #0b131f; --select: #ffffff; color-scheme: dark }
+  --special: #263143; --hexline: #0b131f; --select: #ffffff; --ward: #c9d6ea; color-scheme: dark }
 
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -123,6 +123,13 @@ main.wrap { padding-block: 20px 40px; display: flex; flex-direction: column; gap
 .bars .v { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
 .bars .key { grid-column: 1 / -1; font-size: 13px; color: var(--muted); display: flex; gap: 6px 16px; flex-wrap: wrap; }
 .bars .key i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.tablewrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+table.wards { width: 100%; border-collapse: collapse; font-size: 15px; font-variant-numeric: tabular-nums; }
+.wards th, .wards td { padding: 8px 12px; text-align: right; border-top: 1px solid var(--line); white-space: nowrap; }
+.wards th:first-child, .wards td:first-child { text-align: left; }
+.wards thead th { border-top: 0; font: 700 12px var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); vertical-align: bottom; white-space: normal; }
+.wards button { font: 600 15px var(--body); color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+.wards .over { color: var(--bad); font-weight: 700; } .wards .under { color: var(--good); font-weight: 700; }
 .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
 .notes div { display: flex; flex-direction: column; gap: 4px; font-size: 15px; color: var(--muted); }
 .notes b { color: var(--ink); font-family: var(--display); }
@@ -164,6 +171,12 @@ main.wrap { padding-block: 20px 40px; display: flex; flex-direction: column; gap
     <div class="bars" id="bars"></div>
   </section>
 
+  <section class="evidence" id="wards-sec">
+    <h2>By ward</h2>
+    <p>Each ward's hexagons added up under this plan. A hexagon belongs to the ward its centre falls in, so the outlines on the map follow the hexagon grid, not the exact legal boundary. Select a ward to zoom to it.</p>
+    <div class="tablewrap"><table class="wards" id="wards"></table></div>
+  </section>
+
   <section class="notes">
     <div><b>What is counted</b>Road pavement only. The mobility budget also pays for <span id="items-note"></span>, and the city budget pays for pipes, transit, parks, police and much more.</div>
     <div><b>Revenue</b>The 2025 assessment roll times the 2025 municipal tax rates. Hospitals, schools, parks and other exempt property are removed. The citywide total lands within about 1% of the City's reported figure.</div>
@@ -193,7 +206,7 @@ const cents = v => v == null || !isFinite(v) ? 'n/a' : v >= 1 ? '$' + v.toFixed(
 const pct = v => v == null || !isFinite(v) ? 'n/a' : (v * 100 < 10 ? (v * 100).toFixed(1) : Math.round(v * 100).toLocaleString()) + '%';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'})[c]);
 
-let S = null, H = [], byId = new Map(), map = null, ready = false, bounds = null, tot = {};
+let S = null, W = null, H = [], byId = new Map(), map = null, ready = false, bounds = null, tot = {};
 const state = {scenario: null, sel: null};
 
 // ---- the money -----------------------------------------------------------
@@ -221,7 +234,7 @@ function cls(h) { if (h.special || h.rev <= 0) return 6; const r = ratio(h); let
 function render() {
   const sc = S.scenarios.find(s => s.id === state.scenario);
   H.forEach(h => { h.cost = cost(h, sc); });
-  renderAbout(sc); renderBars(sc); renderBudget(sc);
+  renderAbout(sc); renderBars(sc); renderWards(sc); renderBudget(sc);
   if (!ready) return;
   H.forEach(h => map.setFeatureState({source: 'hex', id: h.id}, {c: cls(h)}));
   map.setFilter('hex-sel', ['==', ['get', 'id'], state.sel ? state.sel.id : -1]);
@@ -251,6 +264,18 @@ function renderBars(sc) {
   $('bars').innerHTML = rows.map(([s, v]) => `<div>${nice(s)}</div><div class="track"><div class="bar" style="width:${(100 * v / max).toFixed(1)}%;background:var(${v > mob ? '--o2' : '--u0'})"></div><div class="line" style="left:${(100 * mob / max).toFixed(1)}%"></div></div><div class="v">${cents(v)}</div>`).join('')
     + `<div class="key"><span><i style="background:var(--u0)"></i>Fits within the mobility budget</span><span><i style="background:var(--o2)"></i>Overruns it</span><span><i style="background:var(--ink);width:3px"></i>Mobility budget, ${cents(mob)} per tax dollar</span></div>`;
 }
+function renderWards(sc) {
+  const mob = S.mobility_share, nums = [...new Set(H.map(h => h.ward))].sort((a, b) => a - b);
+  const rows = nums.map(n => { const g = H.filter(h => h.ward === n), rev = g.reduce((a, h) => a + h.rev, 0), c = g.reduce((a, h) => a + h.cost, 0);
+    return {n, hexes: g.length, rev, c, share: c / rev, ratio: c / (rev * mob)}; });
+  $('wards').innerHTML = `<thead><tr><th>Ward</th><th>Property tax</th><th>Road pavement and repair</th><th>Per tax dollar</th><th>Share of mobility budget</th></tr></thead><tbody>`
+    + rows.map(r => `<tr><td><button type="button" data-ward="${r.n}">Ward ${r.n}</button></td><td>${money(r.rev)}</td><td>${money(r.c)}</td><td>${cents(r.share)}</td>
+      <td class="${r.ratio > 1 ? 'over' : 'under'}">${r.ratio > 1 ? r.ratio.toFixed(1) + '×' : pct(r.ratio)}</td></tr>`).join('') + '</tbody>';
+}
+$('wards').addEventListener('click', e => { const b = e.target.closest('button[data-ward]'); if (!b || !ready) return;
+  const n = +b.dataset.ward; let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  H.filter(h => h.ward === n).forEach(h => rings(h.geom).forEach(p => p[0].forEach(([x, y]) => { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); })));
+  map.fitBounds([[x0, y0], [x1, y1]], {padding: 30}); $('map').scrollIntoView({behavior: 'smooth', block: 'center'}); });
 function renderBudget(sc) {
   const h = state.sel, el = $('budget');
   if (!h) { el.innerHTML = `<h3>One hexagon's budget</h3><p class="hint">Tap any hexagon on the map, or search for an address, to see what it raises in property tax and what its roads cost under this plan.</p>`; return; }
@@ -263,7 +288,7 @@ function renderBudget(sc) {
   else verdict = `<div class="verdict under"><b>${money(mobB - h.cost)} left</b><span>Roads use ${pct(r)} of this area's mobility budget. The rest will have to fund ${join('and')}.</span></div>`;
   const fill = r == null ? 0 : Math.min(r, 1);
   el.innerHTML = `<h3>One hexagon's budget</h3>
-    <div><h4>${esc(h.name || 'Unnamed area')}</h4><div class="tag">${nice(h.st)}${h.special ? ' · not expected to pay for itself' : ''}</div></div>
+    <div><h4>${esc(h.name || 'Unnamed area')}</h4><div class="tag">Ward ${h.ward} · ${nice(h.st)}${h.special ? ' · not expected to pay for itself' : ''}</div></div>
     <dl class="ledger">
       <div class="sec">Revenue: municipal property tax</div>
       <dt>Residential</dt><dd>${money(h.rev_res)}</dd>
@@ -307,13 +332,20 @@ function startMap(geojson) {
   map.on('error', e => { console.error(e.error || e); if (!ready) $('maphint').textContent = 'The map could not be loaded.'; });
   map.on('load', () => {
     map.addSource('hex', {type: 'geojson', data: geojson, promoteId: 'id'});
-    // under the basemap's roads and labels, so streets and place names stay readable
-    const under = (map.getStyle().layers.find(l => l['source-layer'] === 'road' || l.type === 'symbol') || {}).id;
+    // above the basemap's roads, below its labels: streets show faintly through the colour
+    // and place names stay on top
+    const under = (map.getStyle().layers.find(l => l.type === 'symbol') || {}).id;
     const fill = ['match', ['coalesce', ['feature-state', 'c'], 6]];
     COLORS.forEach((c, i) => fill.push(i, css(c)));
     fill.push(css('--special'));
-    map.addLayer({id: 'hex-fill', type: 'fill', source: 'hex', paint: {'fill-color': fill, 'fill-opacity': 0.8}}, under);
+    map.addLayer({id: 'hex-fill', type: 'fill', source: 'hex', paint: {'fill-color': fill, 'fill-opacity': 0.86}}, under);
     map.addLayer({id: 'hex-line', type: 'line', source: 'hex', paint: {'line-color': css('--hexline'), 'line-width': 0.6, 'line-opacity': 0.6}}, under);
+    map.addSource('wards', {type: 'geojson', data: W});
+    map.addLayer({id: 'ward-line', type: 'line', source: 'wards', filter: ['==', ['get', 'kind'], 'outline'],
+      paint: {'line-color': css('--ward'), 'line-width': ['interpolate', ['linear'], ['zoom'], 9, 1.4, 13, 2.6]}}, under);
+    map.addLayer({id: 'ward-label', type: 'symbol', source: 'wards', filter: ['==', ['get', 'kind'], 'label'],
+      layout: {'text-field': ['get', 'label'], 'text-size': 12, 'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'], 'text-allow-overlap': false},
+      paint: {'text-color': css('--ward'), 'text-halo-color': css('--surface'), 'text-halo-width': 1.6}});
     map.addLayer({id: 'hex-sel', type: 'line', source: 'hex', filter: ['==', ['get', 'id'], -1], paint: {'line-color': css('--select'), 'line-width': 3}});
     map.on('click', 'hex-fill', e => select(byId.get(String(e.features[0].properties.id)), true));
     const tip = $('tip');
@@ -339,8 +371,8 @@ $('search').addEventListener('submit', e => { e.preventDefault();
 });
 
 // ---- start ---------------------------------------------------------------
-Promise.all([fetch('data/scenarios.json').then(r => r.json()), fetch('data/hexes.geojson').then(r => r.json())]).then(([s, g]) => {
-  S = s; state.scenario = S.default;
+Promise.all(['scenarios.json', 'hexes.geojson', 'wards.geojson'].map(f => fetch('data/' + f).then(r => r.json()))).then(([s, g, w]) => {
+  S = s; W = w; state.scenario = S.default;
   H = g.features.map(f => ({...f.properties, st: f.properties.structure || 'OTHER', rev: f.properties.rev_res + f.properties.rev_com, geom: f.geometry}));
   byId = new Map(H.map(h => [String(h.id), h]));
   prepare();

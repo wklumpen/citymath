@@ -7,7 +7,7 @@ srid: 26912 # NAD83 / UTM 12N; all staging tables are stored in this CRS
 output:
   database: projects
   schema: strongtowns_citymath
-  site_data: docs/data/hexes.geojson # written by the `export` step for the website
+  site_data: docs/data/hexes.geojson # written by the `export` step for the website (wards.geojson and scenarios.json go beside it)
 
 hex:
   gpkg: citymath.gpkg
@@ -17,6 +17,7 @@ hex:
 sources:
   database: spatial
   communities: na_ca_ab_cgy.community_boundaries_2025
+  wards: na_ca_ab_cgy.ward_boundaries_2025 # current 14 wards, from data.calgary.ca (tz8z-hyaz)
   roads: na_ca_ab_cgy.roads_osm_2025
   # Assessment roll to use, with its column names. To switch back to the 2026
   # roll, swap which block is commented out, then re-run everything.
