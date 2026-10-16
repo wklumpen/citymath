@@ -207,7 +207,7 @@ table.wards { width: 100%; border-collapse: collapse; font-size: 15px; font-vari
     <div><b>Revenue</b>The <span class="yr">2026</span> assessment roll times the <span class="yr">2026</span> municipal tax rates. Hospitals, schools, parks and other exempt property are removed. Checked against 2025, the same method lands within about 1% of the City's reported total.</div>
     <div><b>Road cost</b>Citywide budgets are shared out by each area's paved area. Per-square-metre plans use street lengths from OpenStreetMap and widths measured on sampled streets. Main roads everyone uses are pooled citywide.</div>
     <div><b>Median household</b>The median <span class="yr">2026</span> assessment of a single residential property, <span id="home-note"></span>, and the municipal property tax on it.</div>
-    <div><b>Mobility budget</b>The share of each tax dollar assumed to go to mobility, <span id="mob-note"></span>. This figure is a placeholder still being confirmed.</div>
+    <div><b>Mobility budget</b>The share of each tax dollar assumed to go to mobility, <span id="mob-note"></span>.</div>
   </section>
 </main>
 <div id="tip" hidden></div>
@@ -228,7 +228,7 @@ const dark = () => { const t = document.documentElement.dataset.theme; return t 
 const nice = s => NICE[s] || s;
 const money = v => { const a = Math.abs(v), s = v < 0 ? '−$' : '$';
   return a >= 1e9 ? s + (a / 1e9).toFixed(2) + 'B' : a >= 1e6 ? s + (a / 1e6).toFixed(a >= 1e8 ? 0 : 1) + 'M' : a >= 1e4 ? s + Math.round(a / 1e3) + 'K' : s + Math.round(a).toLocaleString(); };
-const cents = v => v == null || !isFinite(v) ? 'n/a' : v >= 1 ? '$' + v.toFixed(2) : (v * 100 < 1 ? (v * 100).toFixed(1) : Math.round(v * 100)) + '¢';
+const cents = v => v == null || !isFinite(v) ? 'n/a' : v >= 1 ? '$' + v.toFixed(2) : (v * 100 < 10 ? (v * 100).toFixed(1) : Math.round(v * 100)) + '¢';
 const pct = v => v == null || !isFinite(v) ? 'n/a' : (v * 100 < 10 ? (v * 100).toFixed(1) : Math.round(v * 100).toLocaleString()) + '%';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'})[c]);
 
