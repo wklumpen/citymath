@@ -97,6 +97,7 @@ main.wrap { padding-block: 20px 40px; display: flex; flex-direction: column; gap
 .ledger { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 12px; font-size: 15px; font-variant-numeric: tabular-nums; }
 .ledger .sec { grid-column: 1 / -1; font-family: var(--display); font-weight: 700; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding-top: 8px; }
 .ledger .sec:first-child { padding-top: 0; }
+.ledger .sec.divide { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 12px; }
 .ledger dt { color: var(--muted); }
 .ledger dd { margin: 0; text-align: right; font-weight: 600; }
 .ledger .tot { border-top: 1px solid var(--line); padding-top: 4px; color: var(--ink); font-weight: 600; }
@@ -253,12 +254,12 @@ function renderBudget(sc) {
   const h = state.sel, el = $('budget');
   if (!h) { el.innerHTML = `<h3>One hexagon's budget</h3><p class="hint">Tap any hexagon on the map, or search for an address, to see what it raises in property tax and what its roads cost under this plan.</p>`; return; }
   const rev = h.rev, mobB = rev * S.mobility_share, r = ratio(h), items = S.mobility_items;
-  const list = items.length > 1 ? items.slice(0, -1).join(', ') + ' or ' + items[items.length - 1] : items[0];
+  const join = w => items.length > 1 ? items.slice(0, -1).join(', ') + ' ' + w + ' ' + items[items.length - 1] : items[0];
   const range = sc.kind === 'budget' ? '' : ` <small>(${money(cost(h, sc, 'low'))}–${money(cost(h, sc, 'high'))})</small>`;
   let verdict;
   if (rev <= 0) verdict = `<div class="verdict over"><b>No tax base</b><span>Nothing here pays property tax, so the cost of these roads falls on the rest of the city.</span></div>`;
-  else if (r > 1) verdict = `<div class="verdict over"><b>${(r).toFixed(r < 10 ? 1 : 0)}× over</b><span>Roads alone need ${money(h.cost - mobB)} more than this area's whole mobility budget. Nothing is left for ${list}.</span></div>`;
-  else verdict = `<div class="verdict under"><b>${money(mobB - h.cost)} left</b><span>Roads use ${pct(r)} of this area's mobility budget. The rest goes to ${list}.</span></div>`;
+  else if (r > 1) verdict = `<div class="verdict over"><b>${(r).toFixed(r < 10 ? 1 : 0)}× over</b><span>Roads alone need ${money(h.cost - mobB)} more than this area's whole mobility budget. Nothing is left for ${join('or')}.</span></div>`;
+  else verdict = `<div class="verdict under"><b>${money(mobB - h.cost)} left</b><span>Roads use ${pct(r)} of this area's mobility budget. The rest will have to fund ${join('and')}.</span></div>`;
   const fill = r == null ? 0 : Math.min(r, 1);
   el.innerHTML = `<h3>One hexagon's budget</h3>
     <div><h4>${esc(h.name || 'Unnamed area')}</h4><div class="tag">${nice(h.st)}${h.special ? ' · not expected to pay for itself' : ''}</div></div>
@@ -268,11 +269,11 @@ function renderBudget(sc) {
       <dt>Commercial and other</dt><dd>${money(h.rev_com)}</dd>
       <dt class="tot">Total revenue</dt><dd class="tot">${money(rev)}</dd>
       <div class="sec">Expense: ${esc(sc.label.toLowerCase())}</div>
-      <dt>Road pavement</dt><dd>${money(h.cost)}${range}</dd>
+      <dt>Road pavement and repair</dt><dd>${money(h.cost)}${range}</dd>
       <dt>Per tax dollar</dt><dd>${rev > 0 ? cents(h.cost / rev) : 'n/a'}</dd>
-      <div class="sec">Against the mobility budget</div>
-      <dt>Mobility budget (${cents(S.mobility_share)} per tax dollar)</dt><dd>${money(mobB)}</dd>
-      <dt>Share of it roads need</dt><dd>${r == null ? 'n/a' : pct(r)}</dd>
+      <div class="sec divide">Compared with the mobility budget (${cents(S.mobility_share)} per tax dollar)</div>
+      <dt>Mobility budget</dt><dd>${money(mobB)}</dd>
+      <dt>Share needed by roads</dt><dd>${r == null ? 'n/a' : pct(r)}</dd>
     </dl>
     ${r == null ? '' : `<div class="meter" aria-hidden="true"><div class="track"><div class="fill" style="width:${(100 * fill).toFixed(1)}%;background:var(${r > 1 ? '--bad' : '--good'})"></div></div>
       <div class="cap"><span>$0</span><span>${r > 1 ? 'Mobility budget used up' : 'Mobility budget ' + money(mobB)}</span></div></div>`}
