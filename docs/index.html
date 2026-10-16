@@ -97,6 +97,7 @@ main.wrap { padding-block: 20px 40px; display: flex; flex-direction: column; gap
 .ledger { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 12px; font-size: 15px; font-variant-numeric: tabular-nums; }
 .ledger .sec { grid-column: 1 / -1; font-family: var(--display); font-weight: 700; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding-top: 8px; }
 .ledger .sec:first-child { padding-top: 0; }
+.ledger .sub { grid-column: 1 / -1; font-size: 14px; color: var(--muted); padding-bottom: 2px; }
 .ledger .sec.divide { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 12px; }
 .ledger dt { color: var(--muted); }
 .ledger dd { margin: 0; text-align: right; font-weight: 600; }
@@ -271,8 +272,9 @@ function renderBudget(sc) {
       <div class="sec">Expense: ${esc(sc.label.toLowerCase())}</div>
       <dt>Road pavement and repair</dt><dd>${money(h.cost)}${range}</dd>
       <dt>Per tax dollar</dt><dd>${rev > 0 ? cents(h.cost / rev) : 'n/a'}</dd>
-      <div class="sec divide">Compared with the mobility budget (${cents(S.mobility_share)} per tax dollar)</div>
-      <dt>Mobility budget</dt><dd>${money(mobB)}</dd>
+      <div class="sec divide">Compared with the mobility budget</div>
+      <div class="sub">Mobility gets ${cents(S.mobility_share)} of every tax dollar.</div>
+      <dt>Mobility budget for this hex</dt><dd>${money(mobB)}</dd>
       <dt>Share needed by roads</dt><dd>${r == null ? 'n/a' : pct(r)}</dd>
     </dl>
     ${r == null ? '' : `<div class="meter" aria-hidden="true"><div class="track"><div class="fill" style="width:${(100 * fill).toFixed(1)}%;background:var(${r > 1 ? '--bad' : '--good'})"></div></div>
