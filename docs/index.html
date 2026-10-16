@@ -65,14 +65,14 @@ main.wrap { padding-block: 20px 40px; display: flex; flex-direction: column; gap
 /* scenario picker */
 .picker { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
 @media (min-width: 880px) { .picker { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
-.options { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
-.opt { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 9px 12px; border-top: 1px solid var(--line); cursor: pointer; }
-.opt:first-child { border-top: 0; }
-.opt input { accent-color: var(--band); margin: 0; width: 17px; height: 17px; }
-.opt span { font-weight: 600; }
-.opt em { font-style: normal; max-width: 22ch; font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14px; text-align: right; }
-.opt:has(input:checked) { background: color-mix(in srgb, var(--band) 9%, var(--surface)); }
-.opt:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: -3px; }
+.options { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 8px; }
+.opt { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; align-items: start; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; background: var(--surface); }
+.opt input { accent-color: var(--band); margin: 3px 0 0; width: 17px; height: 17px; grid-row: span 2; }
+.opt b { font-family: var(--display); font-weight: 700; font-size: 16px; line-height: 1.25; }
+.opt small { font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; line-height: 1.35; }
+.opt:hover { border-color: color-mix(in srgb, var(--band) 40%, var(--line)); }
+.opt:has(input:checked) { background: color-mix(in srgb, var(--band) 9%, var(--surface)); border-color: var(--band); }
+.opt:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
 .about { display: flex; flex-direction: column; gap: 10px; }
 .about h2 { font-size: 22px; font-weight: 800; }
 .pickcol { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
@@ -271,8 +271,9 @@ function render() {
   map.setFilter('hex-sel', ['==', ['get', 'id'], state.sel ? state.sel.id : -1]);
 }
 function renderOptions() {
-  $('options').innerHTML = S.scenarios.map(s => `<label class="opt"><input type="radio" name="scenario" value="${s.id}"${s.id === state.scenario ? ' checked' : ''}>
-    <span>${esc(s.label)}</span><em>${money(cityCost(s))}/yr · ${rise(taxRise(s))}${taxRise(s) > 0.0005 ? ` · ${perHome(taxRise(s))}/household` : ''}</em></label>`).join('');
+  $('options').innerHTML = S.scenarios.map(s => { const r = taxRise(s);
+    return `<label class="opt"><input type="radio" name="scenario" value="${s.id}"${s.id === state.scenario ? ' checked' : ''}>
+    <b>${esc(s.label)}</b><small>${money(cityCost(s))} a year · ${r > 0.0005 ? `+${pct(r)} tax · ${perHome(r)} per household` : 'no tax increase'}</small></label>`; }).join('');
   $('options').addEventListener('change', e => { state.scenario = e.target.value; render(); });
 }
 function renderAbout(sc) {
