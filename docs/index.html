@@ -50,7 +50,10 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid 
 .draft { font-family: var(--display); font-weight: 700; font-size: 12px; letter-spacing: .09em; text-transform: uppercase; color: var(--band-muted); display: flex; gap: 10px; flex-wrap: wrap; }
 .draft b { color: var(--accent); }
 h1 { font-weight: 800; font-size: clamp(28px, 5.2vw, 46px); letter-spacing: -.01em; }
-.lede { color: var(--band-muted); max-width: 64ch; font-size: 17px; }
+.lede { color: var(--band-muted); max-width: 64ch; font-size: 18px; }
+.lede strong { color: var(--band-ink); }
+.srcline { color: var(--band-muted); font-size: 13px; max-width: 90ch; }
+.srcline a { color: var(--band-muted); }
 
 main.wrap { padding-block: 20px 40px; display: flex; flex-direction: column; gap: 28px; }
 .block { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
@@ -70,7 +73,10 @@ main.wrap { padding-block: 20px 40px; display: flex; flex-direction: column; gap
 .opt:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: -3px; }
 .about { display: flex; flex-direction: column; gap: 10px; }
 .about h2 { font-size: 22px; font-weight: 800; }
-.about .cons { border-left: 3px solid var(--accent); padding-left: 12px; }
+.pickcol { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.alert { background: color-mix(in srgb, var(--accent) 14%, var(--surface)); border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--surface)); border-left: 5px solid var(--accent); border-radius: 6px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.alert b { font-family: var(--display); font-size: 13px; letter-spacing: .07em; text-transform: uppercase; color: var(--bad); }
+.alert p { font-size: 16px; font-weight: 600; }
 .sources { font-size: 14px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 14px; }
 .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding-top: 4px; }
 .stat b { display: block; font-family: var(--display); font-weight: 800; font-size: clamp(20px, 5vw, 27px); font-variant-numeric: tabular-nums; line-height: 1.1; }
@@ -123,6 +129,12 @@ main.wrap { padding-block: 20px 40px; display: flex; flex-direction: column; gap
 .bars .v { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
 .bars .key { grid-column: 1 / -1; font-size: 13px; color: var(--muted); display: flex; gap: 6px 16px; flex-wrap: wrap; }
 .bars .key i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.ways { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+.way { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.way h3 { font-size: 19px; font-weight: 800; }
+.way .num { font-family: var(--display); font-weight: 800; font-size: 26px; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.way p { color: var(--muted); }
+.way.decline { border-color: color-mix(in srgb, var(--accent) 55%, var(--surface)); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
 .tablewrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
 table.wards { width: 100%; border-collapse: collapse; font-size: 15px; font-variant-numeric: tabular-nums; }
 .wards th, .wards td { padding: 8px 12px; text-align: right; border-top: 1px solid var(--line); white-space: nowrap; }
@@ -141,20 +153,22 @@ table.wards { width: 100%; border-collapse: collapse; font-size: 15px; font-vari
 
 <header class="band"><div class="wrap">
   <div class="draft"><b>Draft</b><span>Calgary · 2025 tax year · numbers not final</span></div>
-  <h1>What would it take to look after Calgary's streets?</h1>
-  <p class="lede">Pick a pavement plan and see what it costs each part of the city, set against the property tax that area raises. Tap any hexagon for its budget.</p>
+  <h1>The math doesn't work</h1>
+  <p class="lede">Calgary needs $54 billion of infrastructure over the next ten years and has funded only half of it, leaving a <strong>$27 billion shortfall</strong>.</p>
+  <p class="lede">This page looks at just one piece of that: the roads. <span id="thesis">Even the City's own recommended pavement plan would use most of the mobility budget before a single sidewalk, streetlight or bike lane is paid for.</span></p>
+  <p class="srcline">Sources: <a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=361737" target="_blank" rel="noopener">City of Calgary, 10-year Capital Infrastructure Plan, May 2026, p. 2</a> · <a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=361684" target="_blank" rel="noopener">Report to Executive Committee EC2026-0159, p. 2</a> · <a href="https://strongtownscalgary.substack.com/p/calgary-we-are-in-a-predicament" target="_blank" rel="noopener">Strong Towns Calgary, "Calgary, we are in a predicament"</a></p>
 </div></header>
 
 <main class="wrap">
   <section class="block picker" aria-labelledby="pick-h">
-    <div class="eyebrow" id="pick-h" hidden>Choose a pavement plan</div>
-    <div class="options" id="options" role="radiogroup" aria-label="Pavement plan"></div>
+    <div class="pickcol"><div class="eyebrow" id="pick-h">Choose a pavement plan</div>
+    <div class="options" id="options" role="radiogroup" aria-label="Pavement plan"></div></div>
     <div class="about" id="about"></div>
   </section>
 
   <section class="work">
     <div class="block mapcard">
-      <div class="maphead"><h2>Roads under this plan, against each area's mobility budget</h2><span id="maphint">Loading map…</span></div>
+      <div class="maphead"><h2>Where roads alone use up the area's mobility budget</h2><span id="maphint">Loading map…</span></div>
       <form class="search" id="search">
         <input id="q" type="search" placeholder="Find an address or neighbourhood" aria-label="Find an address or neighbourhood" autocomplete="off">
         <button type="submit">Find</button>
@@ -166,9 +180,15 @@ table.wards { width: 100%; border-collapse: collapse; font-size: 15px; font-vari
   </section>
 
   <section class="evidence">
-    <h2>Which kinds of neighbourhood can carry their streets</h2>
-    <p>The share of each tax dollar this plan needs for pavement, added up by when each area was built. The black line is the mobility budget's share. Parks, undeveloped land and special districts such as the airport are left out.</p>
+    <h2>Compact, older neighbourhoods carry their streets. Suburbs built since the 1960s carry them least.</h2>
+    <p>Cents of every property tax dollar this plan needs for roads, by when each area was built. The black line is the mobility budget's share. Parks, undeveloped land and special districts such as the airport are left out.</p>
     <div class="bars" id="bars"></div>
+  </section>
+
+  <section class="evidence" id="options-sec">
+    <h2>So what can we do?</h2>
+    <p id="gap-intro"></p>
+    <div class="ways" id="ways"></div>
   </section>
 
   <section class="evidence" id="wards-sec">
@@ -234,7 +254,7 @@ function cls(h) { if (h.special || h.rev <= 0) return 6; const r = ratio(h); let
 function render() {
   const sc = S.scenarios.find(s => s.id === state.scenario);
   H.forEach(h => { h.cost = cost(h, sc); });
-  renderAbout(sc); renderBars(sc); renderWards(sc); renderBudget(sc);
+  renderAbout(sc); renderBars(sc); renderWays(sc); renderWards(sc); renderBudget(sc);
   if (!ready) return;
   H.forEach(h => map.setFeatureState({source: 'hex', id: h.id}, {c: cls(h)}));
   map.setFilter('hex-sel', ['==', ['get', 'id'], state.sel ? state.sel.id : -1]);
@@ -249,7 +269,7 @@ function renderAbout(sc) {
   const over = H.filter(h => !h.special && h.rev > 0 && ratio(h) > 1).length, ord = H.filter(h => !h.special && h.rev > 0).length;
   const range = sc.kind === 'budget' ? '' : ` <span class="hint">(${money(cityCost({...sc, kind: sc.kind, low: sc.low, high: sc.low}))} to ${money(cityCost({...sc, low: sc.high}))})</span>`;
   $('about').innerHTML = `<h2>${esc(sc.label)}</h2><p>${esc(sc.summary)}</p>
-    ${sc.consequence ? `<p class="cons">${esc(sc.consequence)}</p>` : ''}
+    ${sc.consequence ? `<div class="alert" role="note"><b>What this means</b><p>${esc(sc.consequence)}</p></div>` : ''}
     ${sc.sources.length ? `<div class="sources">Source: ${sc.sources.map(x => `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}</a>`).join('')}</div>` : ''}
     <div class="stats">
       <div class="stat"><b>${money(c)}</b><span>a year citywide${range}</span></div>
@@ -263,6 +283,25 @@ function renderBars(sc) {
   const max = Math.max(...rows.map(r => r[1]), mob) * 1.08;
   $('bars').innerHTML = rows.map(([s, v]) => `<div>${nice(s)}</div><div class="track"><div class="bar" style="width:${(100 * v / max).toFixed(1)}%;background:var(${v > mob ? '--o2' : '--u0'})"></div><div class="line" style="left:${(100 * mob / max).toFixed(1)}%"></div></div><div class="v">${cents(v)}</div>`).join('')
     + `<div class="key"><span><i style="background:var(--u0)"></i>Fits within the mobility budget</span><span><i style="background:var(--o2)"></i>Overruns it</span><span><i style="background:var(--ink);width:3px"></i>Mobility budget, ${cents(mob)} per tax dollar</span></div>`;
+}
+function renderWays(sc) {
+  const now = S.scenarios.find(s => s.id === S.current), nowCost = cityCost(now), c = cityCost(sc), gap = c - nowCost;
+  const home = S.typical_home_value * S.res_rate, up = gap / tot.rev, brk = S.scenarios.find(s => s.id === 'break_even');
+  if (gap <= 0.5e6) {
+    $('gap-intro').textContent = sc.id === now.id
+      ? `This is what the City is spending now: ${money(nowCost)} a year. It is not enough to stop the decline.`
+      : `This plan spends ${money(-gap)} a year less than the ${money(nowCost)} the City is spending now.`;
+    $('ways').innerHTML = `<div class="way decline"><h3>The streets keep falling apart</h3><p>${brk ? `Below the ${money(cityCost(brk))} break-even, pavement keeps getting worse every year.` : 'Pavement keeps getting worse every year.'} In 2024, 29% of Calgary's pavement was already in poor condition. Pick a bigger plan to see what fixing it would take.</p></div>`;
+    return;
+  }
+  $('gap-intro').innerHTML = `This plan costs ${money(c)} a year, which is <strong>${money(gap)} more</strong> than the ${money(nowCost)} the City is spending now. There are only three ways to close a gap like that.`;
+  $('ways').innerHTML = `
+    <div class="way"><h3>Raise more revenue</h3><div class="num">+${pct(up)}</div>
+      <p>More municipal property tax, every year. That can come from a higher tax rate, about ${money(home * up)} more a year on the median home (${money(home)} today). Or it can come from a bigger tax base: ${pct(up)} more taxable property on the streets we already have, which means more homes and businesses on the same roads.</p></div>
+    <div class="way"><h3>Cut something else</h3><div class="num">${money(gap)}</div>
+      <p>Keep taxes where they are and move this much a year into roads from other City services. That is ${pct(gap / S.mobility_total)} of everything the City spends on mobility today (${money(S.mobility_total)}), or cuts to parks, transit, recreation or other services.</p></div>
+    <div class="way decline"><h3>Let the streets fall apart</h3><div class="num">${money(nowCost)}</div>
+      <p>Keep spending what we spend now and accept the decline. ${brk ? `It is below the ${money(cityCost(brk))} break-even, so` : 'So'} pavement keeps getting worse every year. In 2024, 29% of Calgary's pavement was already in poor condition.</p></div>`;
 }
 function renderWards(sc) {
   const mob = S.mobility_share, nums = [...new Set(H.map(h => h.ward))].sort((a, b) => a - b);
@@ -386,6 +425,11 @@ Promise.all(['scenarios.json', 'hexes.geojson', 'wards.geojson'].map(f => fetch(
   $('legend').innerHTML = LABELS.map((l, i) => `<span><i style="background:var(${COLORS[i]})"></i>${l}</span>`).join('') + '<span><i style="background:var(--special)"></i>Park, undeveloped or special district</span>';
   $('items-note').textContent = S.mobility_items.join(', ');
   $('mob-note').textContent = cents(S.mobility_share) + ' of every dollar';
+  const rec = S.scenarios.find(s => s.id === 'recommended'), full = S.scenarios.find(s => s.id === 'reconstruction');
+  if (rec && full) {
+    const mob = tot.rev * S.mobility_share;
+    $('thesis').textContent = `Even the City's own recommended pavement plan would use ${pct(cityCost(rec) / mob)} of the mobility budget before a single sidewalk, streetlight or bike lane is paid for. Replacing our roads as they wear out would cost ${(cityCost(full) / mob).toFixed(1)} times the whole mobility budget.`;
+  }
   renderOptions(); render();
   try { startMap(g); } catch (err) { console.error(err); $('maphint').textContent = 'The map could not be loaded.'; }
 }).catch(err => { console.error(err); $('maphint').textContent = 'The map data could not be loaded.'; });

@@ -67,6 +67,13 @@ site:
   # 6.2% was an example figure, not yet sourced. (Budget 2026 puts Mobility at
   # $221M operating + $156M capital = $377M.)
   mobility_budget_share: 0.062
+  # Mobility's total 2026 budget ($221M operating + $156M capital), Budget 2026 p. 76.
+  mobility_budget_total: 377000000
+  # What the City spends on pavement now; "So what can we do?" measures each
+  # plan's gap against this scenario.
+  current_scenario: budget_2026
+  # Median 2025 assessment of a single residential property (code RE0110).
+  typical_home_value: 708000
   # What else the mobility budget pays for besides road pavement.
   mobility_items: [sidewalks and pathways, bike lanes, streetlights, traffic signals, snow and ice clearing]
 

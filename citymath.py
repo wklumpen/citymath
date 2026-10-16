@@ -381,6 +381,10 @@ def export(cfg, dst):
     site = {"default": cfg["roads"]["default_scenario"],
             "mobility_share": cfg["site"]["mobility_budget_share"],
             "mobility_items": cfg["site"]["mobility_items"],
+            "mobility_total": cfg["site"]["mobility_budget_total"],
+            "current": cfg["site"]["current_scenario"],
+            "typical_home_value": cfg["site"]["typical_home_value"],
+            "res_rate": cfg["tax_rates"]["municipal"]["res"],
             "shared_basis": cfg["roads"]["shared"]["basis"],
             "scenarios": scenarios}
     spath = path.parent / "scenarios.json"
