@@ -51,6 +51,8 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid 
 .draft b { color: var(--accent); }
 h1 { font-weight: 800; font-size: clamp(36px, 7.5vw, 80px); letter-spacing: -.015em; line-height: 1.02; }
 .lede { color: var(--band-muted); font-size: clamp(17px, 1.6vw, 20px); }
+.subtitle { font-family: var(--display); font-weight: 700; font-size: clamp(21px, 2.6vw, 30px); line-height: 1.25; text-wrap: balance; color: var(--band-ink); }
+.subtitle strong { color: var(--accent); font-weight: 800; }
 .lede strong { color: var(--band-ink); }
 .srcline { color: var(--band-muted); font-size: 13px; }
 .srcline a { color: var(--band-muted); }
@@ -68,7 +70,7 @@ main.wrap { padding-block: 20px 40px; display: flex; flex-direction: column; gap
 .opt:first-child { border-top: 0; }
 .opt input { accent-color: var(--band); margin: 0; width: 17px; height: 17px; }
 .opt span { font-weight: 600; }
-.opt em { font-style: normal; font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14px; text-align: right; }
+.opt em { font-style: normal; max-width: 22ch; font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14px; text-align: right; }
 .opt:has(input:checked) { background: color-mix(in srgb, var(--band) 9%, var(--surface)); }
 .opt:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: -3px; }
 .about { display: flex; flex-direction: column; gap: 10px; }
@@ -79,9 +81,9 @@ main.wrap { padding-block: 20px 40px; display: flex; flex-direction: column; gap
 .alert p { font-size: 16px; font-weight: 600; }
 .sources { font-size: 14px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 14px; }
 .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; padding-top: 4px; }
-@media (min-width: 520px) { .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 620px) { .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (min-width: 880px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 1100px) { .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .stat b { display: block; font-family: var(--display); font-weight: 800; font-size: clamp(20px, 5vw, 27px); font-variant-numeric: tabular-nums; line-height: 1.1; }
 .stat span { font-size: 13px; color: var(--muted); line-height: 1.3; display: block; }
 
@@ -157,8 +159,8 @@ table.wards { width: 100%; border-collapse: collapse; font-size: 15px; font-vari
 <header class="band"><div class="wrap">
   <div class="draft"><b>Draft</b><span>Calgary · <span id="year">2026</span> tax year · numbers not final</span></div>
   <h1>The math doesn't work</h1>
-  <p class="lede">Calgary needs $54 billion of infrastructure over the next ten years and has funded only half of it, leaving a <strong>$27 billion shortfall</strong>.</p>
-  <p class="lede">This page looks at just one piece of that: the roads. <span id="thesis">Even the City's own recommended pavement plan would use most of the mobility budget before a single sidewalk, streetlight or bike lane is paid for.</span></p>
+  <p class="subtitle">Calgary needs $54 billion of infrastructure over the next ten years and has funded only half of it, leaving a <strong>$27 billion shortfall</strong>.</p>
+  <p class="lede">Here we explore just one piece of that budget: the roads. <span id="thesis">Following the City's own recommended pavement plan, we would use up most of the mobility budget just on road repair, before addressing a single sidewalk, streetlight or bike lane.</span></p>
   <p class="srcline">Sources: <a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=361737" target="_blank" rel="noopener">City of Calgary, 10-year Capital Infrastructure Plan, May 2026, p. 2</a> · <a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=361684" target="_blank" rel="noopener">Report to Executive Committee EC2026-0159, p. 2</a> · <a href="https://strongtownscalgary.substack.com/p/calgary-we-are-in-a-predicament" target="_blank" rel="noopener">Strong Towns Calgary, "Calgary, we are in a predicament"</a></p>
 </div></header>
 
@@ -204,6 +206,7 @@ table.wards { width: 100%; border-collapse: collapse; font-size: 15px; font-vari
     <div><b>What is counted</b>Road pavement only. The mobility budget also pays for <span id="items-note"></span>, and the city budget pays for pipes, transit, parks, police and much more.</div>
     <div><b>Revenue</b>The <span class="yr">2026</span> assessment roll times the <span class="yr">2026</span> municipal tax rates. Hospitals, schools, parks and other exempt property are removed. Checked against 2025, the same method lands within about 1% of the City's reported total.</div>
     <div><b>Road cost</b>Citywide budgets are shared out by each area's paved area. Per-square-metre plans use street lengths from OpenStreetMap and widths measured on sampled streets. Main roads everyone uses are pooled citywide.</div>
+    <div><b>Median household</b>The median <span class="yr">2026</span> assessment of a single residential property, <span id="home-note"></span>, and the municipal property tax on it.</div>
     <div><b>Mobility budget</b>The share of each tax dollar assumed to go to mobility, <span id="mob-note"></span>. This figure is a placeholder still being confirmed.</div>
   </section>
 </main>
@@ -254,6 +257,7 @@ function cityCost(sc) { return H.reduce((a, h) => a + cost(h, sc), 0); }
 // came only from a higher tax rate and nothing else changed.
 function taxRise(sc) { return (cityCost(sc) - cityCost(S.scenarios.find(s => s.id === S.current))) / tot.rev; }
 const rise = v => v <= 0.0005 ? 'no increase' : '+' + pct(v) + ' tax';
+const perHome = v => '+$' + Math.round(Math.max(0, v) * S.typical_home_value * S.res_rate).toLocaleString();
 function ratio(h) { return h.rev > 0 ? h.cost / (h.rev * S.mobility_share) : null; }
 function cls(h) { if (h.special || h.rev <= 0) return 6; const r = ratio(h); let i = 0; while (i < STEPS.length && r >= STEPS[i]) i++; return i; }
 
@@ -268,7 +272,7 @@ function render() {
 }
 function renderOptions() {
   $('options').innerHTML = S.scenarios.map(s => `<label class="opt"><input type="radio" name="scenario" value="${s.id}"${s.id === state.scenario ? ' checked' : ''}>
-    <span>${esc(s.label)}</span><em>${money(cityCost(s))}/yr · ${rise(taxRise(s))}</em></label>`).join('');
+    <span>${esc(s.label)}</span><em>${money(cityCost(s))}/yr · ${rise(taxRise(s))}${taxRise(s) > 0.0005 ? ` · ${perHome(taxRise(s))}/household` : ''}</em></label>`).join('');
   $('options').addEventListener('change', e => { state.scenario = e.target.value; render(); });
 }
 function renderAbout(sc) {
@@ -282,6 +286,7 @@ function renderAbout(sc) {
       <div class="stat"><b>${money(c)}</b><span>a year citywide${range}</span></div>
       <div class="stat"><b>${cents(share)}</b><span>of every property tax dollar, against ${cents(mob)} for all of mobility</span></div>
       <div class="stat"><b>${taxRise(sc) <= 0.0005 ? '0%' : '+' + pct(taxRise(sc))}</b><span>property tax increase needed to pay for it, if nothing else changes</span></div>
+      <div class="stat"><b>${perHome(taxRise(sc))}</b><span>a year more for the median household</span></div>
       <div class="stat"><b>${over.toLocaleString()} <small style="font-size:.55em;font-weight:600">of ${ord.toLocaleString()}</small></b><span>neighbourhood hexagons where roads alone overrun the mobility budget</span></div>
     </div>`;
 }
@@ -433,12 +438,13 @@ Promise.all(['scenarios.json', 'hexes.geojson', 'wards.geojson'].map(f => fetch(
   prepare();
   $('legend').innerHTML = LABELS.map((l, i) => `<span><i style="background:var(${COLORS[i]})"></i>${l}</span>`).join('') + '<span><i style="background:var(--special)"></i>Park, undeveloped or special district</span>';
   $('year').textContent = S.tax_year; document.querySelectorAll('.yr').forEach(e => { e.textContent = S.tax_year; });
+  $('home-note').textContent = '$' + S.typical_home_value.toLocaleString();
   $('items-note').textContent = S.mobility_items.join(', ');
   $('mob-note').textContent = cents(S.mobility_share) + ' of every dollar';
   const rec = S.scenarios.find(s => s.id === 'recommended'), full = S.scenarios.find(s => s.id === 'reconstruction');
-  if (rec && full) {
+  if (rec) {
     const mob = tot.rev * S.mobility_share;
-    $('thesis').textContent = `Even the City's own recommended pavement plan would use ${pct(cityCost(rec) / mob)} of the mobility budget before a single sidewalk, streetlight or bike lane is paid for. Replacing our roads as they wear out would cost ${(cityCost(full) / mob).toFixed(1)} times the whole mobility budget.`;
+    $('thesis').textContent = `Following the City's own recommended pavement plan, we would use up ${pct(cityCost(rec) / mob)} of the mobility budget just on road repair, before addressing a single sidewalk, streetlight or bike lane.`;
   }
   renderOptions(); render();
   try { startMap(g); } catch (err) { console.error(err); $('maphint').textContent = 'The map could not be loaded.'; }
