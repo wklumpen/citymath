@@ -66,8 +66,11 @@ assessments:
 
 # Website settings, written to docs/data/scenarios.json by the `export` step.
 site:
-  # Share of each tax dollar that goes to the mobility budget: 6.62%, as
-  # supplied by Willem (2026-10-16). The site shows it rounded to 6.6 cents.
+  # Share of each municipal tax dollar that goes to Mobility: 6.62%, from the
+  # City's property tax calculator breakdown (calgary.ca/taxcalculator), as
+  # supplied by Willem (2026-10-16). The calculator shows Mobility as 3.87% of
+  # the whole bill, which includes the Government of Alberta's 41.49%; as a
+  # share of the City's portion that is 3.87 / 58.51 = 6.6%. Shown as 6.6 cents.
   # (Budget 2026 puts Mobility at $221M operating + $156M capital = $377M.)
   mobility_budget_share: 0.0662
   # Mobility's total 2026 budget ($221M operating + $156M capital), Budget 2026 p. 76.
