@@ -384,6 +384,7 @@ def export(cfg, dst):
             "mobility_total": cfg["site"]["mobility_budget_total"],
             "current": cfg["site"]["current_scenario"],
             "typical_home_value": cfg["site"]["typical_home_value"],
+            "tax_year": cfg["site"]["tax_year"],
             "res_rate": cfg["tax_rates"]["municipal"]["res"],
             "shared_basis": cfg["roads"]["shared"]["basis"],
             "scenarios": scenarios}

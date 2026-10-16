@@ -10,8 +10,9 @@
  ],
  "mobility_total": 377000000,
  "current": "budget_2026",
- "typical_home_value": 708000,
- "res_rate": 0.0038706,
+ "typical_home_value": 718000,
+ "tax_year": 2026,
+ "res_rate": 0.0038906,
  "shared_basis": "equal",
  "scenarios": [
   {

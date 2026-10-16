@@ -19,37 +19,40 @@ sources:
   communities: na_ca_ab_cgy.community_boundaries_2025
   wards: na_ca_ab_cgy.ward_boundaries_2025 # current 14 wards, from data.calgary.ca (tz8z-hyaz)
   roads: na_ca_ab_cgy.roads_osm_2025
-  # Assessment roll to use, with its column names. To switch back to the 2026
-  # roll, swap which block is commented out, then re-run everything.
+  # Assessment roll to use, with its column names. 2026 is the live year;
+  # 2025 is the calibration year (its totals were checked against the City's
+  # reported 2025 figures). To switch, swap which block is commented out, set
+  # tax_rates, site.tax_year and site.typical_home_value to match, and re-run
+  # everything.
   assessments:
-    table: na_ca_ab_cgy.assessments_2025 # 2025 roll
+    table: na_ca_ab_cgy.assessments_20260818 # 2026 roll
     columns:
-      roll_number: roll_number
+      roll_number: roll_numbe
       parcel_id: cpid
-      class: assessment_class
-      sub_use: sub_property_use
+      class: assessment
+      sub_use: sub_proper
       comm_code: comm_code
-      res: re_assessed_value
-      nonres: nr_assessed_value
-      farm: fl_assessed_value
+      res: re_assesse
+      nonres: nr_assesse
+      farm: fl_assesse
     # Tax-exempt code groups, matched on the start of the sub-type code:
-    # institutional (hospitals, schools, universities, ...) and recreation
-    # (parks, recreation centres, Stampede, ...). With these out, taxable
-    # value is within ~1% of the City's reported 2025 totals.
-    exempt_prefixes: [IS, RC]
+    # S = institutional (hospitals, schools, universities, ...), P = recreation
+    # (parks, recreation centres, Stampede, ...). The same two groups brought
+    # the 2025 roll within ~1% of the City's reported 2025 totals.
+    exempt_prefixes: [S, P]
   # assessments:
-  #   table: na_ca_ab_cgy.assessments_20260818 # 2026 roll
+  #   table: na_ca_ab_cgy.assessments_2025 # 2025 roll (calibration year)
   #   columns:
-  #     roll_number: roll_numbe
+  #     roll_number: roll_number
   #     parcel_id: cpid
-  #     class: assessment
-  #     sub_use: sub_proper
+  #     class: assessment_class
+  #     sub_use: sub_property_use
   #     comm_code: comm_code
-  #     res: re_assesse
-  #     nonres: nr_assesse
-  #     farm: fl_assesse
-  #   # Same two groups under the 2026 code scheme (S = institutional, P = recreation)
-  #   exempt_prefixes: [S, P]
+  #     res: re_assessed_value
+  #     nonres: nr_assessed_value
+  #     farm: fl_assessed_value
+  #   # 2025 code scheme: IS = institutional, RC = recreation
+  #   exempt_prefixes: [IS, RC]
 
 assessments:
   # Extra tax-exempt properties, on top of the exempt_prefixes set with the
@@ -72,8 +75,11 @@ site:
   # What the City spends on pavement now; "So what can we do?" measures each
   # plan's gap against this scenario.
   current_scenario: budget_2026
-  # Median 2025 assessment of a single residential property (code RE0110).
-  typical_home_value: 708000
+  # Tax year shown on the site; match the assessment roll and tax_rates.
+  tax_year: 2026
+  # Median assessment of a single residential property in that roll
+  # (2026: code R110, $718,000; 2025: code RE0110, $708,000).
+  typical_home_value: 718000
   # What else the mobility budget pays for besides road pavement.
   mobility_items: [sidewalks and pathways, bike lanes, streetlights, traffic signals, snow and ice clearing]
 
@@ -199,7 +205,7 @@ roads:
   #   factor = (1 + annual_inflation) ^ (target_year - base_year)
   cost_inflation:
     base_year: 2024
-    target_year: 2025
+    target_year: 2026
     annual_inflation: 0.0 # e.g. 0.03 for 3% a year; 0 = no adjustment
 
   # Sampled street widths by community structure (min / avg / max). For the
@@ -224,21 +230,21 @@ roads:
 # that matches the assessment roll above.
 # Revenue and net use the municipal rates only. The provincial rates produce
 # tax_provincial / tax_total, for checking against the City's reported totals.
-tax_rates: # tax year 2025
+tax_rates: # tax year 2026
   municipal:
-    res: 0.0038706
-    nonres: 0.0179731
-    farm: 0.0372838
+    res: 0.0038906
+    nonres: 0.0179986
+    farm: 0.0339557
   provincial:
-    res: 0.0023097
-    nonres: 0.0038555
-    farm: 0.0023097
-# tax_rates: # tax year 2026
+    res: 0.0027593
+    nonres: 0.0041502
+    farm: 0.0027593
+# tax_rates: # tax year 2025
 #   municipal:
-#     res: 0.0038906
-#     nonres: 0.0179986
-#     farm: 0.0339557
+#     res: 0.0038706
+#     nonres: 0.0179731
+#     farm: 0.0372838
 #   provincial:
-#     res: 0.0027593
-#     nonres: 0.0041502
-#     farm: 0.0027593
+#     res: 0.0023097
+#     nonres: 0.0038555
+#     farm: 0.0023097
