@@ -207,7 +207,7 @@ table.wards { width: 100%; border-collapse: collapse; font-size: 15px; font-vari
     <div><b>Revenue</b><p>The <span class="yr">2026</span> assessment roll times the <span class="yr">2026</span> municipal tax rates. Hospitals, schools, parks and other exempt property are removed. Checked against 2025, the same method lands within about 1% of the City's reported total.</p></div>
     <div><b>Road cost</b><p>Citywide budgets are shared out by each area's paved area. Per-square-metre plans use street lengths from OpenStreetMap and widths measured on sampled streets. Main roads everyone uses are pooled citywide.</p></div>
     <div><b>Median household</b><p>The median <span class="yr">2026</span> assessment of a single residential property, <span id="home-note"></span>, and the municipal property tax on it.</p></div>
-    <div><b>Mobility budget</b><p>Mobility gets <span id="mob-note"></span>.</p></div>
+    <div><b>Mobility budget</b><p>Here, the mobility budget means mobility's share of property tax: <span id="mob-note"></span>. Each area is measured against what its own taxes put toward mobility. The City's full Mobility budget is larger (<span id="mob-total"></span> in <span class="yr">2026</span>) because it also draws on fees, grants and other revenue. We leave those out because property tax is the lever the city and each neighbourhood control.</p></div>
   </section>
 </main>
 <div id="tip" hidden></div>
@@ -314,7 +314,7 @@ function renderWays(sc) {
       <p>More municipal property tax, every year. That can come from a higher tax rate, about ${money(home * up)} more a year on the median home (${money(home)} today).</p>
       <p>Or it can come from making the land we already have more tax-productive: ${pct(up)} more taxable property value, from more households and more businesses on the same roads.</p></div>
     <div class="way"><h3>Cut something else</h3><div class="num">${money(gap)}</div>
-      <p>Keep taxes where they are and move this much a year into roads from other City services. That is ${pct(gap / S.mobility_total)} of everything the City spends on mobility today (${money(S.mobility_total)}), or cuts to parks, transit, recreation or other services.</p></div>
+      <p>Keep taxes where they are and move this much property tax a year from other City services into roads. Mobility's share of each tax dollar would have to grow from ${cents(S.mobility_share)} to ${cents(S.mobility_share + up)}, and parks, transit, recreation or other services would get less.</p></div>
     <div class="way decline"><h3>Let the streets fall apart</h3><div class="num">${money(nowCost)}</div>
       <p>Keep spending what we spend now and accept the decline. ${brk ? `It is below the ${money(cityCost(brk))} break-even, so` : 'So'} pavement keeps getting worse every year. In 2024, 29% of Calgary's pavement was already in poor condition.</p></div>`;
 }
@@ -441,7 +441,8 @@ Promise.all(['scenarios.json', 'hexes.geojson', 'wards.geojson'].map(f => fetch(
   $('year').textContent = S.tax_year; document.querySelectorAll('.yr').forEach(e => { e.textContent = S.tax_year; });
   $('home-note').textContent = '$' + S.typical_home_value.toLocaleString();
   $('items-note').textContent = S.mobility_items.join(', ');
-  $('mob-note').textContent = cents(S.mobility_share) + ' of every property tax dollar';
+  $('mob-note').textContent = cents(S.mobility_share) + ' of every dollar, or ' + money(tot.rev * S.mobility_share) + ' citywide';
+  $('mob-total').textContent = money(S.mobility_total);
   const rec = S.scenarios.find(s => s.id === 'recommended'), full = S.scenarios.find(s => s.id === 'reconstruction');
   if (rec) {
     const mob = tot.rev * S.mobility_share;
