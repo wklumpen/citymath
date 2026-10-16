@@ -1,0 +1,137 @@
+{
+ "default": "budget_2026",
+ "mobility_share": 0.062,
+ "mobility_items": [
+  "sidewalks and pathways",
+  "bike lanes",
+  "streetlights",
+  "traffic signals",
+  "snow and ice clearing"
+ ],
+ "shared_basis": "equal",
+ "scenarios": [
+  {
+   "id": "historic",
+   "label": "Historical spending",
+   "kind": "budget",
+   "low": 40000000.0,
+   "high": 40000000.0,
+   "summary": "About what Calgary spent on pavement each year from 2011 to 2025, when the budget ran between $30M and $50M.",
+   "consequence": "Pavement kept getting worse under this level of spending. By 2024, 29% of the network had fallen to poor condition.",
+   "sources": [
+    {
+     "title": "Pavement Quality report, p. 7",
+     "url": "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347"
+    },
+    {
+     "title": "Pavement Quality presentation, pp. 5-6",
+     "url": "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304348"
+    }
+   ]
+  },
+  {
+   "id": "budget_2026",
+   "label": "2026 budget",
+   "kind": "budget",
+   "low": 64000000.0,
+   "high": 64000000.0,
+   "summary": "The 2026 pavement budget, after Council moved $24M from the Fiscal Stability Reserve to reach $64M. It targets repaving 400 lane-km of road, about 2.3% of the network, so each street waits about 43 years for new pavement.",
+   "consequence": "This is below the $88M needed just to stop pavement getting worse, so the network keeps declining.",
+   "sources": [
+    {
+     "title": "Budget 2026 as approved, pp. 76-78",
+     "url": "https://www.calgary.ca/content/dam/www/cfod/finance/documents/plans-budgets-and-financial-reports/2023-2026-service-plans-budgets/2026-budget-as-approved-dec-3-2025.pdf"
+    }
+   ]
+  },
+  {
+   "id": "break_even",
+   "label": "Break even",
+   "kind": "budget",
+   "low": 88000000.0,
+   "high": 88000000.0,
+   "summary": "The spending that holds pavement quality steady, with no further decline.",
+   "consequence": "The decline stops, but the backlog of roads already in poor condition is not caught up.",
+   "sources": [
+    {
+     "title": "Pavement Quality presentation, p. 7",
+     "url": "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304348"
+    }
+   ]
+  },
+  {
+   "id": "recommended",
+   "label": "Recommended service level",
+   "kind": "budget",
+   "low": 116000000.0,
+   "high": 116000000.0,
+   "summary": "The pavement quality level of service recommended in the City's pavement review.",
+   "consequence": "By 2034: arterials 60% good, 28% fair, 12% poor; collectors 54% good, 12% fair, 34% poor; local streets 42% good, 32% fair, 26% poor. It only covers work that was needed as of 2024, not roads that wear out after that.",
+   "sources": [
+    {
+     "title": "Pavement Quality presentation, pp. 7-8",
+     "url": "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304348"
+    }
+   ]
+  },
+  {
+   "id": "high",
+   "label": "High option",
+   "kind": "budget",
+   "low": 132000000.0,
+   "high": 132000000.0,
+   "summary": "The highest spending option in the City's pavement review.",
+   "consequence": "By 2034, pavement would average 60% good, 28% fair and 12% poor, slightly better than 2013, when 57% was good. It still does not cover roads that wear out after 2024.",
+   "sources": [
+    {
+     "title": "Pavement Quality presentation, p. 7",
+     "url": "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304348"
+    }
+   ]
+  },
+  {
+   "id": "crack_seal",
+   "label": "Seal cracks every 10 years",
+   "kind": "flat",
+   "low": 1.0,
+   "high": 2.5,
+   "summary": "Crack-seal or microsurface every road at least once every 10 years.",
+   "consequence": "This only works if pavement never slips to fair quality (4 to 6 out of 10). Anything that does needs repaving instead.",
+   "sources": [
+    {
+     "title": "Pavement Quality report, p. 4",
+     "url": "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347"
+    }
+   ]
+  },
+  {
+   "id": "repave",
+   "label": "Repave every 12-17 years",
+   "kind": "flat",
+   "low": 2.92,
+   "high": 4.17,
+   "summary": "Repave every road every 12 to 17 years.",
+   "consequence": "This only works if pavement never falls to poor quality (below 4 out of 10). In 2024, 29% of Calgary's pavement already had.",
+   "sources": [
+    {
+     "title": "Pavement Quality report, p. 4",
+     "url": "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347"
+    },
+    {
+     "title": "Pavement Quality presentation, p. 5",
+     "url": "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304348"
+    }
+   ]
+  },
+  {
+   "id": "reconstruction",
+   "label": "Full replacement",
+   "kind": "life",
+   "low": 300.0,
+   "high": 350.0,
+   "summary": "Rebuild every road completely when it wears out, at $300 to $350 a square metre. Local streets last 40 years, main roads 21.",
+   "consequence": "The full cost of keeping the network we have, if nothing is allowed to fail.",
+   "sources": []
+  }
+ ]
+}

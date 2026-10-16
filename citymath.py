@@ -181,21 +181,27 @@ def load_width_samples(cfg, dst):
 
 
 def load_scenarios(cfg, dst):
-    """Pavement scenarios -> cfg_scenario, with costs inflated to target_year."""
+    """Pavement scenarios -> cfg_scenario. Per-m2 costs are inflated to
+    target_year; annual budgets are used as given."""
     infl = cfg["roads"]["cost_inflation"]
     factor = (1 + infl["annual_inflation"]) ** (infl["target_year"] - infl["base_year"])
     rows = {}
     for name, sc in cfg["roads"]["scenarios"].items():
-        per_life = "cost_per_m2" in sc
-        cost = sc["cost_per_m2"] if per_life else sc["cost_per_m2_year"]
-        rows[name] = (sc.get("label", name), cost["low"] * factor, cost["high"] * factor, per_life)
+        if "annual_budget" in sc:
+            kind = "budget"
+            low = high = float(sc["annual_budget"])
+        else:
+            kind = "life" if "cost_per_m2" in sc else "flat"
+            cost = sc["cost_per_m2"] if kind == "life" else sc["cost_per_m2_year"]
+            low, high = cost["low"] * factor, cost["high"] * factor
+        rows[name] = (sc.get("label", name), low, high, kind)
     dst.execute("""
         drop table if exists cfg_scenario cascade;
         create table cfg_scenario (scenario text primary key, label text,
-            cost_low float8, cost_high float8, per_life boolean);""")
+            cost_low float8, cost_high float8, kind text);""")
     dst.cursor().executemany("insert into cfg_scenario values (%s, %s, %s, %s, %s)",
                              [(n, *r) for n, r in rows.items()])
-    print(f"  pavement costs in {infl['target_year']} dollars (x{factor:.4f})")
+    print(f"  per-m2 pavement costs in {infl['target_year']} dollars (x{factor:.4f})")
     return rows
 
 
@@ -249,14 +255,15 @@ def summary(cfg, dst):
     params |= {f"prov_{k}": rates["provincial"][k] for k in ("res", "nonres", "farm")}
     params["sampled_class"] = sampled_class
     scenarios = load_scenarios(cfg, dst)
-    _, low, high, per_life = scenarios[cfg["roads"]["default_scenario"]]
+    _, low, high, kind = scenarios[cfg["roads"]["default_scenario"]]
     params["cost_low"], params["cost_high"] = low, high
     params["shared_basis"] = cfg["roads"]["shared"]["basis"]
     params["special"] = cfg.get("special_structures") or []
     if params["shared_basis"] not in ("equal", "area", "revenue"):
         raise SystemExit("roads.shared.basis must be equal, area or revenue")
     run_sql(dst, "04_hex_summary.sql", params, road_cols=road_cols,
-            cost_basis="pavement_m2_per_year" if per_life else "pavement_m2")
+            cost_basis={"life": "pavement_m2_per_year", "flat": "pavement_m2",
+                        "budget": "(pavement_m2 / sum(pavement_m2) over ())"}[kind])
     run_sql(dst, "05_hex_scenario.sql")
     show(dst, "scenarios: road cost $M (low, mid, high), % of municipal tax "
               "(low, mid, high), hexes with net <= 0 (mid)", """
@@ -303,40 +310,60 @@ def summary(cfg, dst):
 
 
 def export(cfg, dst):
-    """Write the per-hex file the website reads: tax revenue plus pavement area
-    split three ways, so the page can recompute any scenario itself."""
-    sampled = cfg["roads"]["width_samples"]["applies_to"]
+    """Write the two files the website reads: per-hex revenue and pavement
+    (data/hexes.geojson) and the scenario definitions (data/scenarios.json).
+    The page recomputes road cost in the browser from these."""
     rows = dst.execute("""
         with m as (
             select l.hex_id,
                    sum(l.length_m * coalesce(w.width_median, k.width_m))
-                       filter (where not k.shared and l.road_class = %(sampled)s) as sampled,
-                   sum(l.length_m * k.width_m)
-                       filter (where not k.shared and l.road_class <> %(sampled)s) as local,
-                   sum(l.length_m * k.width_m) filter (where k.shared) as shared
+                       filter (where not k.shared) as m2,
+                   sum(l.length_m * coalesce(w.width_median, k.width_m) / k.life_years)
+                       filter (where not k.shared) as m2y,
+                   sum(l.length_m * k.width_m) filter (where k.shared) as m2_sh,
+                   sum(l.length_m * k.width_m / k.life_years) filter (where k.shared) as m2y_sh
             from hex_road_length l
             join cfg_road_class k using (road_class)
             join hex_community hc using (hex_id)
-            left join comm_structure_width w on w.comm_structure = hc.comm_structure
+            left join comm_structure_width w
+                   on w.comm_structure = hc.comm_structure and l.road_class = %(sampled)s
             group by l.hex_id
         )
-        select s.hex_id, initcap(s.comm_name), s.comm_structure, s.is_special,
-               s.revenue_total, coalesce(m.sampled, 0), coalesce(m.local, 0),
-               coalesce(m.shared, 0), ST_AsGeoJSON(ST_Transform(s.geom, 4326), 5)
+        select s.hex_id, initcap(s.comm_name), s.comm_structure, s.is_special, s.hex_area_ha,
+               s.revenue_res, s.revenue_nonres + s.revenue_farm,
+               coalesce(m.m2, 0), coalesce(m.m2y, 0), coalesce(m.m2_sh, 0), coalesce(m.m2y_sh, 0),
+               ST_AsGeoJSON(ST_Transform(s.geom, 4326), 5)
         from hex_summary s left join m using (hex_id)
-        order by s.hex_id""", {"sampled": sampled}).fetchall()
-    features = [{
-        "type": "Feature",
-        "properties": {"id": hex_id, "name": name, "structure": structure, "special": special,
-                       "revenue": round(revenue), "m2_sampled": round(m2_sampled),
-                       "m2_local": round(m2_local), "m2_shared": round(m2_shared)},
-        "geometry": json.loads(geom),
-    } for hex_id, name, structure, special, revenue, m2_sampled, m2_local, m2_shared, geom in rows]
+        order by s.hex_id""", {"sampled": cfg["roads"]["width_samples"]["applies_to"]}).fetchall()
+    keys = ["id", "name", "structure", "special", "area_ha", "rev_res", "rev_com",
+            "m2", "m2y", "m2_sh", "m2y_sh"]
+    features = []
+    for row in rows:
+        props = dict(zip(keys, row[:-1]))
+        for k in keys[4:]:
+            props[k] = round(props[k], 2 if k in ("area_ha", "m2y", "m2y_sh") else None)
+        features.append({"type": "Feature", "properties": props, "geometry": json.loads(row[-1])})
     path = ROOT / cfg["output"]["site_data"]
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps({"type": "FeatureCollection", "features": features},
                                separators=(",", ":")))
     print(f"  {len(features)} hexes -> {path.relative_to(ROOT)} ({path.stat().st_size // 1024} KB)")
+
+    costs = load_scenarios(cfg, dst)
+    scenarios = []
+    for name, sc in cfg["roads"]["scenarios"].items():
+        label, low, high, kind = costs[name]
+        scenarios.append({"id": name, "label": label, "kind": kind, "low": low, "high": high,
+                          "summary": sc.get("summary", ""), "consequence": sc.get("consequence", ""),
+                          "sources": sc.get("sources") or []})
+    site = {"default": cfg["roads"]["default_scenario"],
+            "mobility_share": cfg["site"]["mobility_budget_share"],
+            "mobility_items": cfg["site"]["mobility_items"],
+            "shared_basis": cfg["roads"]["shared"]["basis"],
+            "scenarios": scenarios}
+    spath = path.parent / "scenarios.json"
+    spath.write_text(json.dumps(site, indent=1))
+    print(f"  {len(scenarios)} scenarios -> {spath.relative_to(ROOT)}")
 
 
 STEPS = {"load": load, "community": community, "roads": roads,

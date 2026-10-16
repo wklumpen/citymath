@@ -60,6 +60,15 @@ assessments:
     sub_property_codes: []
     roll_numbers: []
 
+# Website settings, written to docs/data/scenarios.json by the `export` step.
+site:
+  # Share of each tax dollar that goes to the mobility budget. PLACEHOLDER:
+  # 6.2% was an example figure, not yet sourced. (Budget 2026 puts Mobility at
+  # $221M operating + $156M capital = $377M.)
+  mobility_budget_share: 0.062
+  # What else the mobility budget pays for besides road pavement.
+  mobility_items: [sidewalks and pathways, bike lanes, streetlights, traffic signals, snow and ice clearing]
+
 # Community structures that are not ordinary neighbourhoods. Hexes tagged with
 # one of these stay in the analysis and the city totals, but get
 # is_special = true so maps can grey them out or hide them.
@@ -109,25 +118,76 @@ roads:
     classes: [highway, primary, secondary]
     basis: equal
 
-  # Pavement treatment scenarios. Each gives a low / high cost, either
-  #   cost_per_m2:      one-off cost, spread over each class's life_years, or
-  #   cost_per_m2_year: a flat annual cost on all pavement.
+  # Pavement scenarios. Each one is costed one of three ways:
+  #   annual_budget:    a citywide $ per year, shared out by pavement area
+  #   cost_per_m2_year: a flat annual $ per m2 on all pavement
+  #   cost_per_m2:      a one-off $ per m2, spread over each class's life_years
+  # Rates take {low, high}; the unsuffixed columns use the midpoint.
   # Every scenario is written to hex_scenario; `default_scenario` is the one
-  # behind road_cost / net / road_share in hex_summary. The midpoint of low and
-  # high is used for the unsuffixed columns.
-  default_scenario: reconstruction
+  # behind road_cost / net / road_share in hex_summary. summary, consequence and
+  # sources are shown on the website.
+  default_scenario: budget_2026
   scenarios:
-    reconstruction:
-      label: Full reconstruction
-      cost_per_m2: {low: 300, high: 350} # = $14.29-16.67 per m2 per year over 21 years
-    repave:
-      label: Repave (minor or major)
-      cost_per_m2_year: {low: 2.92, high: 4.17}
+    historic:
+      label: Historical spending
+      annual_budget: 40000000
+      summary: About what Calgary spent on pavement each year from 2011 to 2025, when the budget ran between $30M and $50M.
+      consequence: Pavement kept getting worse under this level of spending. By 2024, 29% of the network had fallen to poor condition.
+      sources:
+        - {title: "Pavement Quality report, p. 7", url: "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347"}
+        - {title: "Pavement Quality presentation, pp. 5-6", url: "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304348"}
+    budget_2026:
+      label: 2026 budget
+      annual_budget: 64000000
+      summary: The 2026 pavement budget, after Council moved $24M from the Fiscal Stability Reserve to reach $64M. It targets repaving 400 lane-km of road, about 2.3% of the network, so each street waits about 43 years for new pavement.
+      consequence: This is below the $88M needed just to stop pavement getting worse, so the network keeps declining.
+      sources:
+        - {title: "Budget 2026 as approved, pp. 76-78", url: "https://www.calgary.ca/content/dam/www/cfod/finance/documents/plans-budgets-and-financial-reports/2023-2026-service-plans-budgets/2026-budget-as-approved-dec-3-2025.pdf"}
+    break_even:
+      label: Break even
+      annual_budget: 88000000
+      summary: The spending that holds pavement quality steady, with no further decline.
+      consequence: The decline stops, but the backlog of roads already in poor condition is not caught up.
+      sources:
+        - {title: "Pavement Quality presentation, p. 7", url: "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304348"}
+    recommended:
+      label: Recommended service level
+      annual_budget: 116000000
+      summary: The pavement quality level of service recommended in the City's pavement review.
+      consequence: "By 2034: arterials 60% good, 28% fair, 12% poor; collectors 54% good, 12% fair, 34% poor; local streets 42% good, 32% fair, 26% poor. It only covers work that was needed as of 2024, not roads that wear out after that."
+      sources:
+        - {title: "Pavement Quality presentation, pp. 7-8", url: "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304348"}
+    high:
+      label: High option
+      annual_budget: 132000000
+      summary: The highest spending option in the City's pavement review.
+      consequence: By 2034, pavement would average 60% good, 28% fair and 12% poor, slightly better than 2013, when 57% was good. It still does not cover roads that wear out after 2024.
+      sources:
+        - {title: "Pavement Quality presentation, p. 7", url: "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304348"}
     crack_seal:
-      label: Crack sealing or microsurfacing
+      label: Seal cracks every 10 years
       cost_per_m2_year: {low: 1.00, high: 2.50}
+      summary: Crack-seal or microsurface every road at least once every 10 years.
+      consequence: This only works if pavement never slips to fair quality (4 to 6 out of 10). Anything that does needs repaving instead.
+      sources:
+        - {title: "Pavement Quality report, p. 4", url: "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347"}
+    repave:
+      label: Repave every 12-17 years
+      cost_per_m2_year: {low: 2.92, high: 4.17}
+      summary: Repave every road every 12 to 17 years.
+      consequence: This only works if pavement never falls to poor quality (below 4 out of 10). In 2024, 29% of Calgary's pavement already had.
+      sources:
+        - {title: "Pavement Quality report, p. 4", url: "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347"}
+        - {title: "Pavement Quality presentation, p. 5", url: "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304348"}
+    reconstruction:
+      label: Full replacement
+      cost_per_m2: {low: 300, high: 350} # = $14.29-16.67 per m2 per year over 21 years
+      summary: Rebuild every road completely when it wears out, at $300 to $350 a square metre. Local streets last 40 years, main roads 21.
+      consequence: The full cost of keeping the network we have, if nothing is allowed to fail.
+      sources: []
 
-  # Costs above are in base_year dollars and are inflated to target_year:
+  # Per-m2 costs above are in base_year dollars and are inflated to target_year
+  # (annual budgets are used as given):
   #   factor = (1 + annual_inflation) ^ (target_year - base_year)
   cost_inflation:
     base_year: 2024

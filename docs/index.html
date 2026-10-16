@@ -7,16 +7,18 @@
      and browsers otherwise send only the domain. -->
 <meta name="referrer" content="no-referrer-when-downgrade">
 <title>Calgary Street Math</title>
-<meta name="description" content="What share of Calgary's municipal property tax each area needs to pay for its road pavement.">
+<meta name="description" content="What Calgary's pavement plans cost each neighbourhood, set against the property tax it raises.">
 <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600&display=swap">
 <style>
-/* Layout: navy masthead, then one working screen: map beside (or above, on phones) a panel
-   of story text, scenario controls and the tapped hex. Evidence chart and method notes below. */
+/* Layout: navy masthead; then the working screen: scenario picker and the map, with the
+   tapped hexagon's budget beside the map (below it on phones). Evidence chart and notes follow.
+   Map colour is diverging around one line: the mobility budget. Teal fits, orange overruns. */
 :root {
   --bg: #f4f6f9; --surface: #ffffff; --ink: #101b2d; --muted: #586579; --line: #dde2ea;
   --band: #12305c; --band-ink: #ffffff; --band-muted: #b9c8de; --accent: #e8751a;
-  --r0: #fde9d0; --r1: #fbc98f; --r2: #f5a04c; --r3: #e2751f; --r4: #b3500f; --r5: #6f2c07;
+  --u0: #1f7a8c; --u1: #9fd3db; --o0: #fbd3a6; --o1: #f29b4b; --o2: #d1611a; --o3: #8a3608;
+  --good: #1f7a8c; --bad: #c2410c;
   --special: #d5dae2; --hexline: #ffffff; --select: #101b2d;
   --display: "Archivo", "Arial Narrow", Arial, sans-serif;
   --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
@@ -24,158 +26,147 @@
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #0b131f; --surface: #121d2d; --ink: #e9eef5; --muted: #9aa8ba; --line: #24334b;
   --band: #0e2547; --band-ink: #ffffff; --band-muted: #a9bbd6; --accent: #f08a35;
-  --r0: #3f2410; --r1: #6b3a12; --r2: #9c4f12; --r3: #d06c1c; --r4: #f29a4a; --r5: #fddcb0;
+  --u0: #5cc3d3; --u1: #24606b; --o0: #6b3a12; --o1: #b3561a; --o2: #e8822e; --o3: #fdc58c;
+  --good: #5cc3d3; --bad: #f29b4b;
   --special: #263143; --hexline: #0b131f; --select: #ffffff; color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #0b131f; --surface: #121d2d; --ink: #e9eef5; --muted: #9aa8ba; --line: #24334b;
   --band: #0e2547; --band-ink: #ffffff; --band-muted: #a9bbd6; --accent: #f08a35;
-  --r0: #3f2410; --r1: #6b3a12; --r2: #9c4f12; --r3: #d06c1c; --r4: #f29a4a; --r5: #fddcb0;
+  --u0: #5cc3d3; --u1: #24606b; --o0: #6b3a12; --o1: #b3561a; --o2: #e8822e; --o3: #fdc58c;
+  --good: #5cc3d3; --bad: #f29b4b;
   --special: #263143; --hexline: #0b131f; --select: #ffffff; color-scheme: dark }
 
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.5; }
-h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.15; }
+h1, h2, h3, h4 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.15; }
 p { margin: 0; }
-.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 16px; }
+a { color: inherit; text-underline-offset: 2px; }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-inline: 16px; }
 
 .band { background: var(--band); color: var(--band-ink); }
 .band .wrap { padding-block: 22px 26px; display: flex; flex-direction: column; gap: 10px; }
 .draft { font-family: var(--display); font-weight: 700; font-size: 12px; letter-spacing: .09em; text-transform: uppercase; color: var(--band-muted); display: flex; gap: 10px; flex-wrap: wrap; }
 .draft b { color: var(--accent); }
 h1 { font-weight: 800; font-size: clamp(28px, 5.2vw, 46px); letter-spacing: -.01em; }
-.lede { color: var(--band-muted); max-width: 62ch; font-size: 17px; }
+.lede { color: var(--band-muted); max-width: 64ch; font-size: 17px; }
 
 main.wrap { padding-block: 20px 40px; display: flex; flex-direction: column; gap: 28px; }
+.block { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.block > h3, .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); font-family: var(--display); }
+.hint { font-size: 14px; color: var(--muted); }
+
+/* scenario picker */
+.picker { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 880px) { .picker { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.options { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.opt { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 9px 12px; border-top: 1px solid var(--line); cursor: pointer; }
+.opt:first-child { border-top: 0; }
+.opt input { accent-color: var(--band); margin: 0; width: 17px; height: 17px; }
+.opt span { font-weight: 600; }
+.opt em { font-style: normal; font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14px; text-align: right; }
+.opt:has(input:checked) { background: color-mix(in srgb, var(--band) 9%, var(--surface)); }
+.opt:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: -3px; }
+.about { display: flex; flex-direction: column; gap: 10px; }
+.about h2 { font-size: 22px; font-weight: 800; }
+.about .cons { border-left: 3px solid var(--accent); padding-left: 12px; }
+.sources { font-size: 14px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding-top: 4px; }
+.stat b { display: block; font-family: var(--display); font-weight: 800; font-size: clamp(20px, 5vw, 27px); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.stat span { font-size: 13px; color: var(--muted); line-height: 1.3; display: block; }
+
+/* map + budget */
 .work { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
 @media (min-width: 880px) { .work { grid-template-columns: minmax(0, 1fr) 380px; align-items: start; } }
-
-.mapcard { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.maphead { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.mapcard { gap: 10px; padding: 12px; }
+.maphead { display: flex; justify-content: space-between; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; }
 .maphead h2 { font-size: 17px; font-weight: 700; }
 .maphead span { color: var(--muted); font-size: 14px; }
-#map { width: 100%; height: 62vh; min-height: 380px; border-radius: 4px; overflow: hidden; background: var(--special); }
-@media (min-width: 880px) { #map { height: min(78vh, 760px); } }
 .search { display: flex; gap: 8px; }
 .search input { flex: 1; min-width: 0; font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
 .search button { font: 600 15px var(--body); padding: 8px 14px; border: 0; border-radius: 6px; background: var(--band); color: var(--band-ink); cursor: pointer; }
-.search button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+#map { width: 100%; height: 62vh; min-height: 380px; border-radius: 4px; overflow: hidden; background: var(--special); }
+@media (min-width: 880px) { #map { height: min(76vh, 740px); } }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); }
 .legend i { display: inline-block; width: 14px; height: 14px; border-radius: 2px; vertical-align: -2px; margin-right: 5px; border: 1px solid var(--line); }
 
-.panel { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-.block { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
-.block h3 { font-size: 13px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
-.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.stat b { display: block; font-family: var(--display); font-weight: 800; font-size: clamp(22px, 5.5vw, 28px); font-variant-numeric: tabular-nums; line-height: 1.1; }
-.stat span { font-size: 13px; color: var(--muted); line-height: 1.3; display: block; }
+/* the hexagon's budget */
+#budget h4 { font-size: 20px; font-weight: 700; }
+#budget .tag { color: var(--muted); font-size: 14px; }
+.ledger { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 12px; font-size: 15px; font-variant-numeric: tabular-nums; }
+.ledger .sec { grid-column: 1 / -1; font-family: var(--display); font-weight: 700; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding-top: 8px; }
+.ledger .sec:first-child { padding-top: 0; }
+.ledger dt { color: var(--muted); }
+.ledger dd { margin: 0; text-align: right; font-weight: 600; }
+.ledger .tot { border-top: 1px solid var(--line); padding-top: 4px; color: var(--ink); font-weight: 600; }
+.ledger dd.tot { font-weight: 800; }
+.ledger small { color: var(--muted); font-weight: 400; font-size: 13px; }
+.meter { display: flex; flex-direction: column; gap: 6px; }
+.meter .track { position: relative; height: 16px; border-radius: 3px; background: color-mix(in srgb, var(--good) 14%, var(--surface)); border: 1px solid var(--line); }
+.meter .fill { position: absolute; inset: 0 auto 0 0; border-radius: 2px; }
+.meter .cap { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.verdict { font-size: 15px; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--line); display: flex; gap: 8px; align-items: baseline; }
+.verdict b { font-family: var(--display); white-space: nowrap; }
+.verdict.over b { color: var(--bad); } .verdict.under b { color: var(--good); }
 
-.seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
-.seg button { font: 600 14px/1.25 var(--body); padding: 10px 6px; background: var(--surface); color: var(--ink); border: 0; border-left: 1px solid var(--line); cursor: pointer; }
-.seg button:first-child { border-left: 0; }
-.seg button[aria-pressed="true"] { background: var(--band); color: var(--band-ink); }
-.seg button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-.hint { font-size: 14px; color: var(--muted); }
-details summary { cursor: pointer; font-weight: 600; }
-.ctl { display: flex; flex-direction: column; gap: 12px; padding-top: 12px; }
-.ctl label { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; font-size: 14px; }
-.ctl label output { font-variant-numeric: tabular-nums; font-weight: 600; }
-.ctl input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); }
-.ctl select { grid-column: 1 / -1; font: inherit; padding: 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
-.ctl label.off { opacity: .45; }
-
-#hex h4 { font-family: var(--display); font-size: 19px; font-weight: 700; margin: 0; }
-#hex .tag { color: var(--muted); font-size: 14px; }
-.kv { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; font-size: 15px; }
-.kv dt { color: var(--muted); } .kv dd { margin: 0; font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
-.dollar { height: 14px; border-radius: 3px; background: var(--r0); border: 1px solid var(--line); overflow: hidden; }
-.dollar div { height: 100%; background: var(--r3); }
-
+/* evidence */
 .evidence { display: flex; flex-direction: column; gap: 12px; }
 .evidence h2 { font-size: 22px; font-weight: 800; }
 .evidence > p { max-width: 65ch; color: var(--muted); }
 .bars { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; gap: 8px 12px; align-items: center; font-size: 15px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px; }
-.bars .track { height: 16px; }
-.bars .bar { height: 100%; background: var(--r3); border-radius: 0 4px 4px 0; min-width: 2px; }
+.bars .track { position: relative; height: 16px; }
+.bars .bar { height: 100%; border-radius: 0 4px 4px 0; min-width: 2px; }
+.bars .line { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--ink); }
 .bars .v { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
+.bars .key { grid-column: 1 / -1; font-size: 13px; color: var(--muted); display: flex; gap: 6px 16px; flex-wrap: wrap; }
+.bars .key i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
 .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
 .notes div { display: flex; flex-direction: column; gap: 4px; font-size: 15px; color: var(--muted); }
 .notes b { color: var(--ink); font-family: var(--display); }
-#tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 13px; padding: 5px 8px; border-radius: 4px; z-index: 5; max-width: 220px; }
+#tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 13px; padding: 5px 8px; border-radius: 4px; z-index: 5; max-width: 240px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 </style>
 </head>
 <body>
 
 <header class="band"><div class="wrap">
-  <div class="draft"><b>Draft mockup</b><span>Calgary · 2025 tax year · sample layout, numbers not final</span></div>
-  <h1>Do Calgary's streets pay for themselves?</h1>
-  <p class="lede">Every block has pavement the city must one day rebuild, and every block pays property tax. This map sets one against the other, 800 metres at a time.</p>
+  <div class="draft"><b>Draft</b><span>Calgary · 2025 tax year · numbers not final</span></div>
+  <h1>What would it take to look after Calgary's streets?</h1>
+  <p class="lede">Pick a pavement plan and see what it costs each part of the city, set against the property tax that area raises. Tap any hexagon for its budget.</p>
 </div></header>
 
 <main class="wrap">
+  <section class="block picker" aria-labelledby="pick-h">
+    <div class="eyebrow" id="pick-h" hidden>Choose a pavement plan</div>
+    <div class="options" id="options" role="radiogroup" aria-label="Pavement plan"></div>
+    <div class="about" id="about"></div>
+  </section>
+
   <section class="work">
-    <div class="mapcard">
-      <div class="maphead"><h2>Share of local property tax needed for roads</h2><span id="maphint">Tap a hexagon for its numbers. Use two fingers to move the map.</span></div>
+    <div class="block mapcard">
+      <div class="maphead"><h2>Roads under this plan, against each area's mobility budget</h2><span id="maphint">Loading map…</span></div>
       <form class="search" id="search">
         <input id="q" type="search" placeholder="Find an address or neighbourhood" aria-label="Find an address or neighbourhood" autocomplete="off">
         <button type="submit">Find</button>
       </form>
-      <div id="map" role="application" aria-label="Map of Calgary in hexagons, shaded by the share of municipal property tax needed to pay for roads"></div>
+      <div id="map" role="application" aria-label="Map of Calgary in hexagons, coloured by how this plan's road cost compares with each area's share of the mobility budget"></div>
       <div class="legend" id="legend"></div>
     </div>
-
-    <div class="panel">
-      <div class="block">
-        <h3>Citywide, this scenario</h3>
-        <div class="stats">
-          <div class="stat"><b id="s-share">–</b><span>of municipal property tax goes to pavement</span></div>
-          <div class="stat"><b id="s-cost">–</b><span>road cost per year</span></div>
-          <div class="stat"><b id="s-red">–</b><span>neighbourhood hexes where roads take over half the tax</span></div>
-        </div>
-      </div>
-
-      <div class="block">
-        <h3>What do we do to the roads?</h3>
-        <div class="seg" id="treat">
-          <button type="button" data-t="recon" aria-pressed="true">Rebuild them</button>
-          <button type="button" data-t="repave" aria-pressed="false">Repave only</button>
-          <button type="button" data-t="crack" aria-pressed="false">Seal cracks only</button>
-        </div>
-        <p class="hint" id="treat-hint"></p>
-        <details id="custom">
-          <summary>Change the assumptions</summary>
-          <div class="ctl">
-            <label id="l-res">Rebuild residential streets every <output id="o-res"></output>
-              <input type="range" id="res" min="20" max="60" step="1" value="40"></label>
-            <label id="l-main">Rebuild main roads every <output id="o-main"></output>
-              <input type="range" id="main" min="15" max="40" step="1" value="21"></label>
-            <label id="l-cost">Cost to rebuild a square metre <output id="o-cost"></output>
-              <input type="range" id="cost" min="250" max="400" step="5" value="325"></label>
-            <label>Who pays for the main roads everyone uses?
-              <select id="sharemode">
-                <option value="revenue">Everyone, in proportion to tax paid</option>
-                <option value="equal">Every hexagon pays the same</option>
-                <option value="local">Only the hexagon the road sits in</option>
-              </select></label>
-          </div>
-        </details>
-      </div>
-
-      <div class="block" id="hex"></div>
-    </div>
+    <div class="block" id="budget" aria-live="polite"></div>
   </section>
 
   <section class="evidence">
-    <h2>Older and denser places carry their roads more easily</h2>
-    <p>The same measure, added up by when each area was built. Parks, undeveloped land and special districts such as the airport are left out here and shown in grey on the map.</p>
+    <h2>Which kinds of neighbourhood can carry their streets</h2>
+    <p>The share of each tax dollar this plan needs for pavement, added up by when each area was built. The black line is the mobility budget's share. Parks, undeveloped land and special districts such as the airport are left out.</p>
     <div class="bars" id="bars"></div>
   </section>
 
   <section class="notes">
-    <div><b>What is counted</b>Road pavement only. Pipes, transit, parks, police and everything else the city pays for are not in this picture.</div>
-    <div><b>Where the tax number comes from</b>The 2025 assessment roll times the 2025 municipal tax rate. Hospitals, schools, parks and other exempt property are removed. The total lands within about 1% of the City's reported figure.</div>
-    <div><b>Where the road number comes from</b>Street lengths from OpenStreetMap, widths measured on a sample of residential streets in each era of neighbourhood, and rebuild costs of $300 to $350 per square metre.</div>
-    <div><b>Still to come</b>A guided walk through the findings above the map, and a printable report built from the same text and maps.</div>
+    <div><b>What is counted</b>Road pavement only. The mobility budget also pays for <span id="items-note"></span>, and the city budget pays for pipes, transit, parks, police and much more.</div>
+    <div><b>Revenue</b>The 2025 assessment roll times the 2025 municipal tax rates. Hospitals, schools, parks and other exempt property are removed. The citywide total lands within about 1% of the City's reported figure.</div>
+    <div><b>Road cost</b>Citywide budgets are shared out by each area's paved area. Per-square-metre plans use street lengths from OpenStreetMap and widths measured on sampled streets. Main roads everyone uses are pooled citywide.</div>
+    <div><b>Mobility budget</b>The share of each tax dollar assumed to go to mobility, <span id="mob-note"></span>. This figure is a placeholder still being confirmed.</div>
   </section>
 </main>
 <div id="tip" hidden></div>
@@ -184,107 +175,154 @@ details summary { cursor: pointer; font-weight: 600; }
 <script>
 const MAPBOX_TOKEN = 'pk.eyJ1Ijoid2tsdW1wZW4iLCJhIjoiY211eWVyeXg5MGlqcTJ4b3RycWJwOHRkMCJ9.uF0fIM1cJwxGwrEdw0_-EA';  // public token
 const ORDER = ['CENTRE CITY','INNER CITY','1950s','1960s/1970s','1980s/1990s','2000s','2010s','2020s','BUILDING OUT','EMPLOYMENT'];
-const NICE = {'CENTRE CITY':'Centre City','INNER CITY':'Inner city','BUILDING OUT':'Still building out','EMPLOYMENT':'Employment areas','OTHER':'Special district','PARKS':'Park','UNDEVELOPED':'Undeveloped'};
-const BINS = [0.10, 0.25, 0.50, 0.75, 1.0];
-const BIN_LABELS = ['Under 10%','10–25%','25–50%','50–75%','75–100%','Over 100%'];
-const FLAT = {repave: 3.545, crack: 1.75};
-const HINTS = {
-  recon: 'Full reconstruction when a road wears out: residential streets every 40 years, main roads every 21.',
-  repave: 'A new surface only, at $2.92 to $4.17 per square metre a year. Cheaper now; the road underneath keeps ageing.',
-  crack: 'Crack sealing and microsurfacing, at $1.00 to $2.50 per square metre a year. The minimum to slow the decline.'};
-const state = {treat: 'recon', sel: null};
-const $ = id => document.getElementById(id);
-let H = [], byId = new Map();
-const money = v => v >= 1e9 ? '$' + (v / 1e9).toFixed(2) + 'B' : v >= 1e6 ? '$' + (v / 1e6).toFixed(v >= 1e7 ? 0 : 1) + 'M' : '$' + Math.round(v / 1e3).toLocaleString() + 'K';
-const pct = v => v == null || !isFinite(v) ? 'n/a' : (v > 9.99 ? 'over 1,000' : Math.round(v * 100)) + '%';
-const nice = s => NICE[s] || s;
+const NICE = {'CENTRE CITY':'Centre City','INNER CITY':'Inner city','BUILDING OUT':'Still building out','EMPLOYMENT':'Employment area','OTHER':'Special district','PARKS':'Park','UNDEVELOPED':'Undeveloped'};
+// Map classes: road cost as a multiple of the area's mobility budget.
+const STEPS = [0.5, 1, 2, 4, 8];
+const COLORS = ['--u0', '--u1', '--o0', '--o1', '--o2', '--o3'];
+const LABELS = ['Under half the mobility budget', 'Within the mobility budget', '1–2× the mobility budget', '2–4×', '4–8×', 'Over 8×'];
 
+const $ = id => document.getElementById(id);
 const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 const dark = () => { const t = document.documentElement.dataset.theme; return t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches; };
-let map = null, ready = false, bounds = null;
-const rings = g => (g.type === 'MultiPolygon' ? g.coordinates : [g.coordinates]);
+const nice = s => NICE[s] || s;
+const money = v => { const a = Math.abs(v), s = v < 0 ? '−$' : '$';
+  return a >= 1e9 ? s + (a / 1e9).toFixed(2) + 'B' : a >= 1e6 ? s + (a / 1e6).toFixed(a >= 1e8 ? 0 : 1) + 'M' : a >= 1e4 ? s + Math.round(a / 1e3) + 'K' : s + Math.round(a).toLocaleString(); };
+const cents = v => v == null || !isFinite(v) ? 'n/a' : v >= 1 ? '$' + v.toFixed(2) : (v * 100 < 1 ? (v * 100).toFixed(1) : Math.round(v * 100)) + '¢';
+const pct = v => v == null || !isFinite(v) ? 'n/a' : (v * 100 < 10 ? (v * 100).toFixed(1) : Math.round(v * 100).toLocaleString()) + '%';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'})[c]);
 
-function draw(geojson) {
-  H = geojson.features.map(f => { const p = f.properties; return {id: p.id, st: p.structure || 'OTHER', special: p.special,
-    rev: p.revenue, res: p.m2_sampled, ter: p.m2_local, sh: p.m2_shared, name: p.name, geom: f.geometry}; });
-  byId = new Map(H.map(h => [String(h.id), h]));
+let S = null, H = [], byId = new Map(), map = null, ready = false, bounds = null, tot = {};
+const state = {scenario: null, sel: null};
+
+// ---- the money -----------------------------------------------------------
+function prepare() {
+  // each hexagon's pavement: its own local streets plus its slice of the shared main roads
+  const n = H.length, area = H.reduce((a, h) => a + h.area_ha, 0), rev = H.reduce((a, h) => a + h.rev, 0);
+  const sh = H.reduce((a, h) => a + h.m2_sh, 0), shy = H.reduce((a, h) => a + h.m2y_sh, 0);
+  H.forEach(h => {
+    const w = {equal: 1 / n, area: h.area_ha / area, revenue: h.rev / rev}[S.shared_basis];
+    h.pm2 = h.m2 + (w == null ? h.m2_sh : w * sh);
+    h.pm2y = h.m2y + (w == null ? h.m2y_sh : w * shy);
+  });
+  tot = {rev, pm2: H.reduce((a, h) => a + h.pm2, 0)};
+}
+function cost(h, sc, end) {  // end: 'low' | 'high' | undefined for the midpoint
+  const rate = end ? sc[end] : (sc.low + sc.high) / 2;
+  if (sc.kind === 'budget') return rate * h.pm2 / tot.pm2;
+  return rate * (sc.kind === 'life' ? h.pm2y : h.pm2);
+}
+function cityCost(sc) { return H.reduce((a, h) => a + cost(h, sc), 0); }
+function ratio(h) { return h.rev > 0 ? h.cost / (h.rev * S.mobility_share) : null; }
+function cls(h) { if (h.special || h.rev <= 0) return 6; const r = ratio(h); let i = 0; while (i < STEPS.length && r >= STEPS[i]) i++; return i; }
+
+// ---- rendering -----------------------------------------------------------
+function render() {
+  const sc = S.scenarios.find(s => s.id === state.scenario);
+  H.forEach(h => { h.cost = cost(h, sc); });
+  renderAbout(sc); renderBars(sc); renderBudget(sc);
+  if (!ready) return;
+  H.forEach(h => map.setFeatureState({source: 'hex', id: h.id}, {c: cls(h)}));
+  map.setFilter('hex-sel', ['==', ['get', 'id'], state.sel ? state.sel.id : -1]);
+}
+function renderOptions() {
+  $('options').innerHTML = S.scenarios.map(s => `<label class="opt"><input type="radio" name="scenario" value="${s.id}"${s.id === state.scenario ? ' checked' : ''}>
+    <span>${esc(s.label)}</span><em>${money(cityCost(s))}/yr</em></label>`).join('');
+  $('options').addEventListener('change', e => { state.scenario = e.target.value; render(); });
+}
+function renderAbout(sc) {
+  const c = cityCost(sc), share = c / tot.rev, mob = S.mobility_share;
+  const over = H.filter(h => !h.special && h.rev > 0 && ratio(h) > 1).length, ord = H.filter(h => !h.special && h.rev > 0).length;
+  const range = sc.kind === 'budget' ? '' : ` <span class="hint">(${money(cityCost({...sc, kind: sc.kind, low: sc.low, high: sc.low}))} to ${money(cityCost({...sc, low: sc.high}))})</span>`;
+  $('about').innerHTML = `<h2>${esc(sc.label)}</h2><p>${esc(sc.summary)}</p>
+    ${sc.consequence ? `<p class="cons">${esc(sc.consequence)}</p>` : ''}
+    ${sc.sources.length ? `<div class="sources">Source: ${sc.sources.map(x => `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}</a>`).join('')}</div>` : ''}
+    <div class="stats">
+      <div class="stat"><b>${money(c)}</b><span>a year citywide${range}</span></div>
+      <div class="stat"><b>${cents(share)}</b><span>of every property tax dollar, against ${cents(mob)} for all of mobility</span></div>
+      <div class="stat"><b>${over.toLocaleString()} <small style="font-size:.55em;font-weight:600">of ${ord.toLocaleString()}</small></b><span>neighbourhood hexagons where roads alone overrun the mobility budget</span></div>
+    </div>`;
+}
+function renderBars(sc) {
+  const mob = S.mobility_share;
+  const rows = ORDER.map(s => { const g = H.filter(h => h.st === s); return [s, g.reduce((a, h) => a + h.cost, 0) / g.reduce((a, h) => a + h.rev, 0)]; });
+  const max = Math.max(...rows.map(r => r[1]), mob) * 1.08;
+  $('bars').innerHTML = rows.map(([s, v]) => `<div>${nice(s)}</div><div class="track"><div class="bar" style="width:${(100 * v / max).toFixed(1)}%;background:var(${v > mob ? '--o2' : '--u0'})"></div><div class="line" style="left:${(100 * mob / max).toFixed(1)}%"></div></div><div class="v">${cents(v)}</div>`).join('')
+    + `<div class="key"><span><i style="background:var(--u0)"></i>Fits within the mobility budget</span><span><i style="background:var(--o2)"></i>Overruns it</span><span><i style="background:var(--ink);width:3px"></i>Mobility budget, ${cents(mob)} per tax dollar</span></div>`;
+}
+function renderBudget(sc) {
+  const h = state.sel, el = $('budget');
+  if (!h) { el.innerHTML = `<h3>One hexagon's budget</h3><p class="hint">Tap any hexagon on the map, or search for an address, to see what it raises in property tax and what its roads cost under this plan.</p>`; return; }
+  const rev = h.rev, mobB = rev * S.mobility_share, r = ratio(h), items = S.mobility_items;
+  const list = items.length > 1 ? items.slice(0, -1).join(', ') + ' or ' + items[items.length - 1] : items[0];
+  const range = sc.kind === 'budget' ? '' : ` <small>(${money(cost(h, sc, 'low'))}–${money(cost(h, sc, 'high'))})</small>`;
+  let verdict;
+  if (rev <= 0) verdict = `<div class="verdict over"><b>No tax base</b><span>Nothing here pays property tax, so the cost of these roads falls on the rest of the city.</span></div>`;
+  else if (r > 1) verdict = `<div class="verdict over"><b>${(r).toFixed(r < 10 ? 1 : 0)}× over</b><span>Roads alone need ${money(h.cost - mobB)} more than this area's whole mobility budget. Nothing is left for ${list}.</span></div>`;
+  else verdict = `<div class="verdict under"><b>${money(mobB - h.cost)} left</b><span>Roads use ${pct(r)} of this area's mobility budget. The rest goes to ${list}.</span></div>`;
+  const fill = r == null ? 0 : Math.min(r, 1);
+  el.innerHTML = `<h3>One hexagon's budget</h3>
+    <div><h4>${esc(h.name || 'Unnamed area')}</h4><div class="tag">${nice(h.st)}${h.special ? ' · not expected to pay for itself' : ''}</div></div>
+    <dl class="ledger">
+      <div class="sec">Revenue: municipal property tax</div>
+      <dt>Residential</dt><dd>${money(h.rev_res)}</dd>
+      <dt>Commercial and other</dt><dd>${money(h.rev_com)}</dd>
+      <dt class="tot">Total revenue</dt><dd class="tot">${money(rev)}</dd>
+      <div class="sec">Expense: ${esc(sc.label.toLowerCase())}</div>
+      <dt>Road pavement</dt><dd>${money(h.cost)}${range}</dd>
+      <dt>Per tax dollar</dt><dd>${rev > 0 ? cents(h.cost / rev) : 'n/a'}</dd>
+      <div class="sec">Against the mobility budget</div>
+      <dt>Mobility budget (${cents(S.mobility_share)} per tax dollar)</dt><dd>${money(mobB)}</dd>
+      <dt>Share of it roads need</dt><dd>${r == null ? 'n/a' : pct(r)}</dd>
+    </dl>
+    ${r == null ? '' : `<div class="meter" aria-hidden="true"><div class="track"><div class="fill" style="width:${(100 * fill).toFixed(1)}%;background:var(${r > 1 ? '--bad' : '--good'})"></div></div>
+      <div class="cap"><span>$0</span><span>${r > 1 ? 'Mobility budget used up' : 'Mobility budget ' + money(mobB)}</span></div></div>`}
+    ${verdict}`;
+}
+
+// ---- map -----------------------------------------------------------------
+const rings = g => (g.type === 'MultiPolygon' ? g.coordinates : [g.coordinates]);
+function inside([px, py], geom) {
+  return rings(geom).some(poly => { const r = poly[0]; let hit = false;
+    for (let i = 0, j = r.length - 1; i < r.length; j = i++) { const [xi, yi] = r[i], [xj, yj] = r[j];
+      if ((yi > py) !== (yj > py) && px < (xj - xi) * (py - yi) / (yj - yi) + xi) hit = !hit; }
+    return hit; });
+}
+function select(h, toggle) {
+  if (!h) return; state.sel = toggle && state.sel === h ? null : h; render();
+  if (state.sel && innerWidth < 880) $('budget').scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start'});
+}
+function startMap(geojson) {
   let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
   H.forEach(h => rings(h.geom).forEach(poly => poly[0].forEach(([x, y]) => {
     x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); })));
   bounds = [[x0, y0], [x1, y1]];
-
   mapboxgl.accessToken = MAPBOX_TOKEN;
   map = new mapboxgl.Map({container: 'map', style: 'mapbox://styles/mapbox/' + (dark() ? 'dark-v11' : 'light-v11'),
     bounds, fitBoundsOptions: {padding: 16}, maxBounds: [[x0 - 0.35, y0 - 0.25], [x1 + 0.35, y1 + 0.25]],
-    minZoom: 8, cooperativeGestures: true, attributionControl: true});
+    minZoom: 8, cooperativeGestures: true});
   map.addControl(new mapboxgl.NavigationControl({showCompass: false}), 'top-right');
   map.on('error', e => { console.error(e.error || e); if (!ready) $('maphint').textContent = 'The map could not be loaded.'; });
   map.on('load', () => {
     map.addSource('hex', {type: 'geojson', data: geojson, promoteId: 'id'});
     // under the basemap's roads and labels, so streets and place names stay readable
     const under = (map.getStyle().layers.find(l => l['source-layer'] === 'road' || l.type === 'symbol') || {}).id;
-    const fill = ['match', ['coalesce', ['feature-state', 'bin'], 6]];
-    for (let i = 0; i < 6; i++) fill.push(i, css('--r' + i));
+    const fill = ['match', ['coalesce', ['feature-state', 'c'], 6]];
+    COLORS.forEach((c, i) => fill.push(i, css(c)));
     fill.push(css('--special'));
-    map.addLayer({id: 'hex-fill', type: 'fill', source: 'hex', paint: {'fill-color': fill, 'fill-opacity': 0.78}}, under);
+    map.addLayer({id: 'hex-fill', type: 'fill', source: 'hex', paint: {'fill-color': fill, 'fill-opacity': 0.8}}, under);
     map.addLayer({id: 'hex-line', type: 'line', source: 'hex', paint: {'line-color': css('--hexline'), 'line-width': 0.6, 'line-opacity': 0.6}}, under);
     map.addLayer({id: 'hex-sel', type: 'line', source: 'hex', filter: ['==', ['get', 'id'], -1], paint: {'line-color': css('--select'), 'line-width': 3}});
     map.on('click', 'hex-fill', e => select(byId.get(String(e.features[0].properties.id)), true));
+    const tip = $('tip');
     map.on('mousemove', 'hex-fill', e => { const h = byId.get(String(e.features[0].properties.id)); if (!h) return;
       map.getCanvas().style.cursor = 'pointer';
-      tip.textContent = `${h.name || nice(h.st)}: ${h.special ? nice(h.st).toLowerCase() : pct(h.share) + ' of tax'}`; tip.hidden = false;
-      tip.style.left = Math.min(e.originalEvent.clientX + 12, innerWidth - 230) + 'px'; tip.style.top = (e.originalEvent.clientY + 14) + 'px'; });
+      const r = ratio(h);
+      tip.textContent = `${h.name || nice(h.st)}: ` + (h.special ? nice(h.st).toLowerCase() : r == null ? 'no tax base' : r > 1 ? `${r.toFixed(1)}× the mobility budget` : `${pct(r)} of the mobility budget`);
+      tip.hidden = false; tip.style.left = Math.min(e.originalEvent.clientX + 12, innerWidth - 250) + 'px'; tip.style.top = (e.originalEvent.clientY + 14) + 'px'; });
     map.on('mouseleave', 'hex-fill', () => { map.getCanvas().style.cursor = ''; tip.hidden = true; });
-    ready = true; $('maphint').textContent = 'Tap a hexagon for its numbers. Use two fingers to move the map.'; render();
+    ready = true; $('maphint').textContent = 'Tap a hexagon for its budget. Use two fingers to move the map.'; render();
   });
 }
-function select(h, toggle) { if (!h) return; state.sel = toggle && state.sel === h ? null : h; render(); }
-function inside([px, py], geom) {  // is a lon/lat point inside a hex?
-  return rings(geom).some(poly => { const r = poly[0]; let hit = false;
-    for (let i = 0, j = r.length - 1; i < r.length; j = i++) { const [xi, yi] = r[i], [xj, yj] = r[j];
-      if ((yi > py) !== (yj > py) && px < (xj - xi) * (py - yi) / (yj - yi) + xi) hit = !hit; }
-    return hit; });
-}
-
-function compute() {
-  const resLife = +$('res').value, mainLife = +$('main').value, cost = +$('cost').value, mode = $('sharemode').value;
-  const sharedTotal = H.reduce((a, h) => a + h.sh, 0), revTotal = H.reduce((a, h) => a + h.rev, 0);
-  H.forEach(h => {
-    const shared = mode === 'local' ? h.sh : mode === 'equal' ? sharedTotal / H.length : sharedTotal * h.rev / revTotal;
-    h.cost = state.treat === 'recon' ? cost * (h.res / resLife + (h.ter + shared) / mainLife) : FLAT[state.treat] * (h.res + h.ter + shared);
-    h.share = h.rev > 0 ? h.cost / h.rev : null;
-  });
-}
-function bin(h) { if (h.special || h.share == null) return 6; let i = 0; while (i < BINS.length && h.share >= BINS[i]) i++; return i; }
-
-function render() {
-  if (!ready) return;
-  compute();
-  const recon = state.treat === 'recon';
-  $('o-res').textContent = $('res').value + ' years'; $('o-main').textContent = $('main').value + ' years'; $('o-cost').textContent = '$' + $('cost').value;
-  ['res', 'main', 'cost'].forEach(k => { $(k).disabled = !recon; $('l-' + k).classList.toggle('off', !recon); });
-  $('treat-hint').textContent = HINTS[state.treat];
-  H.forEach(h => map.setFeatureState({source: 'hex', id: h.id}, {bin: bin(h)}));
-  map.setFilter('hex-sel', ['==', ['get', 'id'], state.sel ? state.sel.id : -1]);
-  const cost = H.reduce((a, h) => a + h.cost, 0), rev = H.reduce((a, h) => a + h.rev, 0);
-  $('s-share').textContent = pct(cost / rev); $('s-cost').textContent = money(cost);
-  $('s-red').textContent = H.filter(h => !h.special && h.share != null && h.share > 0.5).length.toLocaleString();
-  const rows = ORDER.map(s => { const g = H.filter(h => h.st === s); return [s, g.reduce((a, h) => a + h.cost, 0) / g.reduce((a, h) => a + h.rev, 0)]; });
-  const max = Math.max(...rows.map(r => r[1]), 0.01);
-  $('bars').innerHTML = rows.map(r => `<div>${nice(r[0])}</div><div class="track"><div class="bar" style="width:${(100 * r[1] / max).toFixed(1)}%"></div></div><div class="v">${pct(r[1])}</div>`).join('');
-  renderHex();
-}
-function renderHex() {
-  const h = state.sel, el = $('hex');
-  if (!h) { el.innerHTML = '<h3>One hexagon</h3><p class="hint">Tap any hexagon on the map to see what it pays in tax and what its roads cost.</p>'; return; }
-  const cents = h.share == null ? null : Math.min(100, Math.round(h.share * 100));
-  el.innerHTML = `<h3>One hexagon</h3><div><h4>${h.name || 'Unnamed area'}</h4><div class="tag">${nice(h.st)}${h.special ? ' · not expected to pay for itself' : ''}</div></div>
-    <dl class="kv"><dt>Municipal tax raised</dt><dd>${money(h.rev)}</dd><dt>Road cost per year</dt><dd>${money(h.cost)}</dd><dt>Share of tax needed for roads</dt><dd>${pct(h.share)}</dd></dl>
-    ${cents == null ? '<p class="hint">No taxable property here.</p>' : `<div class="dollar" aria-hidden="true"><div style="width:${cents}%"></div></div><p class="hint">${h.share > 1 ? 'Roads here cost more than all the municipal tax the area raises.' : `Of every tax dollar raised here, about ${cents}¢ would go to pavement.`}</p>`}`;
-}
-$('legend').innerHTML = BIN_LABELS.map((l, i) => `<span><i style="background:var(--r${i})"></i>${l}</span>`).join('') + '<span><i style="background:var(--special)"></i>Park, undeveloped or special district</span>';
-
-const tip = $('tip');
 $('search').addEventListener('submit', e => { e.preventDefault();
   const q = $('q').value.trim(); if (!q || !ready) return;
   const url = 'https://api.mapbox.com/search/geocode/v6/forward?q=' + encodeURIComponent(q) + '&limit=1&country=ca&bbox=' + bounds.flat().join(',') +
@@ -296,10 +334,19 @@ $('search').addEventListener('submit', e => { e.preventDefault();
     map.flyTo({center: pt, zoom: 12.5, essential: true}); if (h) select(h, false);
   }).catch(() => { $('maphint').textContent = 'Search is unavailable right now.'; });
 });
-$('treat').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.treat = b.dataset.t; [...$('treat').children].forEach(x => x.setAttribute('aria-pressed', x === b)); render(); });
-['res', 'main', 'cost', 'sharemode'].forEach(k => $(k).addEventListener('input', render));
-fetch('data/hexes.geojson').then(r => r.json()).then(g => { draw(g); render(); })
-  .catch(() => { $('maphint').textContent = 'The map data could not be loaded.'; });
+
+// ---- start ---------------------------------------------------------------
+Promise.all([fetch('data/scenarios.json').then(r => r.json()), fetch('data/hexes.geojson').then(r => r.json())]).then(([s, g]) => {
+  S = s; state.scenario = S.default;
+  H = g.features.map(f => ({...f.properties, st: f.properties.structure || 'OTHER', rev: f.properties.rev_res + f.properties.rev_com, geom: f.geometry}));
+  byId = new Map(H.map(h => [String(h.id), h]));
+  prepare();
+  $('legend').innerHTML = LABELS.map((l, i) => `<span><i style="background:var(${COLORS[i]})"></i>${l}</span>`).join('') + '<span><i style="background:var(--special)"></i>Park, undeveloped or special district</span>';
+  $('items-note').textContent = S.mobility_items.join(', ');
+  $('mob-note').textContent = cents(S.mobility_share) + ' of every dollar';
+  renderOptions(); render();
+  try { startMap(g); } catch (err) { console.error(err); $('maphint').textContent = 'The map could not be loaded.'; }
+}).catch(err => { console.error(err); $('maphint').textContent = 'The map data could not be loaded.'; });
 </script>
 </body>
 </html>

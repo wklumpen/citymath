@@ -10,9 +10,13 @@ with x as (
            c.cost_high * b.m2 as road_cost_high
     from hex_summary s
     cross join cfg_scenario c
+    cross join (select sum(pavement_m2) as m2 from hex_summary) t
     cross join lateral (
-        select case when c.per_life then s.pavement_m2_per_year
-                    else s.pavement_m2 end as m2
+        -- life: one-off cost spread over each class's life; flat: annual rate;
+        -- budget: a citywide amount shared out by pavement area
+        select case c.kind when 'life' then s.pavement_m2_per_year
+                           when 'flat' then s.pavement_m2
+                           else s.pavement_m2 / t.m2 end as m2
     ) b
 )
 select hex_id, scenario, label, comm_structure, is_special, revenue_total,

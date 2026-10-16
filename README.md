@@ -15,7 +15,7 @@ plain SQL in `sql/`; every assumption is in `config.yaml`.
 | `roads` | Length of City-maintained, paved road per hex by class |
 | `assessments` | Assessed value per hex by class, allocated from parcels by area, with tax-exempt property removed |
 | `summary` | `hex_summary` (one row per hex) and `hex_scenario` (one row per hex per pavement scenario) |
-| `export` | `docs/data/hexes.geojson`, the per-hex file the website reads |
+| `export` | `docs/data/hexes.geojson` and `docs/data/scenarios.json`, the files the website reads |
 
 ## Method in brief
 
@@ -45,7 +45,8 @@ Assessments (Parcel)" CSV into the spatial database.
 
 ## Website
 
-`docs/` is a static site served by GitHub Pages: `index.html` reads
+`docs/` is a static site served by GitHub Pages: `index.html` reads the
+scenario definitions in `data/scenarios.json` and
 `data/hexes.geojson` and recomputes road cost in the browser as the reader
 changes the scenario. Preview it locally with
 `python3 -m http.server -d docs`.
