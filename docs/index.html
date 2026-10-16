@@ -305,7 +305,8 @@ function renderWays(sc) {
   $('gap-intro').innerHTML = `This plan costs ${money(c)} a year, which is <strong>${money(gap)} more</strong> than the ${money(nowCost)} the City is spending now. There are only three ways to close a gap like that.`;
   $('ways').innerHTML = `
     <div class="way"><h3>Raise more revenue</h3><div class="num">+${pct(up)}</div>
-      <p>More municipal property tax, every year. That can come from a higher tax rate, about ${money(home * up)} more a year on the median home (${money(home)} today). Or it can come from a bigger tax base: ${pct(up)} more taxable property on the streets we already have, which means more homes and businesses on the same roads.</p></div>
+      <p>More municipal property tax, every year. That can come from a higher tax rate, about ${money(home * up)} more a year on the median home (${money(home)} today).</p>
+      <p>Or it can come from making the land we already have more tax-productive: ${pct(up)} more taxable property value, from more households and more businesses on the same roads.</p></div>
     <div class="way"><h3>Cut something else</h3><div class="num">${money(gap)}</div>
       <p>Keep taxes where they are and move this much a year into roads from other City services. That is ${pct(gap / S.mobility_total)} of everything the City spends on mobility today (${money(S.mobility_total)}), or cuts to parks, transit, recreation or other services.</p></div>
     <div class="way decline"><h3>Let the streets fall apart</h3><div class="num">${money(nowCost)}</div>
