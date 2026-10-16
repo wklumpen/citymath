@@ -220,7 +220,7 @@ const NICE = {'CENTRE CITY':'Centre City','INNER CITY':'Inner city','BUILDING OU
 // Map classes: road cost as a multiple of the area's mobility budget.
 const STEPS = [0.5, 1, 2, 4, 8];
 const COLORS = ['--u0', '--u1', '--o0', '--o1', '--o2', '--o3'];
-const LABELS = ['Under half the mobility budget', 'Within the mobility budget', '1–2× the mobility budget', '2–4×', '4–8×', 'Over 8×'];
+const LABELS = ['Under half the mobility budget', 'Within the mobility budget', 'Up to 100% overrun', '100–300% overrun', '300–700% overrun', 'Over 700% overrun'];
 
 const $ = id => document.getElementById(id);
 const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -322,9 +322,9 @@ function renderWards(sc) {
   const mob = S.mobility_share, nums = [...new Set(H.map(h => h.ward))].sort((a, b) => a - b);
   const rows = nums.map(n => { const g = H.filter(h => h.ward === n), rev = g.reduce((a, h) => a + h.rev, 0), c = g.reduce((a, h) => a + h.cost, 0);
     return {n, hexes: g.length, rev, c, share: c / rev, ratio: c / (rev * mob)}; });
-  $('wards').innerHTML = `<thead><tr><th>Ward</th><th>Property tax</th><th>Road pavement and repair</th><th>Per tax dollar</th><th>Share of mobility budget</th></tr></thead><tbody>`
+  $('wards').innerHTML = `<thead><tr><th>Ward</th><th>Property tax</th><th>Road pavement and repair</th><th>Per tax dollar</th><th>Share of mobility budget, or overrun</th></tr></thead><tbody>`
     + rows.map(r => `<tr><td><button type="button" data-ward="${r.n}">Ward ${r.n}</button></td><td>${money(r.rev)}</td><td>${money(r.c)}</td><td>${cents(r.share)}</td>
-      <td class="${r.ratio > 1 ? 'over' : 'under'}">${r.ratio > 1 ? r.ratio.toFixed(1) + '×' : pct(r.ratio)}</td></tr>`).join('') + '</tbody>';
+      <td class="${r.ratio > 1 ? 'over' : 'under'}">${r.ratio > 1 ? pct(r.ratio - 1) + ' overrun' : pct(r.ratio)}</td></tr>`).join('') + '</tbody>';
 }
 $('wards').addEventListener('click', e => { const b = e.target.closest('button[data-ward]'); if (!b || !ready) return;
   const n = +b.dataset.ward; let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
@@ -338,7 +338,7 @@ function renderBudget(sc) {
   const range = sc.kind === 'budget' ? '' : ` <small>(${money(cost(h, sc, 'low'))}–${money(cost(h, sc, 'high'))})</small>`;
   let verdict;
   if (rev <= 0) verdict = `<div class="verdict over"><b>No tax base</b><span>Nothing here pays property tax, so the cost of these roads falls on the rest of the city.</span></div>`;
-  else if (r > 1) verdict = `<div class="verdict over"><b>${(r).toFixed(r < 10 ? 1 : 0)}× over</b><span>Roads alone need ${money(h.cost - mobB)} more than this area's whole mobility budget. Nothing is left for ${join('or')}.</span></div>`;
+  else if (r > 1) verdict = `<div class="verdict over"><b>${pct(r - 1)} overrun</b><span>Roads alone need ${money(h.cost - mobB)} more than this area's whole mobility budget. Nothing is left for ${join('or')}.</span></div>`;
   else verdict = `<div class="verdict under"><b>${money(mobB - h.cost)} left</b><span>Roads use ${pct(r)} of this area's mobility budget. The rest will have to fund ${join('and')}.</span></div>`;
   const fill = r == null ? 0 : Math.min(r, 1);
   el.innerHTML = `<h3>One hexagon's budget</h3>
@@ -413,7 +413,7 @@ function startMap(geojson) {
     map.on('mousemove', 'hex-fill', e => { const h = byId.get(String(e.features[0].properties.id)); if (!h) return;
       map.getCanvas().style.cursor = 'pointer';
       const r = ratio(h);
-      tip.textContent = `${h.name || nice(h.st)}: ` + (h.special ? nice(h.st).toLowerCase() : r == null ? 'no tax base' : r > 1 ? `${r.toFixed(1)}× the mobility budget` : `${pct(r)} of the mobility budget`);
+      tip.textContent = `${h.name || nice(h.st)}: ` + (h.special ? nice(h.st).toLowerCase() : r == null ? 'no tax base' : r > 1 ? `${pct(r - 1)} over the mobility budget` : `${pct(r)} of the mobility budget`);
       tip.hidden = false; tip.style.left = Math.min(e.originalEvent.clientX + 12, innerWidth - 250) + 'px'; tip.style.top = (e.originalEvent.clientY + 14) + 'px'; });
     map.on('mouseleave', 'hex-fill', () => { map.getCanvas().style.cursor = ''; tip.hidden = true; });
     ready = true; $('maphint').textContent = 'Tap a hexagon for its budget. Use two fingers to move the map.'; render();
