@@ -53,3 +53,18 @@ changes the scenario. Preview it locally with
 
 Source data (the hex grid, assessment rolls and street width samples) is not
 included in this repository; only the derived per-hex file for the website is.
+
+## Slide images
+
+`uv run slides.py` renders PNGs for presentations from the same
+`docs/data/` files as the website, with the same math, into `slides/out/`
+(not committed). Pass plan ids (e.g. `uv run slides.py recommended`) to limit
+the per-plan charts. Each chart comes as `_wide.png` (1920x1080, with a title)
+and `_square.png` (1080x1080, untitled, for text beside it):
+
+- `plans_cost`, `plans_tax`, `plans_hexes`: every plan side by side
+- `neighbourhoods_<plan>`: cents per tax dollar by type of neighbourhood
+- `map_<plan>`: the hexagon map
+
+Charts are drawn with Altair and rendered with vl-convert, using the site's
+fonts (Archivo and Source Sans 3, SIL Open Font License) from `slides/fonts/`.
