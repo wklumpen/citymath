@@ -149,7 +149,7 @@ roads:
       label: Historical spending
       annual_budget: 40000000
       summary: About what Calgary spent on pavement each year from 2011 to 2025, when the budget ran between $30M and $50M.
-      consequence: Pavement kept getting worse under this level of spending. By 2024, 29% of the network had fallen to poor condition.
+      consequence: "Pavement kept getting worse under this level of spending. After 10 years of funding at this rate, 26% of roads will be in good condition and 52% will be in poor condition (from 38% in good condition and 26% in poor condition in 2024)."
       sources:
         - {title: "Pavement Quality report, p. 7", url: "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347"}
         - {title: "Pavement Quality presentation, pp. 5-6", url: "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304348"}
@@ -157,42 +157,42 @@ roads:
       label: 2026 budget
       annual_budget: 64000000
       summary: The 2026 pavement budget, after Council moved $24M from the Fiscal Stability Reserve to reach $64M. It targets repaving 400 lane-km of road, about 2.3% of the network, so each street waits about 43 years for new pavement.
-      consequence: This is below the $88M needed just to stop pavement getting worse, so the network keeps declining.
+      consequence: "Roads fall apart faster than they are repaired. The backlog of roads in poor condition grows."
       sources:
         - {title: "Budget 2026 as approved, pp. 76-78", url: "https://www.calgary.ca/content/dam/www/cfod/finance/documents/plans-budgets-and-financial-reports/2023-2026-service-plans-budgets/2026-budget-as-approved-dec-3-2025.pdf"}
     break_even:
       label: Break even
       annual_budget: 88000000
       summary: The spending that holds pavement quality steady, with no further decline.
-      consequence: The decline stops, but the backlog of roads already in poor condition is not caught up.
+      consequence: "Funding levels match the pavement deterioration rate in 2024. The backlog of roads in poor condition remains the same."
       sources:
         - {title: "Pavement Quality presentation, p. 7", url: "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304348"}
     recommended:
-      label: Recommended service level
+      label: 50% of roads in good condition
       annual_budget: 116000000
-      summary: The pavement quality level of service recommended in the City's pavement review.
-      consequence: "By 2034: arterials 60% good, 28% fair, 12% poor; collectors 54% good, 12% fair, 34% poor; local streets 42% good, 32% fair, 26% poor. It only covers work that was needed as of 2024, not roads that wear out after that."
+      summary: The $116M a year option in the City's pavement review.
+      consequence: "After 10 years of funding, 50% of roads will be in good condition (up from 38% in 2024). This only covers work that was needed as of 2024, not roads that wear out after that."
       sources:
         - {title: "Pavement Quality presentation, pp. 7-8", url: "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304348"}
     high:
-      label: High option
+      label: 60% of roads in good condition
       annual_budget: 132000000
       summary: The highest spending option in the City's pavement review.
-      consequence: By 2034, pavement would average 60% good, 28% fair and 12% poor, slightly better than 2013, when 57% was good. It still does not cover roads that wear out after 2024.
+      consequence: "After 10 years of funding, 60% of roads will be in good condition (up from 38% in 2024). This would bring Calgary to the Canadian municipal average. This only covers work that was needed as of 2024, not roads that wear out after that."
       sources:
         - {title: "Pavement Quality presentation, p. 7", url: "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304348"}
     crack_seal:
       label: Seal cracks every 10 years
       cost_per_m2_year: {low: 1.00, high: 2.50}
       summary: Crack-seal or microsurface every road at least once every 10 years.
-      consequence: This only works if pavement never slips to fair quality (4 to 6 out of 10). Anything that does needs repaving instead.
+      consequence: "This only works if pavement never slips into the fair or poor categories (below 6 out of 10). Anything below 6 needs repaving. In 2024, 62% of roads were beyond crack filling."
       sources:
         - {title: "Pavement Quality report, p. 4", url: "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347"}
     repave:
       label: Repave every 12-17 years
       cost_per_m2_year: {low: 2.92, high: 4.17}
       summary: Repave every road every 12 to 17 years.
-      consequence: This only works if pavement never falls to poor quality (below 4 out of 10). In 2024, 29% of Calgary's pavement already had.
+      consequence: "Mill and fill. This only works if pavement never slips into the poor category (below 4 out of 10). Anything below 4 needs to be rebuilt. In 2024, 26% of roads were beyond repaving."
       sources:
         - {title: "Pavement Quality report, p. 4", url: "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347"}
         - {title: "Pavement Quality presentation, p. 5", url: "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304348"}
@@ -200,7 +200,7 @@ roads:
       label: Full replacement
       cost_per_m2: {low: 300, high: 350} # = $14.29-16.67 per m2 per year over 21 years
       summary: Rebuild every road completely when it wears out, at $300 to $350 a square metre. Local streets last 40 years, main roads 21.
-      consequence: The full cost of keeping the network we have, if nothing is allowed to fail.
+      consequence: "The full cost of maintaining our network if we wait until our roads fall to poor condition (below 4 out of 10)."
       sources: []
 
   # Per-m2 costs above are in base_year dollars and are inflated to target_year

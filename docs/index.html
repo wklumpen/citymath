@@ -167,7 +167,7 @@ table.wards { width: 100%; border-collapse: collapse; font-size: 15px; font-vari
   <div class="draft"><b>Draft</b><span>Calgary · <span id="year">2026</span> tax year · numbers not final</span></div>
   <h1>The math doesn't work</h1>
   <p class="subtitle">Calgary needs $54 billion of infrastructure over the next ten years, but has funded only half of it. That leaves us with a <strong>$27 billion shortfall</strong>.</p>
-  <p class="lede">Here we explore just one piece of that budget: the roads. <span id="thesis">Following the City's own recommended pavement plan, we would use up most of the mobility budget just on road repair, before addressing a single sidewalk, streetlight or bike lane.</span></p>
+  <p class="lede">Here we explore just one piece of that budget: the roads. <span id="thesis">Funding the City's option to put half of roads in good condition would use up most of the mobility budget just on road repair, before addressing a single sidewalk, streetlight or bike lane.</span></p>
   <p class="lede">Spending more on roads is necessary, but it is not a solution. Most of our neighbourhoods do not raise enough tax to pay for the roads they already have. The lasting way out, without ever-higher taxes or crumbling streets, is more households and businesses on the roads we already have.</p>
   <p class="srcline">Sources: <a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=361737" target="_blank" rel="noopener">City of Calgary, 10-year Capital Infrastructure Plan, May 2026, p. 2</a> · <a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=361684" target="_blank" rel="noopener">Report to Executive Committee EC2026-0159, p. 2</a> · <a href="https://strongtownscalgary.substack.com/p/calgary-we-are-in-a-predicament" target="_blank" rel="noopener">Strong Towns Calgary, "Calgary, we are in a predicament"</a></p>
 </div></header>
@@ -485,7 +485,7 @@ Promise.all(['scenarios.json', 'hexes.geojson', 'wards.geojson'].map(f => fetch(
   const rec = S.scenarios.find(s => s.id === 'recommended'), full = S.scenarios.find(s => s.id === 'reconstruction');
   if (rec) {
     const mob = tot.rev * S.mobility_share;
-    $('thesis').textContent = `Following the City's own recommended pavement plan, we would use up ${pct(cityCost(rec) / mob)} of the mobility budget just on road repair, before addressing a single sidewalk, streetlight or bike lane.`;
+    $('thesis').textContent = `Funding the City's option to put half of roads in good condition would use up ${pct(cityCost(rec) / mob)} of the mobility budget just on road repair, before addressing a single sidewalk, streetlight or bike lane.`;
   }
   renderOptions(); render();
   try { startMap(g); } catch (err) { console.error(err); $('maphint').textContent = 'The map could not be loaded.'; }
