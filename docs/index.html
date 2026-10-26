@@ -66,10 +66,9 @@ main.wrap { padding-block: 20px 40px; display: flex; flex-direction: column; gap
 .picker { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
 @media (min-width: 880px) { .picker { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
 .options { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 8px; }
-.opt { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; align-items: start; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; background: var(--surface); }
-.opt input { accent-color: var(--band); margin: 3px 0 0; width: 17px; height: 17px; grid-row: span 2; }
+.opt { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; background: var(--surface); }
+.opt input { accent-color: var(--band); margin: 0; width: 17px; height: 17px; }
 .opt b { font-family: var(--display); font-weight: 700; font-size: 16px; line-height: 1.25; }
-.opt small { font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; line-height: 1.35; }
 .opt:hover { border-color: color-mix(in srgb, var(--band) 40%, var(--line)); }
 .opt:has(input:checked) { background: color-mix(in srgb, var(--band) 9%, var(--surface)); border-color: var(--band); }
 .opt:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
@@ -99,7 +98,10 @@ main.wrap { padding-block: 20px 40px; display: flex; flex-direction: column; gap
 .search button { font: 600 15px var(--body); padding: 8px 14px; border: 0; border-radius: 6px; background: var(--band); color: var(--band-ink); cursor: pointer; }
 #map { width: 100%; height: 62vh; min-height: 380px; border-radius: 4px; overflow: hidden; background: var(--special); }
 @media (min-width: 880px) { #map { height: min(76vh, 740px); } }
-.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); }
+.legend { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); }
+.legend > b { color: var(--ink); font: 700 14px var(--display); }
+.legend .grp { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; }
+.legend .grp > b { color: var(--ink); font-weight: 600; margin-right: 2px; }
 .legend i { display: inline-block; width: 14px; height: 14px; border-radius: 2px; vertical-align: -2px; margin-right: 5px; border: 1px solid var(--line); }
 
 /* the hexagon's budget */
@@ -146,6 +148,8 @@ table.wards { width: 100%; border-collapse: collapse; font-size: 15px; font-vari
 .wards th:first-child, .wards td:first-child { text-align: left; }
 .wards thead th { border-top: 0; font: 700 12px var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); vertical-align: bottom; white-space: normal; }
 .wards button { font: 600 15px var(--body); color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+.compare tr.on td { background: color-mix(in srgb, var(--band) 9%, var(--surface)); }
+.compare tr.on button { text-decoration: none; font-weight: 800; }
 .wards .over { color: var(--bad); font-weight: 700; } .wards .under { color: var(--good); font-weight: 700; }
 .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
 .notes div { display: flex; flex-direction: column; gap: 4px; font-size: 15px; color: var(--muted); }
@@ -184,6 +188,12 @@ table.wards { width: 100%; border-collapse: collapse; font-size: 15px; font-vari
     <div class="block" id="budget" aria-live="polite"></div>
   </section>
 
+  <section class="evidence" id="compare-sec">
+    <h2>Every plan side by side</h2>
+    <p>What each pavement plan costs, and how much of the mobility budget it leaves for everything else. Select a plan to show it on the map.</p>
+    <div class="tablewrap"><table class="wards compare" id="compare"></table></div>
+  </section>
+
   <section class="evidence" id="options-sec">
     <h2>So what can we do?</h2>
     <p id="gap-intro"></p>
@@ -220,7 +230,7 @@ const NICE = {'CENTRE CITY':'Centre City','INNER CITY':'Inner city','BUILDING OU
 // Map classes: road cost as a multiple of the area's mobility budget.
 const STEPS = [0.5, 1, 2, 4, 8];
 const COLORS = ['--u0', '--u1', '--o0', '--o1', '--o2', '--o3'];
-const LABELS = ['Under half the mobility budget', 'Within the mobility budget', 'Up to 100% overrun', '100–300% overrun', '300–700% overrun', 'Over 700% overrun'];
+const LABELS = ['Roads use under half', 'Roads use half to all of it', 'Up to 100% overrun', '100–300% overrun', '300–700% overrun', 'Over 700% overrun'];
 
 const $ = id => document.getElementById(id);
 const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -265,20 +275,37 @@ function cls(h) { if (h.special || h.rev <= 0) return 6; const r = ratio(h); let
 function render() {
   const sc = S.scenarios.find(s => s.id === state.scenario);
   H.forEach(h => { h.cost = cost(h, sc); });
-  renderAbout(sc); renderBars(sc); renderWays(sc); renderWards(sc); renderBudget(sc);
+  renderAbout(sc); renderCompare(sc); renderBars(sc); renderWays(sc); renderWards(sc); renderBudget(sc);
   if (!ready) return;
   H.forEach(h => map.setFeatureState({source: 'hex', id: h.id}, {c: cls(h)}));
   map.setFilter('hex-sel', ['==', ['get', 'id'], state.sel ? state.sel.id : -1]);
 }
 function renderOptions() {
-  $('options').innerHTML = S.scenarios.map(s => { const r = taxRise(s);
-    return `<label class="opt"><input type="radio" name="scenario" value="${s.id}"${s.id === state.scenario ? ' checked' : ''}>
-    <b>${esc(s.label)}</b><small>${money(cityCost(s))} a year · ${r > 0.0005 ? `+${pct(r)} tax · ${perHome(r)} per household` : 'no tax increase'}</small></label>`; }).join('');
-  $('options').addEventListener('change', e => { state.scenario = e.target.value; render(); });
+  $('options').innerHTML = S.scenarios.map(s => `<label class="opt"><input type="radio" name="scenario" value="${s.id}"${s.id === state.scenario ? ' checked' : ''}>
+    <b>${esc(s.label)}</b></label>`).join('');
+  $('options').addEventListener('change', e => pick(e.target.value));
 }
+function pick(id) {
+  state.scenario = id;
+  document.querySelectorAll('#options input').forEach(i => { i.checked = i.value === id; });
+  render();
+}
+// neighbourhood hexagons (not parks or special districts) and how many of them roads alone overrun
+function overrun(sc) {
+  const ord = H.filter(h => !h.special && h.rev > 0);
+  return [ord.filter(h => cost(h, sc) > h.rev * S.mobility_share).length, ord.length];
+}
+function renderCompare(sc) {
+  const mob = tot.rev * S.mobility_share;
+  $('compare').innerHTML = `<thead><tr><th>Plan</th><th>A year citywide</th><th>Per tax dollar</th><th>Share of mobility budget, or overrun</th><th>Tax increase needed</th><th>Per median household</th><th>Hexagons overrun</th></tr></thead><tbody>`
+    + S.scenarios.map(s => { const c = cityCost(s), r = c / mob, up = taxRise(s), [o, n] = overrun(s);
+      return `<tr${s.id === sc.id ? ' class="on"' : ''}><td><button type="button" data-plan="${s.id}">${esc(s.label)}</button></td><td>${money(c)}</td><td>${cents(c / tot.rev)}</td>
+        <td class="${r > 1 ? 'over' : 'under'}">${r > 1 ? pct(r - 1) + ' overrun' : pct(r)}</td><td>${up <= 0.0005 ? 'none' : '+' + pct(up)}</td><td>${up <= 0.0005 ? '$0' : perHome(up)}</td><td>${o.toLocaleString()} of ${n.toLocaleString()}</td></tr>`; }).join('') + '</tbody>';
+}
+$('compare').addEventListener('click', e => { const b = e.target.closest('button[data-plan]'); if (b) pick(b.dataset.plan); });
 function renderAbout(sc) {
   const c = cityCost(sc), share = c / tot.rev, mob = S.mobility_share;
-  const over = H.filter(h => !h.special && h.rev > 0 && ratio(h) > 1).length, ord = H.filter(h => !h.special && h.rev > 0).length;
+  const [over, ord] = overrun(sc);
   const range = sc.kind === 'budget' ? '' : ` <span class="hint">(${money(cityCost({...sc, kind: sc.kind, low: sc.low, high: sc.low}))} to ${money(cityCost({...sc, low: sc.high}))})</span>`;
   $('about').innerHTML = `<h2>${esc(sc.label)}</h2><p>${esc(sc.summary)}</p>
     ${sc.consequence ? `<div class="alert" role="note"><b>What this means</b><p>${esc(sc.consequence)}</p></div>` : ''}
@@ -437,7 +464,11 @@ Promise.all(['scenarios.json', 'hexes.geojson', 'wards.geojson'].map(f => fetch(
   H = g.features.map(f => ({...f.properties, st: f.properties.structure || 'OTHER', rev: f.properties.rev_res + f.properties.rev_com, geom: f.geometry}));
   byId = new Map(H.map(h => [String(h.id), h]));
   prepare();
-  $('legend').innerHTML = LABELS.map((l, i) => `<span><i style="background:var(${COLORS[i]})"></i>${l}</span>`).join('') + '<span><i style="background:var(--special)"></i>Park, undeveloped or special district</span>';
+  const key = i => `<span><i style="background:var(${COLORS[i]})"></i>${LABELS[i]}</span>`;
+  $('legend').innerHTML = `<b>Colour: this plan's road cost against the area's own mobility budget</b>
+    <div class="grp"><b>Blue, money left for ${S.mobility_items.slice(0, 3).join(', ')} and more:</b>${key(0)}${key(1)}</div>
+    <div class="grp"><b>Orange, roads alone cost more than the whole mobility budget:</b>${key(2)}${key(3)}${key(4)}${key(5)}</div>
+    <div class="grp"><span><i style="background:var(--special)"></i>Grey: park, undeveloped or special district</span></div>`;
   $('year').textContent = S.tax_year; document.querySelectorAll('.yr').forEach(e => { e.textContent = S.tax_year; });
   $('home-note').textContent = '$' + S.typical_home_value.toLocaleString();
   $('items-note').textContent = S.mobility_items.join(', ');
