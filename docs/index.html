@@ -141,6 +141,9 @@ main.wrap { padding-block: 20px 40px; display: flex; flex-direction: column; gap
 .way h3 { font-size: 19px; font-weight: 800; }
 .way .num { font-family: var(--display); font-weight: 800; font-size: 26px; font-variant-numeric: tabular-nums; line-height: 1.1; }
 .way p { color: var(--muted); }
+.way.best { border-color: var(--good); background: color-mix(in srgb, var(--good) 8%, var(--surface)); }
+.way .kicker { font: 700 12px var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.way.best .kicker { color: var(--good); }
 .way.decline { border-color: color-mix(in srgb, var(--accent) 55%, var(--surface)); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
 .tablewrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
 table.wards { width: 100%; border-collapse: collapse; font-size: 15px; font-variant-numeric: tabular-nums; }
@@ -165,6 +168,7 @@ table.wards { width: 100%; border-collapse: collapse; font-size: 15px; font-vari
   <h1>The math doesn't work</h1>
   <p class="subtitle">Calgary needs $54 billion of infrastructure over the next ten years, but has funded only half of it. That leaves us with a <strong>$27 billion shortfall</strong>.</p>
   <p class="lede">Here we explore just one piece of that budget: the roads. <span id="thesis">Following the City's own recommended pavement plan, we would use up most of the mobility budget just on road repair, before addressing a single sidewalk, streetlight or bike lane.</span></p>
+  <p class="lede">Spending more on roads is necessary, but it is not a solution. Most of our neighbourhoods do not raise enough tax to pay for the roads they already have. The lasting way out, without ever-higher taxes or crumbling streets, is more households and businesses on the roads we already have.</p>
   <p class="srcline">Sources: <a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=361737" target="_blank" rel="noopener">City of Calgary, 10-year Capital Infrastructure Plan, May 2026, p. 2</a> · <a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=361684" target="_blank" rel="noopener">Report to Executive Committee EC2026-0159, p. 2</a> · <a href="https://strongtownscalgary.substack.com/p/calgary-we-are-in-a-predicament" target="_blank" rel="noopener">Strong Towns Calgary, "Calgary, we are in a predicament"</a></p>
 </div></header>
 
@@ -201,9 +205,10 @@ table.wards { width: 100%; border-collapse: collapse; font-size: 15px; font-vari
   </section>
 
   <section class="evidence">
-    <h2>Compact neighbourhoods leave more money for everything other than roads</h2>
+    <h2>More homes and businesses per street means roads that pay for themselves</h2>
     <p>Cents of every property tax dollar this plan needs for roads, by type of neighbourhood. The black line is the mobility budget's share. Parks, undeveloped land and special districts such as the airport are left out.</p>
     <div class="bars" id="bars"></div>
+    <p id="bars-take"></p>
   </section>
 
   <section class="evidence" id="wards-sec">
@@ -322,6 +327,8 @@ function renderBars(sc) {
   const mob = S.mobility_share;
   const rows = ORDER.map(s => { const g = H.filter(h => h.st === s); return [s, g.reduce((a, h) => a + h.cost, 0) / g.reduce((a, h) => a + h.rev, 0)]; });
   const max = Math.max(...rows.map(r => r[1]), mob) * 1.08;
+  const res = rows.filter(r => !['CENTRE CITY', 'EMPLOYMENT', 'BUILDING OUT'].includes(r[0])).sort((a, b) => a[1] - b[1]), lo = res[0], hi = res[res.length - 1];
+  $('bars-take').innerHTML = `Under this plan, the ${nice(lo[0]).toLowerCase()} neighbourhoods need <strong>${cents(lo[1])}</strong> of each tax dollar for their roads; the ${nice(hi[0]).toLowerCase()} suburbs need <strong>${cents(hi[1])}</strong>, ${(hi[1] / lo[1]).toFixed(1)} times as much. Pavement costs the same per square metre everywhere; what differs is how much tax each street carries.`;
   $('bars').innerHTML = rows.map(([s, v]) => `<div>${nice(s)}</div><div class="track"><div class="bar" style="width:${(100 * v / max).toFixed(1)}%;background:var(${v > mob ? '--o2' : '--u0'})"></div><div class="line" style="left:${(100 * mob / max).toFixed(1)}%"></div></div><div class="v">${cents(v)}</div>`).join('')
     + `<div class="key"><span><i style="background:var(--u0)"></i>Fits within the mobility budget</span><span><i style="background:var(--o2)"></i>Overruns it</span><span><i style="background:var(--ink);width:3px"></i>Mobility budget, ${cents(mob)} per tax dollar</span></div>`;
 }
@@ -335,14 +342,15 @@ function renderWays(sc) {
     $('ways').innerHTML = `<div class="way decline"><h3>The streets keep falling apart</h3><p>${brk ? `Below the ${money(cityCost(brk))} break-even, pavement keeps getting worse every year.` : 'Pavement keeps getting worse every year.'} In 2024, 29% of Calgary's pavement was already in poor condition. Pick a bigger plan to see what fixing it would take.</p></div>`;
     return;
   }
-  $('gap-intro').innerHTML = `This plan costs ${money(c)} a year, which is <strong>${money(gap)} more</strong> than the ${money(nowCost)} the City is spending now. There are only three ways to close a gap like that.`;
+  $('gap-intro').innerHTML = `This plan costs ${money(c)} a year, which is <strong>${money(gap)} more</strong> than the ${money(nowCost)} the City is spending now. There are only four ways to close a gap like that, and only one of them lasts.`;
   $('ways').innerHTML = `
-    <div class="way"><h3>Raise more revenue</h3><div class="num">+${pct(up)}</div>
-      <p>More municipal property tax, every year. That can come from a higher tax rate, about ${money(home * up)} more a year on the median home (${money(home)} today).</p>
-      <p>Or it can come from making the land we already have more tax-productive: ${pct(up)} more taxable property value, from more households and more businesses on the same roads.</p></div>
-    <div class="way"><h3>Cut something else</h3><div class="num">${money(gap)}</div>
+    <div class="way best"><span class="kicker">The lasting fix</span><h3>Make our land more productive</h3><div class="num">+${pct(up)}</div>
+      <p>${pct(up)} more taxable property value, from more households and more businesses on the streets we already have. New homes and shops on existing roads add tax without adding pavement, so the gap closes and stays closed.</p></div>
+    <div class="way"><span class="kicker">A stopgap</span><h3>Raise the tax rate</h3><div class="num">+${pct(up)}</div>
+      <p>About ${money(home * up)} more a year on the median home (${money(home)} today). It pays this year's bill, but the roads keep ageing, and the rate has to keep climbing to keep up.</p></div>
+    <div class="way"><span class="kicker">A stopgap</span><h3>Cut something else</h3><div class="num">${money(gap)}</div>
       <p>Keep taxes where they are and move this much property tax a year from other City services into roads. Mobility's share of each tax dollar would have to grow from ${cents(S.mobility_share)} to ${cents(S.mobility_share + up)}, and parks, transit, recreation or other services would get less.</p></div>
-    <div class="way decline"><h3>Let the streets fall apart</h3><div class="num">${money(nowCost)}</div>
+    <div class="way decline"><span class="kicker">What happens by default</span><h3>Let the streets fall apart</h3><div class="num">${money(nowCost)}</div>
       <p>Keep spending what we spend now and accept the decline. ${brk ? `It is below the ${money(cityCost(brk))} break-even, so` : 'So'} pavement keeps getting worse every year. In 2024, 29% of Calgary's pavement was already in poor condition.</p></div>`;
 }
 function renderWards(sc) {
