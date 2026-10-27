@@ -49,6 +49,7 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid 
 .band .wrap { padding-block: 22px 26px; display: flex; flex-direction: column; gap: 10px; }
 .draft { font-family: var(--display); font-weight: 700; font-size: 12px; letter-spacing: .09em; text-transform: uppercase; color: var(--band-muted); display: flex; gap: 10px; flex-wrap: wrap; }
 .draft b { color: var(--accent); }
+.draft .navlink { margin-left: auto; color: var(--band-ink); }
 h1 { font-weight: 800; font-size: clamp(36px, 7.5vw, 80px); letter-spacing: -.015em; line-height: 1.02; }
 .lede { color: var(--band-muted); font-size: clamp(17px, 1.6vw, 20px); }
 .subtitle { font-family: var(--display); font-weight: 700; font-size: clamp(21px, 2.6vw, 30px); line-height: 1.25; text-wrap: balance; color: var(--band-ink); }
@@ -164,7 +165,7 @@ table.wards { width: 100%; border-collapse: collapse; font-size: 15px; font-vari
 <body>
 
 <header class="band"><div class="wrap">
-  <div class="draft"><b>Draft</b><span>Calgary · <span id="year">2026</span> tax year · numbers not final</span></div>
+  <div class="draft"><b>Draft</b><span>Calgary · <span id="year">2026</span> tax year · numbers not final</span><a class="navlink" href="methods.html">Methods</a></div>
   <h1>The math doesn't work</h1>
   <p class="subtitle">Calgary needs $54 billion of infrastructure over the next ten years, but has funded only half of it. That leaves us with a <strong>$27 billion shortfall</strong>.</p>
   <p class="lede">Here we explore just one piece of that budget: the roads. <span id="thesis">Funding the City's option to put half of roads in good condition would use up most of the mobility budget just on road repair, before addressing a single sidewalk, streetlight or bike lane.</span></p>
@@ -218,6 +219,7 @@ table.wards { width: 100%; border-collapse: collapse; font-size: 15px; font-vari
   </section>
 
   <section class="notes">
+    <div><b>Full methods</b><p>The formulas, data sources and assumptions behind every number are on the <a href="methods.html">methods page</a>.</p></div>
     <div><b>What is counted</b><p>Road pavement only. The mobility budget also pays for <span id="items-note"></span>, and the city budget pays for pipes, transit, parks, police and much more.</p></div>
     <div><b>Revenue</b><p>The <span class="yr">2026</span> assessment roll times the <span class="yr">2026</span> municipal tax rates. Hospitals, schools, parks and other exempt property are removed. Checked against 2025, the same method lands within about 1% of the City's reported total.</p></div>
     <div><b>Road cost</b><p>Citywide budgets are shared out by each area's paved area. Per-square-metre plans use street lengths from OpenStreetMap and widths measured on sampled streets. Main roads everyone uses are pooled citywide.</p></div>

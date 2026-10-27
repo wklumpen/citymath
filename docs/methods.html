@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Methods - Calgary Street Math</title>
+<meta name="description" content="How the Calgary street math is calculated: the hex grid, revenue, roads, plan costs, formulas and assumptions.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<style>
+/* Layout: navy masthead; then the working screen: scenario picker and the map, with the
+   tapped hexagon's budget beside the map (below it on phones). Evidence chart and notes follow.
+   Map colour is diverging around one line: the mobility budget. Teal fits, orange overruns. */
+:root {
+  --bg: #f4f6f9; --surface: #ffffff; --ink: #101b2d; --muted: #586579; --line: #dde2ea;
+  --band: #12305c; --band-ink: #ffffff; --band-muted: #b9c8de; --accent: #e8751a;
+  --u0: #1f7a8c; --u1: #9fd3db; --o0: #fbd3a6; --o1: #f29b4b; --o2: #d1611a; --o3: #8a3608;
+  --good: #1f7a8c; --bad: #c2410c;
+  --special: #d5dae2; --hexline: #ffffff; --select: #101b2d; --ward: #12305c;
+  --display: "Archivo", "Arial Narrow", Arial, sans-serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b131f; --surface: #121d2d; --ink: #e9eef5; --muted: #9aa8ba; --line: #24334b;
+  --band: #0e2547; --band-ink: #ffffff; --band-muted: #a9bbd6; --accent: #f08a35;
+  --u0: #5cc3d3; --u1: #24606b; --o0: #6b3a12; --o1: #b3561a; --o2: #e8822e; --o3: #fdc58c;
+  --good: #5cc3d3; --bad: #f29b4b;
+  --special: #263143; --hexline: #0b131f; --select: #ffffff; --ward: #c9d6ea; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0b131f; --surface: #121d2d; --ink: #e9eef5; --muted: #9aa8ba; --line: #24334b;
+  --band: #0e2547; --band-ink: #ffffff; --band-muted: #a9bbd6; --accent: #f08a35;
+  --u0: #5cc3d3; --u1: #24606b; --o0: #6b3a12; --o1: #b3561a; --o2: #e8822e; --o3: #fdc58c;
+  --good: #5cc3d3; --bad: #f29b4b;
+  --special: #263143; --hexline: #0b131f; --select: #ffffff; --ward: #c9d6ea; color-scheme: dark }
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.5; }
+h1, h2, h3, h4 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.15; }
+p { margin: 0; }
+a { color: inherit; text-underline-offset: 2px; }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-inline: 16px; }
+
+.band { background: var(--band); color: var(--band-ink); }
+.band .wrap { padding-block: 22px 26px; display: flex; flex-direction: column; gap: 10px; }
+.draft { font-family: var(--display); font-weight: 700; font-size: 12px; letter-spacing: .09em; text-transform: uppercase; color: var(--band-muted); display: flex; gap: 10px; flex-wrap: wrap; }
+.draft b { color: var(--accent); }
+h1 { font-weight: 800; font-size: clamp(36px, 7.5vw, 80px); letter-spacing: -.015em; line-height: 1.02; }
+.lede { color: var(--band-muted); font-size: clamp(17px, 1.6vw, 20px); }
+.subtitle { font-family: var(--display); font-weight: 700; font-size: clamp(21px, 2.6vw, 30px); line-height: 1.25; text-wrap: balance; color: var(--band-ink); }
+.subtitle strong { color: var(--accent); font-weight: 800; }
+.lede strong { color: var(--band-ink); }
+.srcline { color: var(--band-muted); font-size: 13px; }
+.srcline a { color: var(--band-muted); }
+
+main.wrap { padding-block: 20px 40px; display: flex; flex-direction: column; gap: 28px; }
+.block { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.block > h3, .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); font-family: var(--display); }
+.hint { font-size: 14px; color: var(--muted); }
+
+.tablewrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+
+.draft a, .navlink { color: var(--band-muted); }
+.draft .navlink { margin-left: auto; }
+main.wrap { padding-block: 28px 56px; }
+.doc { max-width: 78ch; display: flex; flex-direction: column; gap: 14px; }
+.doc h2 { font-size: 26px; font-weight: 800; margin-top: 22px; }
+.doc h2:first-child { margin-top: 0; }
+.doc h3 { font-size: 18px; font-weight: 700; margin-top: 6px; }
+.doc ul, .doc ol { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; }
+.doc code { font-size: .92em; background: color-mix(in srgb, var(--band) 8%, var(--surface)); padding: 1px 5px; border-radius: 3px; overflow-wrap: anywhere; }
+.math { overflow-x: auto; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 4px; }
+table.plain { width: 100%; border-collapse: collapse; font-size: 15px; }
+.plain th, .plain td { padding: 8px 12px; text-align: left; border-top: 1px solid var(--line); vertical-align: top; }
+.plain thead th { border-top: 0; font: 700 12px var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.plain tr:nth-child(even) td { background: color-mix(in srgb, var(--band) 3%, var(--surface)); }
+</style>
+</head>
+<body>
+<header class="band"><div class="wrap">
+  <div class="draft"><b>Draft</b><span>Calgary · 2026 tax year · numbers not final</span><a class="navlink" href="./">&larr; Back to the map</a></div>
+  <h1>Methods</h1>
+  <p class="lede">How the numbers are made: the formulas, the data behind them and what we assumed, in plain language with enough detail to reproduce them.</p>
+</div></header>
+<main class="wrap">
+<section class="doc">
+<h2>Overview</h2>
+<p>We split Calgary into equal hexagons and, for each one, compare what its properties pay in municipal property tax with what it costs to look after its roads. The roads are measured against mobility's share of that tax, 6.62 cents of every dollar, because that is the part of the tax bill meant for streets, sidewalks, lights and signals.</p>
+<p>The method has four steps:</p>
+<ol>
+<li><strong>Grid.</strong> Cover the city in 800 m hexagons and tag each with its community, era and ward.</li>
+<li><strong>Revenue.</strong> Spread every property's assessed value into the hexagons it sits in, then apply the 2026 municipal tax rates.</li>
+<li><strong>Roads.</strong> Measure the length of each class of road in each hexagon and turn it into square metres of pavement.</li>
+<li><strong>Cost.</strong> Price that pavement under each pavement plan and compare it with the hexagon's mobility share.</li>
+</ol>
+<p>All figures are for the 2026 tax year unless noted. The 2025 roll was used to check the method against the City's published totals.</p>
+
+<h2>1. The hex grid</h2>
+<p>Each hexagon is 800 m across, about a ten-minute walk, and covers 55.4 hectares (0.55 km²). Equal-sized cells let us compare places fairly; community boundaries vary too much in size to do that.</p>
+<div class="tablewrap"><table class="plain"><thead><tr><th>Measure</th><th>Value</th></tr></thead><tbody>
+<tr><td>Width, flat side to flat side</td><td>800 m</td></tr>
+<tr><td>Width, corner to corner</td><td>924 m</td></tr>
+<tr><td>Side length</td><td>462 m</td></tr>
+<tr><td>Area of a full hexagon</td><td>55.4 ha</td></tr>
+<tr><td>Hexagons in the grid</td><td>1,683 (1,411 full, 272 cut by the city limit)</td></tr>
+<tr><td>Total area covered</td><td>853 km²</td></tr>
+<tr><td>Ordinary neighbourhood hexagons used in the counts</td><td>1,236</td></tr>
+</tbody></table></div>
+<p>The grid was built in QGIS and clipped to the city boundary, so hexagons along the edge are smaller. It is stored in NAD83 / UTM zone 12N (EPSG:26912), so all lengths and areas are in true metres.</p>
+<p><strong>Tags.</strong> Each hexagon takes the community, community structure (era, such as "1960s/1970s" or "Inner city") and ward that its centre point falls in. Three edge hexagons whose centres fall outside every community take the nearest one instead.</p>
+<p><strong>Special areas.</strong> Hexagons tagged Parks, Undeveloped or Other (special districts such as the airport) stay in every citywide total but are greyed out on the map and left out of the neighbourhood counts. There are 435 of them. They are not expected to pay for their own roads.</p>
+
+<h2>2. Revenue: what each hexagon pays</h2>
+<p>Each property's assessed value is shared among the hexagons it overlaps, in proportion to how much of its land falls in each, and then taxed at the City's 2026 municipal rates. In 2026 the model raises $2,548M in municipal property tax from $421B of taxable assessed value.</p>
+<p><strong>Step 1: one value per parcel.</strong> The 2026 assessment roll lists each account (roll number) with its land parcel. Where one roll covers several parcels, the roll repeats its full value on each, so we split it by land area:</p>
+<div class="math">V_{\text{parcel}} = V_{\text{roll}} \times \frac{\text{area of the parcel}}{\text{total area of all the roll's parcels}}</div>
+<p>Without this step, about $25B of value was counted twice.</p>
+<p><strong>Step 2: from parcels to hexagons.</strong> A parcel that straddles a hexagon edge is split by area:</p>
+<div class="math">\text{share}_{p,h} = \frac{\text{area}(p \cap h)}{\sum_{h'} \text{area}(p \cap h')} \qquad V_{h} = \sum_{p} \text{share}_{p,h} \times V_{p}</div>
+<p>The denominator is the parcel's area inside the whole grid, so every dollar of a parcel's value lands in some hexagon. This is done separately for residential, non-residential and farm value.</p>
+<p><strong>Step 3: tax.</strong> Revenue is the value of each class times its 2026 municipal rate:</p>
+<div class="math">R_h = V_{h,\text{res}} \times 0.0038906 + V_{h,\text{nonres}} \times 0.0179986 + V_{h,\text{farm}} \times 0.0339557</div>
+<p>The provincial education tax (0.0027593 residential and farm, 0.0041502 non-residential) is calculated too, but only to check totals. It is never counted as money available for roads.</p>
+<p><strong>Exempt property.</strong> Property in two groups of the roll's sub-type codes pays no tax in the model: institutional (codes starting with S: hospitals, schools, universities) and recreation (codes starting with P: parks, recreation centres, the Stampede grounds). That is $27.8B of value in 2026. Its land still counts toward the hexagon it sits in.</p>
+<p><strong>Calibration.</strong> The same method applied to the 2025 roll and 2025 rates (where the exempt codes are IS and RC) gives $3,473M of total property tax, municipal plus provincial. The City reported $3,471M for 2025, a difference of under 0.1%.</p>
+
+<h2>3. Roads: how much pavement each hexagon has</h2>
+<p>We measure the length of City-maintained, paved road in each hexagon and multiply it by a typical width to get square metres of pavement. Citywide that comes to 6,288 km of road and 62.1 km² of pavement.</p>
+<p><strong>Which roads count.</strong> Roads come from OpenStreetMap (2025 extract). We keep five classes of OSM <code>highway</code> tag and drop the rest:</p>
+<div class="tablewrap"><table class="plain"><thead><tr><th>Class</th><th>OSM tags kept</th><th>Length</th><th>Width used</th><th>Pavement</th></tr></thead><tbody>
+<tr><td>Highway</td><td>motorway, trunk and their links</td><td>335 km</td><td>11.0 m</td><td>3.7 km²</td></tr>
+<tr><td>Primary (arterial)</td><td>primary, primary_link</td><td>226 km</td><td>11.0 m</td><td>2.5 km²</td></tr>
+<tr><td>Secondary (arterial)</td><td>secondary, secondary_link</td><td>909 km</td><td>11.0 m</td><td>10.0 km²</td></tr>
+<tr><td>Tertiary (collector)</td><td>tertiary, tertiary_link</td><td>1,162 km</td><td>11.0 m</td><td>12.8 km²</td></tr>
+<tr><td>Residential (local)</td><td>residential, living_street</td><td>3,656 km</td><td>9.1 m on average</td><td>33.1 km²</td></tr>
+</tbody></table></div>
+<p>Left out: lanes and alleys, service roads, unclassified roads, private roads, paths and tracks. Also left out:</p>
+<ul>
+<li><strong>Unpaved roads:</strong> OSM <code>surface</code> of gravel, dirt, compacted and similar. Roads with no surface tag, about a third of the network, are assumed paved.</li>
+<li><strong>Provincial roads:</strong> Stoney Trail (Highway 201) and Deerfoot Trail (Highway 2), which the Province maintains. Ramps within 300 m of them are dropped too.</li>
+</ul>
+<p><strong>Width.</strong> Divided roads are drawn in OSM as two separate lines, one per direction, so the bigger classes use the width of one carriageway, 11 m. That figure is a placeholder, not a measured value. Residential widths come from 110 sampled streets, 10 in each community structure. Within each structure, 10 random points were placed and snapped to the nearest residential road, and the road width at each point was measured with the Google Maps "Measure distance" tool. Each hexagon uses the median of its community structure's samples, from about 8.8 m in post-2000 suburbs to 10.3 m in Centre City. Where a structure has no samples, the 9.0 m default applies.</p>
+<div class="math">\text{pavement}_h = \sum_{\text{class}} \text{length}_{h,\text{class}} \times \text{width}_{\text{class}}</div>
+<p><strong>Shared roads.</strong> Highways and arterials (primary and secondary) are used by everyone, not just the people who live beside them. So their 16.2 km² of pavement is pooled and split equally across all 1,683 hexagons, about 9,600 m² each, instead of being charged to whichever hexagon they run through. Collectors and local streets stay with the hexagon they are in.</p>
+<div class="math">\text{pavement}_h = \text{local pavement}_h + \frac{\text{shared pavement, citywide}}{1{,}683}</div>
+
+<h2>4. Cost: pricing the pavement</h2>
+<p>Each pavement plan turns square metres of pavement into dollars a year, in one of three ways. Where a plan gives a low and a high figure, the headline uses the midpoint.</p>
+<p><strong>City budget plans</strong> are a single citywide amount a year. Each hexagon gets the share that matches its share of the city's pavement:</p>
+<div class="math">C_h = B \times \frac{\text{pavement}_h}{\text{pavement, citywide}}</div>
+<p>That works out to the same dollars per square metre everywhere, whatever the road class.</p>
+<p><strong>Maintenance-cycle plans</strong> give a cost per square metre per year, applied to all pavement:</p>
+<div class="math">C_h = \text{rate} \times \text{pavement}_h</div>
+<p><strong>Full replacement</strong> is a one-off rebuild cost per square metre, spread over each class's life. Local streets last 40 years; every other class lasts 21.</p>
+<div class="math">C_h = \text{unit cost} \times \sum_{\text{class}} \frac{\text{pavement}_{h,\text{class}}}{\text{life}_{\text{class}}}</div>
+<div class="tablewrap"><table class="plain"><thead><tr><th>Plan</th><th>Type</th><th>Input</th><th>Citywide, a year</th><th>Source</th></tr></thead><tbody>
+<tr><td>Historical spending</td><td>Budget</td><td>$40M a year</td><td>$40M</td><td><a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347" target="_blank" rel="noopener">Pavement Quality report, p. 7</a></td></tr>
+<tr><td>2026 budget</td><td>Budget</td><td>$64M a year</td><td>$64M</td><td><a href="https://www.calgary.ca/content/dam/www/cfod/finance/documents/plans-budgets-and-financial-reports/2023-2026-service-plans-budgets/2026-budget-as-approved-dec-3-2025.pdf" target="_blank" rel="noopener">Budget 2026, pp. 76–78</a></td></tr>
+<tr><td>Break even</td><td>Budget</td><td>$88M a year</td><td>$88M</td><td><a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304348" target="_blank" rel="noopener">Pavement Quality presentation, p. 7</a></td></tr>
+<tr><td>50% of roads in good condition</td><td>Budget</td><td>$116M a year</td><td>$116M</td><td><a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304348" target="_blank" rel="noopener">Pavement Quality presentation, pp. 7–8</a></td></tr>
+<tr><td>60% of roads in good condition</td><td>Budget</td><td>$132M a year</td><td>$132M</td><td><a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304348" target="_blank" rel="noopener">Pavement Quality presentation, p. 7</a></td></tr>
+<tr><td>Seal cracks every 10 years</td><td>Cycle</td><td>$1.00–2.50 per m² a year</td><td>$109M</td><td><a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347" target="_blank" rel="noopener">Pavement Quality report, p. 4</a></td></tr>
+<tr><td>Repave every 12–17 years</td><td>Cycle</td><td>$2.92–4.17 per m² a year</td><td>$220M</td><td><a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347" target="_blank" rel="noopener">Pavement Quality report, p. 4</a></td></tr>
+<tr><td>Full replacement</td><td>Rebuild</td><td>$300–350 per m², over 21 or 40 years</td><td>$717M</td><td><a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347" target="_blank" rel="noopener">Pavement Quality Level of Service report, 2024</a></td></tr>
+</tbody></table></div>
+<p>The 2026 budget is the current scenario: it is what the City spends now, and the yardstick for the tax increase in section 5.</p>
+<p>Per-square-metre costs are in 2024 dollars. The pipeline can inflate them to 2026, but the inflation rate is set to zero, so no adjustment is applied.</p>
+
+<h2>5. Comparing with the mobility budget</h2>
+<p>Each hexagon's road cost is measured against the part of its own tax bill that goes to mobility: 6.62 cents of every municipal tax dollar, or $169M citywide.</p>
+<p><strong>Where 6.62% comes from.</strong> The City's <a href="https://www.calgary.ca/property-owners/taxes/calculator.html" target="_blank" rel="noopener">property tax calculator</a> breaks the full bill into services. Mobility is 3.87% of the whole bill, which includes the Province's 41.49%. As a share of the City's portion alone, that is 3.87 ÷ 58.51 = 6.62%. The City's full Mobility budget is larger ($377M in 2026) because it also draws on fees, grants and other revenue. Those are left out here, because property tax is the lever the City and each neighbourhood control.</p>
+<p><strong>The hexagon's mobility budget and the overrun:</strong></p>
+<div class="math">M_h = 0.0662 \times R_h \qquad \text{ratio}_h = \frac{C_h}{M_h} \qquad \text{overrun}_h = \text{ratio}_h - 1 \quad (\text{when ratio}_h &gt; 1)</div>
+<p>A ratio of 0.4 means roads use 40% of the area's mobility budget, leaving 60% for sidewalks, bike lanes, streetlights, signals and snow clearing. A ratio of 3 is shown as a 200% overrun. The map colours hexagons at ratios of 0.5, 1, 2, 4 and 8.</p>
+<p><strong>Cents per tax dollar</strong> is the road cost over all municipal revenue, C<sub>h</sub> ÷ R<sub>h</sub>, set against the 6.62¢ line. For a group of hexagons (a ward, or a type of neighbourhood) it is total cost over total revenue, not an average of the hexagons' ratios.</p>
+<p><strong>Tax increase needed.</strong> This is how much the municipal tax rate would have to rise to pay for a plan, compared with the 2026 budget, if nothing else changed. It is never shown as negative.</p>
+<div class="math">\text{increase} = \max\left(0,\ \frac{C_{\text{plan}} - C_{\text{2026 budget}}}{R_{\text{city}}}\right)</div>
+<p><strong>Per median household.</strong> The median 2026 assessment of a single residential property (code R110) is $718,000, which pays $2,793 in municipal tax. The extra cost is that bill times the increase:</p>
+<div class="math">\text{extra a year} = \text{increase} \times 718{,}000 \times 0.0038906</div>
+<p><strong>Overrun counts</strong> include only ordinary neighbourhood hexagons that pay some tax: 1,236 in 2026. Parks, undeveloped land, special districts and hexagons with no taxable property are left out.</p>
+
+<h2>6. Assumptions and limitations</h2>
+<p>The model counts only road pavement against only municipal property tax, so it understates what a neighbourhood really costs. Every other piece of infrastructure, and the rest of the mobility budget, comes on top.</p>
+<h3>What is counted</h3>
+<ul>
+<li>Road pavement only. Not sidewalks, curbs, bridges, signals, lighting, snow clearing, pipes, transit or any other service.</li>
+<li>Municipal property tax only. Not provincial education tax, fees, grants, franchise fees or other City revenue.</li>
+<li>Mobility's 6.62% share is taken as fixed. Some road capital may also come from the separate "Contribution to Capital Investments" line (8.94% of the bill), so the true tax share for roads may be a little higher.</li>
+</ul>
+<h3>Road assumptions</h3>
+<ul>
+<li>OpenStreetMap stands in for the City's road inventory. Its classes, surface tags and ownership are not official.</li>
+<li>The 11 m width for highways, arterials and collectors is a placeholder. Undivided four-lane arterials are likely wider. As a check, 62.1 km² of pavement over the City's roughly 17,400 lane-km works out to about 3.6 m a lane, which is plausible.</li>
+<li>Budget plans spend the same per square metre on every road class. The City actually prioritises by class, and its plans leave local streets in worse shape than arterials, so these plans likely overstate spending on local streets.</li>
+<li>One cost per square metre applies to every class. Arterial work likely costs more per square metre.</li>
+<li>Sharing highways and arterials equally across hexagons is a choice. The pipeline can also share them by area or by revenue, or leave them in place.</li>
+<li>Lifespans of 40 years (local) and 21 years (all others) apply to full replacement only.</li>
+<li>No inflation is applied to the 2024 unit costs.</li>
+</ul>
+<h3>Tax assumptions</h3>
+<ul>
+<li>Exemptions are set by sub-type code groups (institutional and recreation), which match the City's 2025 totals but may include or miss individual properties.</li>
+<li>Value is spread by land area, so a tower's value is spread evenly over its parcel. Large parcels that straddle hexagon edges, such as malls or campuses, are split by area rather than by where the buildings are.</li>
+<li>Rates are applied directly to assessed value. Phase-ins, rebates, supplementary assessments and appeals are ignored.</li>
+<li>The tax increase assumes the whole gap is paid by a higher rate on the same tax base, with nothing else changing.</li>
+</ul>
+<h3>Grid assumptions</h3>
+<ul>
+<li>Each hexagon takes one community and ward, from its centre point, even if it straddles a boundary.</li>
+<li>Edge hexagons are smaller, so they hold less road and less property than full ones, but still get an equal share of the shared roads.</li>
+</ul>
+
+<h2>7. Reproducing it</h2>
+<p>The whole method is a set of SQL scripts run in order by one Python script, with every setting in one file. Code: <a href="https://github.com/wklumpen/citymath" target="_blank" rel="noopener">github.com/wklumpen/citymath</a>.</p>
+<h3>Inputs</h3>
+<div class="tablewrap"><table class="plain"><thead><tr><th>Input</th><th>Source</th><th>Notes</th></tr></thead><tbody>
+<tr><td>Hex grid</td><td>Project file <code>citymath.gpkg</code>, layer <code>hex_800m_clipped</code></td><td>800 m hexagons built in QGIS, clipped to the city limit</td></tr>
+<tr><td>Communities</td><td>City of Calgary community boundaries, 2025</td><td>Name, community structure (era)</td></tr>
+<tr><td>Wards</td><td>City of Calgary ward boundaries, 2025 (<a href="https://data.calgary.ca" target="_blank" rel="noopener">data.calgary.ca</a>, dataset tz8z-hyaz)</td><td>Current 14 wards</td></tr>
+<tr><td>Roads</td><td>OpenStreetMap, 2025 extract</td><td><code>highway</code>, <code>surface</code>, <code>ref</code> tags</td></tr>
+<tr><td>Assessments</td><td>City of Calgary property assessments (parcel), 2026 roll; 2025 historical roll for calibration</td><td>Value by class, sub-type code, roll number, parcel shape</td></tr>
+<tr><td>Street widths</td><td>Project sample of 110 residential streets</td><td>10 random points per community structure, measured in Google Maps</td></tr>
+<tr><td>Tax rates</td><td>City of Calgary 2026 (and 2025) municipal and provincial rates</td><td></td></tr>
+</tbody></table></div>
+<p>The source data is not in the repository; only the derived per-hexagon files for the website are.</p>
+<h3>Steps</h3>
+<ol>
+<li>Load the sources into a PostGIS database and list their table names in <code>config.yaml</code>.</li>
+<li>Put the database login in <code>.env</code>.</li>
+<li>Run <code>uv run citymath.py</code>. It loads the grid, tags communities and wards, measures roads, allocates assessments, then builds the summary and plan tables (<code>sql/00_staging.sql</code> to <code>sql/05_hex_scenario.sql</code>).</li>
+<li>The last step, <code>export</code>, writes the website's data files to <code>docs/data/</code>.</li>
+</ol>
+<p>After changing a setting, re-run only the later steps, for example <code>uv run citymath.py roads summary</code>.</p>
+<p><strong>Outputs.</strong> One row per hexagon in <code>hex_summary</code>, with community, ward, road length by class, pavement, assessed value and revenue by class, road cost and net. <code>hex_scenario</code> adds one row per hexagon per plan. Both open directly in QGIS.</p>
+<p><strong>Website and slides.</strong> The website recomputes each plan in the browser from the exported files, with the same formulas as above. <code>uv run slides.py</code> draws the presentation charts from the same files.</p>
+</section>
+
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script>
+document.querySelectorAll('.math').forEach(function (el) {
+  try { katex.render(el.textContent, el, { displayMode: true, throwOnError: false }); } catch (e) { console.error(e); }
+});
+</script>
+</body>
+</html>
