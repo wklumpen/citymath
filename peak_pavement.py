@@ -10,7 +10,7 @@ the website's method) that lies inside the community boundary. Writes:
   slides/data/community_shapes.geojson community outlines for the maps
   slides/out/peak_pavement_pop_filled.csv  the input table with the blank columns filled in
   slides/out/peak_map_{peak,2019}_{wide,square}.png   two maps on one colour scale
-  slides/out/peak_chart_*_{wide,square}.png           the ten biggest changes
+  slides/out/peak_chart_change_*.png, peak_city_*.png  the ten biggest changes, and the whole city
 """
 import csv
 import json
@@ -146,37 +146,56 @@ def map_chart(df, shapes, which):
     save(chart, f"peak_map_{which}", title, sub)
 
 
-def change_chart(df, rank, name, title, subtitle):
+def change_chart(df, name, title, subtitle):
+    """Ten biggest rises in pavement per person, peak to 2019, labelled with the % change."""
     d = df[~df["community"].isin(SUSPECT)].dropna(subset=["pp_peak", "pp_2019"]).copy()
-    d["lost"] = d["peak_pop"] - d["pop_2019"]
-    d["pct"] = 1 - d["pop_2019"] / d["peak_pop"]
-    d["rise"] = d["pp_2019"] - d["pp_peak"]
-    top = d.sort_values(rank, ascending=False).head(10)
+    d["change"] = d["pp_2019"] / d["pp_peak"] - 1
+    top = d.sort_values("change", ascending=False).head(10).copy()
     top["label"] = [f"{c.title().rstrip('*').replace('/', ' / ')} ({int(y)})" for c, y in zip(top["community"], top["peak_year"])]
     order = list(top["label"])
     long = pd.concat([top.assign(when="At peak population", v=top["pp_peak"]),
                       top.assign(when="2019", v=top["pp_2019"])])
-    long["lx"] = long.groupby("label")["v"].transform("max")
-    long["note"] = [f"{abs(r['lost']):,.0f} fewer people ({r['pct']:.0%})" if w == "2019" else ""
-                    for w, (_, r) in zip(long["when"], long.iterrows())]
+    top["lx"] = top[["pp_peak", "pp_2019"]].max(axis=1)
+    top["note"] = [f"{c:+.0%}" for c in top["change"]]
 
     def chart(shape):
         wide = shape == "wide"
         y = alt.Y("label:N", sort=order, title=None, axis=alt.Axis(labelLimit=420, labelFontSize=15 if wide else 12))
         x = alt.X("v:Q", title="Square metres of road per resident", scale=alt.Scale(zero=True))
-        colour = alt.Color("when:N", scale=alt.Scale(domain=["At peak population", "2019"],
-                                                     range=[slides.GOOD, slides.BAD]),
+        colour = alt.Color("when:N", scale=alt.Scale(domain=["At peak population", "2019"], range=[slides.GOOD, slides.BAD]),
                            legend=alt.Legend(title=None, orient="top", labelFontSize=15, labelLimit=400, symbolType="circle"))
-        line = alt.Chart(top).mark_rule(color=slides.LINE, strokeWidth=3).encode(
-            y=y, x="pp_peak:Q", x2="pp_2019:Q")
+        line = alt.Chart(top).mark_rule(color=slides.LINE, strokeWidth=3).encode(y=y, x="pp_peak:Q", x2="pp_2019:Q")
         pts = alt.Chart(long).mark_circle(size=230 if wide else 140, opacity=1).encode(y=y, x=x, color=colour)
-        lab = alt.Chart(long[long["when"] == "2019"]).mark_text(align="left", dx=12, fontSize=14 if wide else 11,
-                                                                color=INK, font=BODY).encode(
-            y=y, x=alt.X("lx:Q"), text="note:N") if wide else alt.Chart(top).mark_point(opacity=0)
+        lab = alt.Chart(top).mark_text(align="left", dx=12, fontSize=17 if wide else 13, fontWeight=600,
+                                       color=INK, font=BODY).encode(y=y, x="lx:Q", text="note:N")
         return alt.layer(line, pts, lab)
 
     save(chart, name, title, subtitle)
     return top
+
+
+def city_chart(df):
+    """The whole city: total pavement over total residents, at each community's peak and in 2019."""
+    d = df[~df["community"].isin(SUSPECT)].dropna(subset=["pp_peak", "pp_2019"])
+    peak = d["m2_peak"].sum() / d["peak_pop"].sum()
+    now = d["m2"].sum() / d["pop_2019"].sum()
+    rows = pd.DataFrame({"when": ["At peak population", "2019"], "v": [peak, now], "row": "All communities",
+                         "note": [f"{peak:.1f} m²", f"{now:.1f} m² ({now / peak - 1:+.0%})"]})
+    print(f"  city: {peak:.1f} -> {now:.1f} m2 per person over {len(d)} communities ({now / peak - 1:+.1%})")
+
+    def chart(shape):
+        wide = shape == "wide"
+        y = alt.Y("when:N", sort=list(rows["when"]), title=None,
+                  axis=alt.Axis(labelLimit=300 if wide else 160, labelFontSize=18 if wide else 14, labelPadding=10))
+        x = alt.X("v:Q", title="Square metres of road per resident", scale=alt.Scale(zero=True, domain=[0, max(peak, now) * 1.45]))
+        colour = alt.Color("when:N", scale=alt.Scale(domain=list(rows["when"]), range=[slides.GOOD, slides.BAD]), legend=None)
+        bars = alt.Chart(rows).mark_bar(size=110 if wide else 90, cornerRadiusEnd=4).encode(y=y, x=x, color=colour)
+        lab = alt.Chart(rows).mark_text(align="left", dx=12, fontSize=26 if wide else 18, fontWeight=700, color=INK,
+                                        font=BODY).encode(y=y, x="v:Q", text="note:N")
+        return alt.layer(bars, lab)
+
+    save(chart, "peak_city", "Each resident now has more road to maintain",
+         f"Square metres of road per resident across {len(d)} communities, each at its own peak population vs 2019")
 
 
 def main():
@@ -190,14 +209,10 @@ def main():
     print(f"{len(df)} communities, {df['m2'].sum() / 1e6:.1f} km2 of pavement")
     map_chart(df, shapes, "peak")
     map_chart(df, shapes, "2019")
-    t = change_chart(df, "lost", "peak_chart_lost",
-                     "Ten neighbourhoods that lost the most people",
-                     "Road pavement per resident at each community's peak population and in 2019")
-    print(t[["community", "peak_year", "peak_pop", "pop_2019", "pp_peak", "pp_2019"]].round(1).to_string())
-    t = change_chart(df, "rise", "peak_chart_rise",
-                     "Where pavement per person grew the most",
-                     "Square metres of road per resident at each community's peak population and in 2019")
-    print(t[["community", "peak_year", "peak_pop", "pop_2019", "pp_peak", "pp_2019"]].round(1).to_string())
+    t = change_chart(df, "peak_chart_change", "Where pavement per resident grew the most",
+                     "Square metres of road per resident at each community's peak population and in 2019, with the % change")
+    print(t[["community", "peak_year", "peak_pop", "pop_2019", "pp_peak", "pp_2019", "change"]].round(2).to_string())
+    city_chart(df)
 
 
 if __name__ == "__main__":

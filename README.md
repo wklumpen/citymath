@@ -74,6 +74,6 @@ fonts (Archivo and Source Sans 3, SIL Open Font License) from `slides/fonts/`.
 `uv run peak_pavement.py` reads `peak_pavement_pop.csv` (peak and 2019
 populations by community), measures the pavement inside each community
 boundary from the database, and writes two maps on one colour scale (peak
-population and 2019), two "biggest changes" charts, and a filled-in copy of
+population and 2019), a "biggest rises" chart, a whole-city comparison, and a filled-in copy of
 the table to `slides/out/`. `--cached` redraws from `slides/data/` without the
 database. Not part of the website.
