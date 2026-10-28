@@ -68,3 +68,12 @@ and `_square.png` (1080x1080, untitled, for text beside it):
 
 Charts are drawn with Altair and rendered with vl-convert, using the site's
 fonts (Archivo and Source Sans 3, SIL Open Font License) from `slides/fonts/`.
+
+### Pavement per person by community
+
+`uv run peak_pavement.py` reads `peak_pavement_pop.csv` (peak and 2019
+populations by community), measures the pavement inside each community
+boundary from the database, and writes two maps on one colour scale (peak
+population and 2019), two "biggest changes" charts, and a filled-in copy of
+the table to `slides/out/`. `--cached` redraws from `slides/data/` without the
+database. Not part of the website.
