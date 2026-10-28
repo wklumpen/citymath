@@ -55,7 +55,7 @@ def query():
     out = cfg["output"]
     db = citymath.connect(out["database"], out["schema"])
     rows = db.execute("""
-        select m.name,
+        select m.name, max(m.comm_structure) as structure,
                sum(ST_Length(ST_Intersection(r.geom, m.geom))
                    * coalesce(case when r.road_class = 'residential' then w.width_median end, k.width_m)) as m2
         from src_community m
@@ -63,7 +63,7 @@ def query():
         left join cfg_road_class k on k.road_class = r.road_class
         left join comm_structure_width w on w.comm_structure = m.comm_structure
         group by m.comm_code, m.name, m.geom order by m.name""").fetchall()
-    pd.DataFrame(rows, columns=["name", "m2"]).to_csv(DATA / "community_pavement.csv", index=False)
+    pd.DataFrame(rows, columns=["name", "structure", "m2"]).to_csv(DATA / "community_pavement.csv", index=False)
     shapes = db.execute("""
         select name, ST_AsGeoJSON(ST_Transform(ST_SimplifyPreserveTopology(geom, 15), 4326), 5)
         from src_community order by name""").fetchall()
@@ -72,7 +72,8 @@ def query():
 
 
 def table():
-    pav = pd.read_csv(DATA / "community_pavement.csv").set_index("name")["m2"].fillna(0)
+    cp = pd.read_csv(DATA / "community_pavement.csv").set_index("name")
+    pav, structure = cp["m2"].fillna(0), cp["structure"]
     rows = []
     with open(ROOT / "peak_pavement_pop.csv", newline="") as f:
         raw = list(csv.DictReader(f))
@@ -89,7 +90,7 @@ def table():
             now = sum(pop19[n] for n in POP_2019_SUM.get(name, [name]))
             m2 = float(sum(pav[n] for n in names))
             m2_peak = m2 + float(sum(pav[n] for n in PEAK_EXTRA.get(name, [])))
-            rows.append({"community": name, "shapes": names, "peak_year": int(r["Year"]), "peak_pop": peak,
+            rows.append({"community": name, "shapes": names, "structure": structure[names[0]], "peak_year": int(r["Year"]), "peak_pop": peak,
                          "pop_2019": now, "m2": m2, "m2_peak": m2_peak,
                          "pp_peak": m2_peak / peak if peak >= MIN_POP else None,
                          "pp_2019": m2 / now if now >= MIN_POP else None})
@@ -198,6 +199,39 @@ def city_chart(df):
          f"Square metres of road per resident across {len(d)} communities, each at its own peak population vs 2019")
 
 
+def structure_chart(df):
+    """Pavement per resident by type of neighbourhood: total pavement over total residents."""
+    d = df[~df["community"].isin(SUSPECT)].dropna(subset=["pp_peak", "pp_2019"])
+    g = d.groupby("structure").agg(n=("community", "size"), m2_peak=("m2_peak", "sum"), peak_pop=("peak_pop", "sum"),
+                                   m2=("m2", "sum"), pop_2019=("pop_2019", "sum")).reset_index()
+    g["pp_peak"], g["pp_2019"] = g["m2_peak"] / g["peak_pop"], g["m2"] / g["pop_2019"]
+    g["change"] = g["pp_2019"] / g["pp_peak"] - 1
+    g = g[g["structure"].isin(slides.ORDER[:7]) & (g["n"] >= 5)].copy()  # age groups with at least 5 communities
+    g["rank"] = g["structure"].map({s: i for i, s in enumerate(slides.ORDER)})
+    g = g.sort_values("rank").reset_index(drop=True)
+    g["label"] = [f"{slides.NICE.get(s, s)} ({n})" for s, n in zip(g["structure"], g["n"])]
+    g["lx"] = g[["pp_peak", "pp_2019"]].max(axis=1)
+    g["note"] = [f"{c:+.0%}" for c in g["change"]]
+    print(g[["structure", "n", "pp_peak", "pp_2019", "change"]].round(2).to_string())
+    order = list(g["label"])
+    long = pd.concat([g.assign(when="At peak population", v=g["pp_peak"]), g.assign(when="2019", v=g["pp_2019"])])
+
+    def chart(shape):
+        wide = shape == "wide"
+        y = alt.Y("label:N", sort=order, title=None, axis=alt.Axis(labelLimit=420, labelFontSize=17 if wide else 13))
+        x = alt.X("v:Q", title="Square metres of road per resident", scale=alt.Scale(zero=True))
+        colour = alt.Color("when:N", scale=alt.Scale(domain=["At peak population", "2019"], range=[slides.GOOD, slides.BAD]),
+                           legend=alt.Legend(title=None, orient="top", labelFontSize=15, labelLimit=400, symbolType="circle"))
+        line = alt.Chart(g).mark_rule(color=slides.LINE, strokeWidth=4).encode(y=y, x="pp_peak:Q", x2="pp_2019:Q")
+        pts = alt.Chart(long).mark_circle(size=300 if wide else 180, opacity=1).encode(y=y, x=x, color=colour)
+        lab = alt.Chart(g).mark_text(align="left", dx=14, fontSize=20 if wide else 14, fontWeight=600, color=INK,
+                                     font=BODY).encode(y=y, x="lx:Q", text="note:N")
+        return alt.layer(line, pts, lab)
+
+    save(chart, "peak_structure", "Pavement per resident by type of neighbourhood",
+         "Square metres of road per resident, at each community's peak population and in 2019 (number of communities)")
+
+
 def main():
     DATA.mkdir(parents=True, exist_ok=True)
     OUT.mkdir(parents=True, exist_ok=True)
@@ -213,6 +247,7 @@ def main():
                      "Square metres of road per resident at each community's peak population and in 2019, with the % change")
     print(t[["community", "peak_year", "peak_pop", "pop_2019", "pp_peak", "pp_2019", "change"]].round(2).to_string())
     city_chart(df)
+    structure_chart(df)
 
 
 if __name__ == "__main__":
