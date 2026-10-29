@@ -241,6 +241,59 @@ def map_chart(s, h, hexes, wards, sc):
          f"{sc['label']}: roads alone overrun it in {over:,} of {ordinary:,} neighbourhood hexagons")
 
 
+COMBINED = ["historic", "budget_2026", "recommended", "reconstruction"]
+LONG = {"historic": "Historical spending", "budget_2026": "2026 budget",
+        "recommended": "50% of roads in good condition", "reconstruction": "Full replacement"}
+
+
+def neighbourhood_combined(s, h):
+    """Lollipops: four plans side by side for each type of neighbourhood, red where roads overrun mobility."""
+    mob = s["mobility_share"]
+    scs = [x for i in COMBINED for x in s["scenarios"] if x["id"] == i]
+    order = [NICE.get(x, x) for x in ORDER]
+    n = len(scs)
+    rows = []
+    for gi, st in enumerate(ORDER):
+        g = h[h["st"] == st]
+        for pi, sc in enumerate(scs):
+            v = cost(g, sc).sum() / g["rev"].sum()
+            # explicit row positions (a gap after each group) keep stems, dots and labels exactly aligned
+            rows.append({"y": gi * (n + 1) + pi, "v": v, "over": v > mob})
+    df = pd.DataFrame(rows)
+    mid = {gi * (n + 1) + (n - 1) / 2: name for gi, name in enumerate(order)}
+    names = ["In each group, top to bottom:"] + [LONG[x["id"]] for x in scs]
+
+    def chart(shape):
+        wide = shape == "wide"
+        ys = alt.Scale(domain=[len(order) * (n + 1) - 1.5, -0.8], nice=False)
+        labels = "{" + ",".join(f"'{y}': '{t}'" for y, t in mid.items()) + "}[datum.value]"
+        yaxis = alt.Axis(values=list(mid), grid=False, domain=False, ticks=False, labelPadding=8,
+                         labelLimit=240, labelExpr=labels)
+        base = alt.Chart(df).encode(
+            y=alt.Y("y:Q", scale=ys, title=None, axis=yaxis),
+            x=alt.X("v:Q", title=None, axis=alt.Axis(format=".0%", tickCount=4, grid=True)))
+        colour = alt.Color("over:N", scale=alt.Scale(domain=[False, True], range=[GOOD, BAD]), legend=None)
+        stems = base.mark_rule(strokeWidth=2).encode(x=alt.X("zero:Q"), x2="v:Q", color=colour).transform_calculate(zero="0")
+        dots = base.mark_circle(size=80 if wide else 60, opacity=1).encode(color=colour)
+        rule = alt.Chart(pd.DataFrame({"x": [mob], "t": [f"Mobility budget: {cents(mob)}"]}))
+        size = 15 if wide else 13
+        # a key in the empty top right: the four plans, in the order they sit within each group
+        gap = 2.2 if wide else 1.5
+        key = pd.DataFrame({"t": names, "y": [1.5 + gap * i - (0 if wide else 1.2) for i in range(n + 1)],
+                            "x": 0.22 if wide else 0.17})
+        kb = alt.Chart(key).encode(x="x:Q", y=alt.Y("y:Q", scale=ys, title=None, axis=yaxis), text="t:N")
+        return alt.layer(
+            stems, dots,
+            rule.mark_rule(color=INK, strokeWidth=2.5, strokeDash=[6, 4]).encode(x="x:Q"),
+            rule.mark_text(align="left", dx=6, dy=-6, baseline="bottom", fontWeight=600, color=INK,
+                           fontSize=15).encode(x="x:Q", y=alt.value(0), text="t:N"),
+            kb.transform_filter("datum.t == '%s'" % names[0]).mark_text(align="left", fontSize=size, color=MUTED),
+            kb.transform_filter("datum.t != '%s'" % names[0]).mark_text(align="left", fontSize=size, fontWeight=600),
+        ).resolve_scale(x="shared")
+    save(chart, "neighbourhoods_combined", "Roads' share of property tax, by type of neighbourhood",
+         "Share of property tax needed for roads under four plans; red where it is more than mobility's share")
+
+
 def main():
     s, h, hexes, wards = load()
     wanted = sys.argv[1:] or [x["id"] for x in s["scenarios"]]
@@ -249,6 +302,7 @@ def main():
         raise SystemExit(f"unknown plan(s): {', '.join(sorted(unknown))}")
     print(f"writing to {OUT.relative_to(ROOT)}/")
     plan_charts(s, h)
+    neighbourhood_combined(s, h)
     for sc in s["scenarios"]:
         if sc["id"] in wanted:
             neighbourhood_chart(s, h, sc)
