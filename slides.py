@@ -241,9 +241,9 @@ def map_chart(s, h, hexes, wards, sc):
          f"{sc['label']}: roads alone overrun it in {over:,} of {ordinary:,} neighbourhood hexagons")
 
 
-COMBINED = ["historic", "budget_2026", "recommended", "reconstruction"]
+COMBINED = ["historic", "budget_2026", "high", "reconstruction"]
 LONG = {"historic": "Historical spending", "budget_2026": "2026 budget",
-        "recommended": "50% of roads in good condition", "reconstruction": "Full replacement"}
+        "high": "60% of roads in good condition", "reconstruction": "Full replacement"}
 
 
 def neighbourhood_combined(s, h):
