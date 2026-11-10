@@ -143,7 +143,7 @@ roads:
   # Every scenario is written to hex_scenario; `default_scenario` is the one
   # behind road_cost / net / road_share in hex_summary. summary, consequence and
   # sources are shown on the website.
-  default_scenario: budget_2026
+  default_scenario: proposed_budget
   scenarios:
     historic:
       label: Historical spending
@@ -167,6 +167,13 @@ roads:
       consequence: "Funding levels match the pavement deterioration rate in 2024. The backlog of roads in poor condition remains the same."
       sources:
         - {title: "Pavement Quality presentation, p. 7", url: "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304348"}
+    proposed_budget:
+      label: Proposed budget
+      annual_budget: 105000000
+      summary: The City's proposed pavement budget averages $105M a year over the next four years, with most of the spending in the last two years. The average hides the timing: roads are left to fall apart for the first couple of years, with the money arriving at the end. A later Council could fix the roads then, or cut taxes and let them get worse.
+      consequence: "Spending starts below the break-even level and only rises above it in the back half of the four years, so the backlog of roads in poor condition keeps growing before it starts to shrink."
+      sources:
+        - {title: "City of Calgary proposed budget", url: "https://pub-calgary.escribemeetings.com/FileStream.ashx?DocumentId=377372"}
     recommended:
       label: 50% of roads in good condition
       annual_budget: 116000000

@@ -1,5 +1,5 @@
 {
- "default": "budget_2026",
+ "default": "proposed_budget",
  "mobility_share": 0.0662,
  "mobility_items": [
   "sidewalks and pathways",
@@ -61,6 +61,21 @@
     {
      "title": "Pavement Quality presentation, p. 7",
      "url": "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304348"
+    }
+   ]
+  },
+  {
+   "id": "proposed_budget",
+   "label": "Proposed budget",
+   "kind": "budget",
+   "low": 105000000.0,
+   "high": 105000000.0,
+   "summary": "The City's proposed pavement budget averages $105M a year over the next four years, with most of the spending in the last two years. The average hides the timing: roads are left to fall apart for the first couple of years, with the money arriving at the end. A later Council could fix the roads then, or cut taxes and let them get worse.",
+   "consequence": "Spending starts below the break-even level and only rises above it in the back half of the four years, so the backlog of roads in poor condition keeps growing before it starts to shrink.",
+   "sources": [
+    {
+     "title": "City of Calgary proposed budget",
+     "url": "https://pub-calgary.escribemeetings.com/FileStream.ashx?DocumentId=377372"
     }
    ]
   },
