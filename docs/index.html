@@ -376,12 +376,12 @@ function renderBudget(sc) {
   const join = w => items.length > 1 ? items.slice(0, -1).join(', ') + ' ' + w + ' ' + items[items.length - 1] : items[0];
   const range = sc.kind === 'budget' ? '' : ` <small>(${money(cost(h, sc, 'low'))}–${money(cost(h, sc, 'high'))})</small>`;
   let verdict;
-  if (rev <= 0) verdict = `<div class="verdict over"><b>No tax base</b><span>Nothing here pays property tax, so the cost of these roads falls on the rest of the city.</span></div>`;
-  else if (r > 1) verdict = `<div class="verdict over"><b>${pct(r - 1)} overrun</b><span>Roads alone need ${money(h.cost - mobB)} more than this area's whole mobility budget. Nothing is left for ${join('or')}.</span></div>`;
-  else verdict = `<div class="verdict under"><b>${money(mobB - h.cost)} left</b><span>Roads use ${pct(r)} of this area's mobility budget. The rest will have to fund ${join('and')}.</span></div>`;
+  if (rev <= 0) verdict = `<div class="verdict over"><b>No tax base</b><span>Nothing in this hexagon pays property tax, so the cost of its roads falls on the rest of the city.</span></div>`;
+  else if (r > 1) verdict = `<div class="verdict over"><b>${pct(r - 1)} overrun</b><span>Roads alone need ${money(h.cost - mobB)} more than this hexagon's whole mobility budget. Nothing is left for ${join('or')}.</span></div>`;
+  else verdict = `<div class="verdict under"><b>${money(mobB - h.cost)} left</b><span>Roads use ${pct(r)} of this hexagon's mobility budget. The rest will have to fund ${join('and')}.</span></div>`;
   const fill = r == null ? 0 : Math.min(r, 1);
   el.innerHTML = `<h3>One hexagon's budget</h3>
-    <div><h4>${esc(h.name || 'Unnamed area')}</h4><div class="tag">Ward ${h.ward} · ${nice(h.st)}${h.special ? ' · not expected to pay for itself' : ''}</div></div>
+    <div><h4>This hexagon is in ${esc(h.name || 'an unnamed area')}</h4><div class="tag">Only this one 800 m hexagon, not the whole neighbourhood · Ward ${h.ward} · ${nice(h.st)}${h.special ? ' · not expected to pay for itself' : ''}</div></div>
     <dl class="ledger">
       <div class="sec">Revenue: municipal property tax</div>
       <dt>Residential</dt><dd>${money(h.rev_res)}</dd>
