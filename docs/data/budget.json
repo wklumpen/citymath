@@ -1,0 +1,734 @@
+{
+ "year": 2026,
+ "document": "https://www.calgary.ca/content/dam/www/cfod/finance/documents/plans-budgets-and-financial-reports/2023-2026-service-plans-budgets/2026-budget-as-approved-dec-3-2025.pdf",
+ "dataset": "https://data.calgary.ca/d/fqax-i3nz",
+ "views": {
+  "operating": {
+   "tab": "What the city does",
+   "name": "operating budget",
+   "heads": [
+    "Comes from",
+    "Pays for"
+   ],
+   "lead": "In 2026 the City expects $5.12 billion to come in. $4.62 billion pays to run services. The other $498 million is set aside, mostly to build and replace things.",
+   "takeaways": [
+    [
+     "Half of it is property tax.",
+     "$2.55 billion of the $5.12 billion."
+    ],
+    [
+     "Most of it is not earmarked.",
+     "Property tax and other general revenue go into one shared pot, and Council divides it up. There is no roads tax or police tax."
+    ],
+    [
+     "Fees stay with the service that charges them.",
+     "Transit fares cover about 28% of what transit costs to run. The shared pot covers the rest."
+    ],
+    [
+     "Water pays its own way.",
+     "Your water bill runs the whole water system. No property tax goes in."
+    ]
+   ],
+   "total": 5116,
+   "nodes": [
+    {
+     "id": "tax",
+     "label": "Property tax",
+     "color": "s1",
+     "desc": "The City's share of the property tax bill, from homes and businesses. It is the one source Council sets directly. Each year it is whatever the budget still needs after everything else is counted.",
+     "link": {
+      "href": "#rate",
+      "text": "How the tax rate is set"
+     },
+     "col": 0
+    },
+    {
+     "id": "general",
+     "label": "Other general revenue",
+     "color": "s2",
+     "desc": "Money that is not tied to any one service. Across the City the budget counts $253 million of investment income, $234 million in franchise fees paid by utility companies, and $207 million from the ENMAX dividend and the water utility.",
+     "col": 0
+    },
+    {
+     "id": "fees",
+     "label": "Fees, fares & permits",
+     "color": "s3",
+     "desc": "What services charge directly. Transit fares, garbage cart fees, building permits, parking, rec centre admissions, fines, and grants tied to a service. This money stays with the service that collects it.",
+     "col": 0
+    },
+    {
+     "id": "water",
+     "label": "Water bills",
+     "color": "s4",
+     "desc": "The water, wastewater and drainage charges on your utility bill. The water utility runs on these alone. They pay to run the system, and they pay for its pipes and plants.",
+     "col": 0
+    },
+    {
+     "id": "pot",
+     "label": "The shared pot",
+     "desc": "Property tax and other general revenue land in one pot. None of it is earmarked. At budget time Council decides how much of it each service gets, so every service is competing for the same dollars.",
+     "col": 1
+    },
+    {
+     "id": "fees_",
+     "col": 1,
+     "ghost": "fees"
+    },
+    {
+     "id": "water_",
+     "col": 1,
+     "ghost": "water"
+    },
+    {
+     "id": "police",
+     "label": "Police",
+     "desc": "The Calgary Police Service. Officers, investigators and civilian staff. It is the largest single draw on the shared pot.",
+     "col": 2
+    },
+    {
+     "id": "transit",
+     "label": "Transit",
+     "desc": "Running the buses and CTrains. Drivers, mechanics, fuel, power and security. Fares and passes cover about 28% of it. Buying buses and building lines is in the capital budget.",
+     "col": 2
+    },
+    {
+     "id": "cityhall",
+     "label": "Running City Hall",
+     "desc": "The organization behind the services. Technology, human resources, finance, law, property assessment, 311, the housing office, security, the City Clerk, and Council itself.",
+     "col": 2
+    },
+    {
+     "id": "fire",
+     "label": "Fire",
+     "desc": "Firefighters and fire halls, on call around the clock. Fire trucks and new stations are in the capital budget.",
+     "col": 2
+    },
+    {
+     "id": "roads",
+     "label": "Roads & sidewalks",
+     "desc": "Snow clearing, pothole and sidewalk repair, street sweeping, traffic signals, streetlights and parking. Repaving and rebuilding is in the capital budget. Add what it sets aside in reserves and the $156 million of road work in the capital budget, and you get the $377 million Mobility budget the roads map refers to.",
+     "link": {
+      "href": "./",
+      "text": "Do your streets pay for themselves?"
+     },
+     "col": 2
+    },
+    {
+     "id": "planning",
+     "label": "Planning & permits",
+     "desc": "Community planning, building and development permits, business licences, climate programs and the downtown strategy. Permit and licence fees cover part of it.",
+     "col": 2
+    },
+    {
+     "id": "shared",
+     "label": "Debt & shared costs",
+     "desc": "Costs that belong to the City as a whole and not to one service. Payments on debt that taxes repay, employee benefit costs and other city-wide bills.",
+     "col": 2
+    },
+    {
+     "id": "community",
+     "label": "Recreation & community",
+     "desc": "Pools, arenas and rec centres, social programs, neighbourhood supports and funding for community groups. Admissions and program fees cover about a third.",
+     "col": 2
+    },
+    {
+     "id": "buildings",
+     "label": "Buildings, land & projects",
+     "desc": "Looking after City buildings and vehicles, buying and selling land, and the staff who plan and manage construction projects.",
+     "col": 2
+    },
+    {
+     "id": "partners",
+     "label": "Libraries & partners",
+     "desc": "Operating grants to the organizations that run things on the City's behalf. The Calgary Public Library, the zoo, Heritage Park, TELUS Spark, Arts Commons and others.",
+     "col": 2
+    },
+    {
+     "id": "safety",
+     "label": "911 & bylaw",
+     "desc": "The 911 call centre, bylaw and community peace officers, and the Calgary Emergency Management Agency.",
+     "col": 2
+    },
+    {
+     "id": "parks",
+     "label": "Parks",
+     "desc": "Mowing, trees, pathways, playgrounds, natural areas and cemeteries.",
+     "col": 2
+    },
+    {
+     "id": "waste",
+     "label": "Waste & recycling",
+     "desc": "Black, blue and green cart pickup and the landfills. Almost all of it is paid by the cart fees on your utility bill.",
+     "col": 2
+    },
+    {
+     "id": "waterworks",
+     "label": "Water & wastewater",
+     "desc": "Treating and delivering drinking water, and collecting and cleaning wastewater and stormwater. Paid entirely from water bills. Water bills also set aside $229 million for pipes and plants this year, and a small part covers water work done by other departments.",
+     "col": 2
+    },
+    {
+     "id": "reserve",
+     "label": "Set aside",
+     "desc": "Money moved into savings (reserves), after what is taken out. The City puts $890 million in this year and draws $391 million out. Most of it is for building and replacing things, and $403 million goes straight to paying for the capital budget.",
+     "view": "capital",
+     "col": 2
+    }
+   ],
+   "links": [
+    {
+     "s": "pot",
+     "t": "police",
+     "v": 607.3
+    },
+    {
+     "s": "fees_",
+     "t": "police",
+     "v": 71
+    },
+    {
+     "s": "pot",
+     "t": "transit",
+     "v": 415.3
+    },
+    {
+     "s": "fees_",
+     "t": "transit",
+     "v": 159
+    },
+    {
+     "s": "pot",
+     "t": "cityhall",
+     "v": 432.6
+    },
+    {
+     "s": "fees_",
+     "t": "cityhall",
+     "v": 15
+    },
+    {
+     "s": "pot",
+     "t": "fire",
+     "v": 351.9
+    },
+    {
+     "s": "fees_",
+     "t": "fire",
+     "v": 7
+    },
+    {
+     "s": "pot",
+     "t": "roads",
+     "v": 204.4
+    },
+    {
+     "s": "fees_",
+     "t": "roads",
+     "v": 112
+    },
+    {
+     "s": "pot",
+     "t": "planning",
+     "v": 162.5
+    },
+    {
+     "s": "fees_",
+     "t": "planning",
+     "v": 99
+    },
+    {
+     "s": "pot",
+     "t": "shared",
+     "v": 226.3
+    },
+    {
+     "s": "pot",
+     "t": "community",
+     "v": 136.3
+    },
+    {
+     "s": "fees_",
+     "t": "community",
+     "v": 68
+    },
+    {
+     "s": "pot",
+     "t": "buildings",
+     "v": 106.8
+    },
+    {
+     "s": "fees_",
+     "t": "buildings",
+     "v": 81
+    },
+    {
+     "s": "pot",
+     "t": "partners",
+     "v": 154.3
+    },
+    {
+     "s": "pot",
+     "t": "safety",
+     "v": 123.8
+    },
+    {
+     "s": "fees_",
+     "t": "safety",
+     "v": 26
+    },
+    {
+     "s": "pot",
+     "t": "parks",
+     "v": 113.1
+    },
+    {
+     "s": "fees_",
+     "t": "parks",
+     "v": 23
+    },
+    {
+     "s": "pot",
+     "t": "waste",
+     "v": 3.9
+    },
+    {
+     "s": "fees_",
+     "t": "waste",
+     "v": 196
+    },
+    {
+     "s": "water_",
+     "t": "waterworks",
+     "v": 722.3
+    },
+    {
+     "s": "tax",
+     "t": "pot",
+     "v": 2551
+    },
+    {
+     "s": "general",
+     "t": "pot",
+     "v": 724
+    },
+    {
+     "s": "water",
+     "t": "pot",
+     "v": 32.7,
+     "label": "Water work done by other departments"
+    },
+    {
+     "s": "fees",
+     "t": "fees_",
+     "v": 857
+    },
+    {
+     "s": "water",
+     "t": "water_",
+     "v": 951.3
+    },
+    {
+     "s": "water_",
+     "t": "reserve",
+     "v": 229
+    },
+    {
+     "s": "pot",
+     "t": "reserve",
+     "v": 269.2
+    }
+   ]
+  },
+  "capital": {
+   "tab": "What the city owns",
+   "name": "capital budget",
+   "heads": [
+    "Paid with",
+    "Builds and replaces"
+   ],
+   "lead": "In 2026 the City plans to spend $3.67 billion building, buying and replacing things. Very little of it comes from this year's taxes.",
+   "takeaways": [
+    [
+     "Almost none of it is this year's taxes.",
+     "Pay-as-you-go is $231 million, about 6% of the total."
+    ],
+    [
+     "Nearly a third is borrowed.",
+     "$1.14 billion, to be paid back with interest out of future budgets."
+    ],
+    [
+     "The biggest piece is under your feet.",
+     "$1.14 billion for water and wastewater pipes and plants."
+    ],
+    [
+     "It is drawn as one pot, because that is all the budget tells us.",
+     "It does not say which source pays for which project."
+    ]
+   ],
+   "total": 3668.4,
+   "nodes": [
+    {
+     "id": "debt",
+     "label": "Borrowing",
+     "color": "s5",
+     "desc": "Loans, paid back with interest over many years. Some are repaid from water bills and other fees, the rest from property tax. Either way, a future budget pays.",
+     "col": 0
+    },
+    {
+     "id": "savings",
+     "label": "Savings",
+     "color": "s4",
+     "desc": "Reserves and other funds built up in earlier years, much of it set aside from the operating budget and from water bills.",
+     "view": "operating",
+     "col": 0
+    },
+    {
+     "id": "grants",
+     "label": "Grants",
+     "color": "s3",
+     "desc": "Money from the provincial and federal governments, usually tied to particular kinds of projects such as transit and housing.",
+     "col": 0
+    },
+    {
+     "id": "payg",
+     "label": "Pay-as-you-go",
+     "color": "s1",
+     "desc": "Cash from this year's taxes and fees, spent on capital right away with no borrowing.",
+     "view": "operating",
+     "col": 0
+    },
+    {
+     "id": "developers",
+     "label": "Developers & others",
+     "color": "s2",
+     "desc": "Levies and contributions from developers toward the infrastructure that serves new communities, plus other outside contributions. They help pay to build it the first time. Running it and replacing it later falls to the City.",
+     "col": 0
+    },
+    {
+     "id": "pot",
+     "label": "Capital budget",
+     "desc": "Everything the City plans to build, buy or replace in 2026. The budget does not say which source pays for which project, so the money is shown passing through one pot. The exception is water. Its $1.1 billion of projects is paid by the water utility, not by property tax.",
+     "col": 1
+    },
+    {
+     "id": "water",
+     "label": "Water & wastewater",
+     "desc": "Replacing and adding water mains, sewer lines and storm drains, and upgrading the treatment plants. Paid by the water utility through water bills, levies and borrowing that water bills repay.",
+     "items": [
+      [
+       "Water distribution network",
+       363
+      ],
+      [
+       "Wastewater treatment plant",
+       360
+      ],
+      [
+       "Wastewater collection network",
+       187
+      ],
+      [
+       "Stormwater facilities and network",
+       95
+      ],
+      [
+       "Water treatment plant",
+       94
+      ]
+     ],
+     "col": 2
+    },
+    {
+     "id": "transit",
+     "label": "Transit",
+     "desc": "The Green Line, new buses and trains, and repairs to stations, track and garages.",
+     "items": [
+      [
+       "Green Line LRT",
+       255
+      ],
+      [
+       "Buses and shuttles",
+       217
+      ],
+      [
+       "Light rail vehicles",
+       20
+      ],
+      [
+       "Customer service technology",
+       20
+      ]
+     ],
+     "col": 2
+    },
+    {
+     "id": "event",
+     "label": "Event Centre",
+     "desc": "The new arena and event centre, Scotia Place. The City's 2026 share of construction.",
+     "col": 2
+    },
+    {
+     "id": "public",
+     "label": "Public spaces & rec centres",
+     "desc": "Rec centres, downtown streets and plazas, bridges, pathways and parks, built by the City's project delivery group.",
+     "items": [
+      [
+       "Recreation centres",
+       51
+      ],
+      [
+       "Downtown public realm",
+       32
+      ],
+      [
+       "Stoney Trail improvements",
+       25
+      ],
+      [
+       "Bridge rehabilitation",
+       18
+      ],
+      [
+       "Walking and wheeling network",
+       15
+      ],
+      [
+       "Park infrastructure",
+       14
+      ]
+     ],
+     "col": 2
+    },
+    {
+     "id": "housing",
+     "label": "Affordable housing",
+     "desc": "Building and funding affordable homes, much of it with federal Housing Accelerator Fund money.",
+     "items": [
+      [
+       "Housing Accelerator Fund",
+       109
+      ],
+      [
+       "Leverage capital",
+       56
+      ],
+      [
+       "Affordable housing redevelopment",
+       43
+      ],
+      [
+       "Increased affordable housing",
+       27
+      ]
+     ],
+     "col": 2
+    },
+    {
+     "id": "fleet",
+     "label": "City buildings & vehicles",
+     "desc": "Keeping up the buildings the City works out of and replacing its trucks, plows and equipment.",
+     "items": [
+      [
+       "Fleet replacement",
+       77
+      ],
+      [
+       "Facility sustainment",
+       62
+      ],
+      [
+       "Operations facilities upgrades",
+       28
+      ],
+      [
+       "Vehicle and equipment growth",
+       17
+      ]
+     ],
+     "col": 2
+    },
+    {
+     "id": "land",
+     "label": "Land, design & rising costs",
+     "desc": "Buying and servicing land, design work to get projects ready, and money held back for construction costs that come in higher than planned.",
+     "items": [
+      [
+       "Capital cost escalations",
+       76
+      ],
+      [
+       "Great Plains Starfield industrial land",
+       56
+      ],
+      [
+       "Design to shovel-ready",
+       20
+      ],
+      [
+       "Land acquisition",
+       15
+      ]
+     ],
+     "col": 2
+    },
+    {
+     "id": "roads",
+     "label": "Roads & streetlights",
+     "desc": "Repaving, streetlights, signals and safety fixes. Only $64 million of it is repaving. Some road and bridge projects are counted under public spaces.",
+     "link": {
+      "href": "./",
+      "text": "What would it cost to keep the roads up?"
+     },
+     "items": [
+      [
+       "Pavement rehabilitation",
+       64
+      ],
+      [
+       "Operational improvements",
+       14
+      ],
+      [
+       "Safety improvements",
+       13
+      ],
+      [
+       "Streetlight lifecycle and upgrade",
+       12
+      ]
+     ],
+     "col": 2
+    },
+    {
+     "id": "partners",
+     "label": "Arts & partner buildings",
+     "desc": "Buildings owned or funded by the City and run by its partners.",
+     "items": [
+      [
+       "Arts Commons transformation",
+       60
+      ],
+      [
+       "MNP Centre aquatic upgrade",
+       22
+      ],
+      [
+       "Civic partners infrastructure grant",
+       12
+      ]
+     ],
+     "col": 2
+    },
+    {
+     "id": "safety",
+     "label": "Police, fire & 911",
+     "desc": "Fire trucks, police vehicles, stations, and 911 equipment.",
+     "items": [
+      [
+       "Fire trucks",
+       13
+      ],
+      [
+       "Police vehicles",
+       13
+      ],
+      [
+       "Police indoor range",
+       13
+      ]
+     ],
+     "col": 2
+    },
+    {
+     "id": "other",
+     "label": "Technology & the rest",
+     "desc": "Computer systems, security, climate projects and everything not counted above.",
+     "col": 2
+    }
+   ],
+   "links": [
+    {
+     "s": "debt",
+     "t": "pot",
+     "v": 1135
+    },
+    {
+     "s": "savings",
+     "t": "pot",
+     "v": 1102
+    },
+    {
+     "s": "grants",
+     "t": "pot",
+     "v": 976
+    },
+    {
+     "s": "payg",
+     "t": "pot",
+     "v": 231
+    },
+    {
+     "s": "developers",
+     "t": "pot",
+     "v": 225
+    },
+    {
+     "s": "pot",
+     "t": "water",
+     "v": 1140.5
+    },
+    {
+     "s": "pot",
+     "t": "transit",
+     "v": 571.9
+    },
+    {
+     "s": "pot",
+     "t": "event",
+     "v": 420
+    },
+    {
+     "s": "pot",
+     "t": "public",
+     "v": 325.3
+    },
+    {
+     "s": "pot",
+     "t": "housing",
+     "v": 262.6
+    },
+    {
+     "s": "pot",
+     "t": "fleet",
+     "v": 238.9
+    },
+    {
+     "s": "pot",
+     "t": "land",
+     "v": 207.9
+    },
+    {
+     "s": "pot",
+     "t": "roads",
+     "v": 156.3
+    },
+    {
+     "s": "pot",
+     "t": "partners",
+     "v": 131.2
+    },
+    {
+     "s": "pot",
+     "t": "safety",
+     "v": 121.1
+    },
+    {
+     "s": "pot",
+     "t": "other",
+     "v": 92.6
+    }
+   ]
+  }
+ }
+}

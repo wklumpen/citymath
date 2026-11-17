@@ -1,0 +1,285 @@
+# The City's 2026 budget, as drawn on docs/pay.html. `uv run budget.py` reads this
+# file, pulls spending by business unit from the City's open data, checks the
+# totals against the approved budget and writes docs/data/budget.json.
+#
+# Money is in $ millions. Page numbers refer to `document`. Spending comes from
+# the open data; where the money comes from is not in the open data, so those
+# figures are typed in here from the budget document.
+
+year: 2026
+dataset: fqax-i3nz # data.calgary.ca, "2023-2026 Budget": spending by business unit
+document: https://www.calgary.ca/content/dam/www/cfod/finance/documents/plans-budgets-and-financial-reports/2023-2026-service-plans-budgets/2026-budget-as-approved-dec-3-2025.pdf
+
+# Colours are the --s1..--s5 tokens in docs/pay.html, checked for colour-blind
+# safety in this top-to-bottom order. Keep the order if you change them.
+
+operating:
+  fund: Operating Expenditures Net of Recoveries
+  tab: What the city does
+  name: operating budget
+  heads: [Comes from, Pays for]
+  lead: In 2026 the City expects $5.12 billion to come in. $4.62 billion pays to run services. The other $498 million is set aside, mostly to build and replace things.
+  takeaways:
+    - [Half of it is property tax., "$2.55 billion of the $5.12 billion."]
+    - [Most of it is not earmarked., "Property tax and other general revenue go into one shared pot, and Council divides it up. There is no roads tax or police tax."]
+    - [Fees stay with the service that charges them., "Transit fares cover about 28% of what transit costs to run. The shared pot covers the rest."]
+    - [Water pays its own way., "Your water bill runs the whole water system. No property tax goes in."]
+
+  # What the budget document says the totals are; budget.py stops if the flows do not add up to these.
+  revenue_total: 5116 # p. 25, total operating revenue
+  spending_total: 4618 # p. 32, total departmental expenditures
+  net_reserves: 498 # p. 4, net reserve activity ($890M put in, $391M taken out)
+  corporate_revenue: 3275 # p. 143, revenue held centrally: property tax, franchise fees, investment income, dividends
+  water_reserves: 229 # p. 33, utility net reserve contribution
+  # p. 33 puts utility spending at $755M, more than the water business units spend themselves
+  water_other_label: Water work done by other departments
+
+  sources:
+    - id: tax
+      label: Property tax
+      value: 2551 # p. 25, includes local improvement and community revitalization levies
+      color: s1
+      desc: The City's share of the property tax bill, from homes and businesses. It is the one source Council sets directly. Each year it is whatever the budget still needs after everything else is counted.
+      link: {href: "#rate", text: How the tax rate is set}
+    - id: general
+      label: Other general revenue
+      # value is worked out: corporate_revenue less property tax
+      color: s2
+      desc: Money that is not tied to any one service. Across the City the budget counts $253 million of investment income, $234 million in franchise fees paid by utility companies, and $207 million from the ENMAX dividend and the water utility.
+    - id: fees
+      label: Fees, fares & permits
+      # value is worked out: the sum of each service's own revenue below
+      color: s3
+      desc: What services charge directly. Transit fares, garbage cart fees, building permits, parking, rec centre admissions, fines, and grants tied to a service. This money stays with the service that collects it.
+    - id: water
+      label: Water bills
+      value: 984 # p. 30: water 365, wastewater 517, stormwater 102
+      color: s4
+      desc: The water, wastewater and drainage charges on your utility bill. The water utility runs on these alone. They pay to run the system, and they pay for its pipes and plants.
+
+  pot:
+    label: The shared pot
+    desc: Property tax and other general revenue land in one pot. None of it is earmarked. At budget time Council decides how much of it each service gets, so every service is competing for the same dollars.
+
+  reserve:
+    label: Set aside
+    desc: Money moved into savings (reserves), after what is taken out. The City puts $890 million in this year and draws $391 million out. Most of it is for building and replacing things, and $403 million goes straight to paying for the capital budget.
+    view: capital
+
+  # Services, in the order they are drawn. `units` and `departments` are names in
+  # the open data; every row must be claimed exactly once. `revenue` is what the
+  # service raises itself (fees, fines, permits, grants). The shared pot pays the rest.
+  uses:
+    - id: police
+      label: Police
+      units: [Calgary Police Service]
+      revenue: 71 # p. 57
+      desc: The Calgary Police Service. Officers, investigators and civilian staff. It is the largest single draw on the shared pot.
+    - id: transit
+      label: Transit
+      units: [Calgary Transit]
+      revenue: 159 # p. 69
+      desc: Running the buses and CTrains. Drivers, mechanics, fuel, power and security. Fares and passes cover about 28% of it. Buying buses and building lines is in the capital budget.
+    - id: cityhall
+      label: Running City Hall
+      departments: [Corporate Services, Council]
+      revenue: 15 # p. 118
+      desc: The organization behind the services. Technology, human resources, finance, law, property assessment, 311, the housing office, security, the City Clerk, and Council itself.
+    - id: fire
+      label: Fire
+      units: [Calgary Fire]
+      revenue: 7 # p. 46
+      desc: Firefighters and fire halls, on call around the clock. Fire trucks and new stations are in the capital budget.
+    - id: roads
+      label: Roads & sidewalks
+      units: [Mobility]
+      revenue: 112 # p. 76
+      desc: Snow clearing, pothole and sidewalk repair, street sweeping, traffic signals, streetlights and parking. Repaving and rebuilding is in the capital budget. Add what it sets aside in reserves and the $156 million of road work in the capital budget, and you get the $377 million Mobility budget the roads map refers to.
+      link: {href: "./", text: "Do your streets pay for themselves?"}
+    - id: planning
+      label: Planning & permits
+      departments: [Planning & Development Services]
+      revenue: 99 # p. 102
+      desc: Community planning, building and development permits, business licences, climate programs and the downtown strategy. Permit and licence fees cover part of it.
+    - id: shared
+      label: Debt & shared costs
+      units: [Corporate Programs]
+      revenue: 0 # its revenue is the shared pot itself
+      desc: Costs that belong to the City as a whole and not to one service. Payments on debt that taxes repay, employee benefit costs and other city-wide bills.
+    - id: community
+      label: Recreation & community
+      units: [Recreation & Social Programs, Community Strategies, Partnerships, GM - Community Services]
+      revenue: 68 # Community Services (p. 43) 101, less Fire 7 and Emergency Management 26
+      desc: Pools, arenas and rec centres, social programs, neighbourhood supports and funding for community groups. Admissions and program fees cover about a third.
+    - id: buildings
+      label: Buildings, land & projects
+      units: [Facilities, Fleet & Inventory, GM - Operational Services, Real Estate & Development Services, Capital Planning & Business Services, Project Development, Public Spaces Delivery, GM - Infrastructure Services, Green Line]
+      revenue: 81 # Infrastructure Services (p. 85) 69, plus what is left of Operational Services (p. 66) 12
+      desc: Looking after City buildings and vehicles, buying and selling land, and the staff who plan and manage construction projects.
+    - id: partners
+      label: Libraries & partners
+      units: [Civic Partners]
+      revenue: 0 # p. 61
+      desc: Operating grants to the organizations that run things on the City's behalf. The Calgary Public Library, the zoo, Heritage Park, TELUS Spark, Arts Commons and others.
+    - id: safety
+      label: 911 & bylaw
+      units: [Emergency Management & Community Safety]
+      revenue: 26 # p. 50
+      desc: The 911 call centre, bylaw and community peace officers, and the Calgary Emergency Management Agency.
+    - id: parks
+      label: Parks
+      units: [Parks & Open Spaces]
+      revenue: 23 # p. 79
+      desc: Mowing, trees, pathways, playgrounds, natural areas and cemeteries.
+    - id: waste
+      label: Waste & recycling
+      units: [Waste & Recycling Services]
+      revenue: 196 # p. 81
+      desc: Black, blue and green cart pickup and the landfills. Almost all of it is paid by the cart fees on your utility bill.
+    - id: waterworks
+      label: Water & wastewater
+      units: [Water Services, Utilities Delivery]
+      paid_by: water
+      desc: Treating and delivering drinking water, and collecting and cleaning wastewater and stormwater. Paid entirely from water bills. Water bills also set aside $229 million for pipes and plants this year, and a small part covers water work done by other departments.
+
+capital:
+  fund: Capital
+  tab: What the city owns
+  name: capital budget
+  heads: [Paid with, Builds and replaces]
+  lead: In 2026 the City plans to spend $3.67 billion building, buying and replacing things. Very little of it comes from this year's taxes.
+  takeaways:
+    - [Almost none of it is this year's taxes., "Pay-as-you-go is $231 million, about 6% of the total."]
+    - [Nearly a third is borrowed., "$1.14 billion, to be paid back with interest out of future budgets."]
+    - [The biggest piece is under your feet., "$1.14 billion for water and wastewater pipes and plants."]
+    - ["It is drawn as one pot, because that is all the budget tells us.", "It does not say which source pays for which project."]
+
+  spending_total: 3668 # p. 36
+
+  sources: # p. 36, sources of capital funding
+    - id: debt
+      label: Borrowing
+      value: 1135
+      color: s5
+      desc: Loans, paid back with interest over many years. Some are repaid from water bills and other fees, the rest from property tax. Either way, a future budget pays.
+    - id: savings
+      label: Savings
+      value: 1102
+      color: s4
+      desc: Reserves and other funds built up in earlier years, much of it set aside from the operating budget and from water bills.
+      view: operating
+    - id: grants
+      label: Grants
+      value: 976
+      color: s3
+      desc: Money from the provincial and federal governments, usually tied to particular kinds of projects such as transit and housing.
+    - id: payg
+      label: Pay-as-you-go
+      value: 231
+      color: s1
+      desc: Cash from this year's taxes and fees, spent on capital right away with no borrowing.
+      view: operating
+    - id: developers
+      label: Developers & others
+      value: 225
+      color: s2
+      desc: Levies and contributions from developers toward the infrastructure that serves new communities, plus other outside contributions. They help pay to build it the first time. Running it and replacing it later falls to the City.
+
+  pot:
+    label: Capital budget
+    desc: Everything the City plans to build, buy or replace in 2026. The budget does not say which source pays for which project, so the money is shown passing through one pot. The exception is water. Its $1.1 billion of projects is paid by the water utility, not by property tax.
+
+  # `take` moves a single project out of a business unit into its own group.
+  # `items` are the largest programs in 2026, from each business unit's pages.
+  uses:
+    - id: water
+      label: Water & wastewater
+      units: [Utilities Delivery]
+      desc: Replacing and adding water mains, sewer lines and storm drains, and upgrading the treatment plants. Paid by the water utility through water bills, levies and borrowing that water bills repay.
+      items: # p. 100
+        - [Water distribution network, 363]
+        - [Wastewater treatment plant, 360]
+        - [Wastewater collection network, 187]
+        - [Stormwater facilities and network, 95]
+        - [Water treatment plant, 94]
+    - id: transit
+      label: Transit
+      units: [Green Line, Calgary Transit]
+      desc: The Green Line, new buses and trains, and repairs to stations, track and garages.
+      items: # pp. 70, 89
+        - [Green Line LRT, 255]
+        - [Buses and shuttles, 217]
+        - [Light rail vehicles, 20]
+        - [Customer service technology, 20]
+    - id: event
+      label: Event Centre
+      take: {from: Public Spaces Delivery, amount: 420} # p. 93
+      desc: The new arena and event centre, Scotia Place. The City's 2026 share of construction.
+    - id: public
+      label: Public spaces & rec centres
+      units: [Public Spaces Delivery, Parks & Open Spaces]
+      desc: Rec centres, downtown streets and plazas, bridges, pathways and parks, built by the City's project delivery group.
+      items: # pp. 80, 93
+        - [Recreation centres, 51]
+        - [Downtown public realm, 32]
+        - [Stoney Trail improvements, 25]
+        - [Bridge rehabilitation, 18]
+        - [Walking and wheeling network, 15]
+        - [Park infrastructure, 14]
+    - id: housing
+      label: Affordable housing
+      units: [Chief Housing Office]
+      desc: Building and funding affordable homes, much of it with federal Housing Accelerator Fund money.
+      items: # p. 125
+        - [Housing Accelerator Fund, 109]
+        - [Leverage capital, 56]
+        - [Affordable housing redevelopment, 43]
+        - [Increased affordable housing, 27]
+    - id: fleet
+      label: City buildings & vehicles
+      units: [Facilities, Fleet & Inventory]
+      desc: Keeping up the buildings the City works out of and replacing its trucks, plows and equipment.
+      items: # pp. 71, 74
+        - [Fleet replacement, 77]
+        - [Facility sustainment, 62]
+        - [Operations facilities upgrades, 28]
+        - [Vehicle and equipment growth, 17]
+    - id: land
+      label: Land, design & rising costs
+      units: [Capital Planning & Business Services, Real Estate & Development Services, Project Development]
+      desc: Buying and servicing land, design work to get projects ready, and money held back for construction costs that come in higher than planned.
+      items: # pp. 88, 98
+        - [Capital cost escalations, 76]
+        - [Great Plains Starfield industrial land, 56]
+        - [Design to shovel-ready, 20]
+        - [Land acquisition, 15]
+    - id: roads
+      label: Roads & streetlights
+      units: [Mobility]
+      desc: Repaving, streetlights, signals and safety fixes. Only $64 million of it is repaving. Some road and bridge projects are counted under public spaces.
+      link: {href: "./", text: "What would it cost to keep the roads up?"}
+      items: # p. 77
+        - [Pavement rehabilitation, 64]
+        - [Operational improvements, 14]
+        - [Safety improvements, 13]
+        - [Streetlight lifecycle and upgrade, 12]
+    - id: partners
+      label: Arts & partner buildings
+      units: [Civic Partners]
+      desc: Buildings owned or funded by the City and run by its partners.
+      items: # p. 64
+        - [Arts Commons transformation, 60]
+        - [MNP Centre aquatic upgrade, 22]
+        - [Civic partners infrastructure grant, 12]
+    - id: safety
+      label: Police, fire & 911
+      units: [Calgary Fire, Calgary Police Service, Emergency Management & Community Safety]
+      desc: Fire trucks, police vehicles, stations, and 911 equipment.
+      items: # pp. 47, 58
+        - [Fire trucks, 13]
+        - [Police vehicles, 13]
+        - [Police indoor range, 13]
+    - id: other
+      label: Technology & the rest
+      rest: true
+      desc: Computer systems, security, climate projects and everything not counted above.

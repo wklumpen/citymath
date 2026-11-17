@@ -51,6 +51,10 @@ scenario definitions in `data/scenarios.json` and
 changes the scenario. Preview it locally with
 `python3 -m http.server -d docs`.
 
+`pay.html` explains the City's budget and the property tax. Its budget diagrams
+read `data/budget.json`, which `uv run budget.py` builds from the City's open
+budget data and the figures and groupings in `budget.yaml`.
+
 Source data (the hex grid, assessment rolls and street width samples) is not
 included in this repository; only the derived per-hex file for the website is.
 

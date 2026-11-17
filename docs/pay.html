@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>How We Pay for Calgary</title>
-<meta name="description" content="An independent, interactive walk through how Calgary's property tax works, and what happens when you change the levers.">
+<meta name="description" content="An independent, interactive walk through how Calgary pays for what it does and what it owns: where the money comes from, where it goes, and how your tax bill is worked out.">
 <meta name="robots" content="noindex">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600&display=swap">
 <style>
@@ -14,6 +14,7 @@
   --u0: #1f7a8c; --u1: #9fd3db; --o0: #fbd3a6; --o1: #f29b4b; --o2: #d1611a; --o3: #8a3608;
   --good: #1f7a8c; --bad: #c2410c;
   --special: #d5dae2; --hexline: #ffffff; --select: #101b2d; --ward: #12305c;
+  --s1: #e8751a; --s2: #6250d6; --s3: #1baf7a; --s4: #2a78d6; --s5: #e87ba4; --pot: #7a8698;
   --display: "Archivo", "Arial Narrow", Arial, sans-serif;
   --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
 }
@@ -22,12 +23,14 @@
   --band: #0e2547; --band-ink: #ffffff; --band-muted: #a9bbd6; --accent: #f08a35;
   --u0: #5cc3d3; --u1: #24606b; --o0: #6b3a12; --o1: #b3561a; --o2: #e8822e; --o3: #fdc58c;
   --good: #5cc3d3; --bad: #f29b4b;
+  --s1: #d95926; --s2: #9085e9; --s3: #199e70; --s4: #3987e5; --s5: #d55181; --pot: #7d8ba0;
   --special: #263143; --hexline: #0b131f; --select: #ffffff; --ward: #c9d6ea; color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #0b131f; --surface: #121d2d; --ink: #e9eef5; --muted: #9aa8ba; --line: #24334b;
   --band: #0e2547; --band-ink: #ffffff; --band-muted: #a9bbd6; --accent: #f08a35;
   --u0: #5cc3d3; --u1: #24606b; --o0: #6b3a12; --o1: #b3561a; --o2: #e8822e; --o3: #fdc58c;
   --good: #5cc3d3; --bad: #f29b4b;
+  --s1: #d95926; --s2: #9085e9; --s3: #199e70; --s4: #3987e5; --s5: #d55181; --pot: #7d8ba0;
   --special: #263143; --hexline: #0b131f; --select: #ffffff; --ward: #c9d6ea; color-scheme: dark }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -210,6 +213,59 @@ select { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border
 .cmp thead th { font: 700 13px var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .cmp tbody th { font-weight: 400; color: var(--muted); }
 .cmp td { font-weight: 600; }
+
+/* start here: what the city does, what the city owns */
+.pair { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@media (min-width: 720px) { .pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.side { border: 1px solid var(--line); border-top: 5px solid var(--band); border-radius: 6px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+.side.owns { border-top-color: var(--accent); }
+.side h3 { font-size: clamp(22px, 3vw, 26px); font-weight: 800; }
+.side .num { font: 800 clamp(30px, 7vw, 42px) var(--display); font-variant-numeric: tabular-nums; line-height: 1.05; }
+.side .num small { display: block; font: 400 15px var(--body); color: var(--muted); padding-top: 4px; }
+.side p { color: var(--muted); }
+.side p b { color: var(--ink); }
+.owned { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px 20px; align-items: center; padding: 14px 16px; border-radius: 6px; background: color-mix(in srgb, var(--accent) 12%, var(--surface)); border-left: 5px solid var(--accent); }
+@media (min-width: 720px) { .owned { grid-template-columns: auto minmax(0, 1fr); } }
+.owned b { font: 800 clamp(30px, 7vw, 42px) var(--display); line-height: 1.05; }
+.block > p.plain { color: var(--ink); font-size: 17px; }
+
+/* follow the money: the budget as flows */
+.flowwrap { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 980px) { .flowwrap { grid-template-columns: minmax(0, 1fr) 320px; align-items: start; } }
+.flowbox { position: relative; min-width: 0; }
+.flow { display: block; width: 100%; overflow: visible; }
+.flow text { font: 13px var(--body); fill: var(--ink); }
+.flow.narrow text { font-size: 12px; }
+.flow .nm { font-weight: 600; }
+.flow .val, .flow .head { fill: var(--muted); }
+.flow .head { font: 700 11px var(--display); letter-spacing: .07em; text-transform: uppercase; }
+.flow .halo { paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; }
+.flow .lk { fill: none; opacity: .4; transition: opacity .15s; }
+.flow.focus .lk { opacity: .1; }
+.flow.focus .lk.on { opacity: .75; }
+.flow .nd { cursor: pointer; }
+.flow .nd:focus { outline: none; }
+.flow .nd:focus-visible .hit { stroke: var(--accent); stroke-width: 3px; }
+.flow .nd .hit { fill: transparent; }
+.flow .nd.picked .bar { stroke: var(--ink); stroke-width: 2px; }
+.flow.focus .nd:not(.on) text { opacity: .45; }
+.tip { position: absolute; z-index: 2; pointer-events: none; max-width: 240px; padding: 6px 9px; border-radius: 6px; background: var(--ink); color: var(--surface); font-size: 13px; line-height: 1.3; }
+.tip b { font-family: var(--display); }
+#flowInfo { display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; }
+#flowInfo h3 { font-size: 20px; font-weight: 800; }
+#flowInfo .num { font: 800 30px var(--display); font-variant-numeric: tabular-nums; line-height: 1.1; }
+#flowInfo .num small { display: block; font: 400 14px var(--body); color: var(--muted); padding-top: 3px; }
+#flowInfo p, #flowInfo li { color: var(--muted); font-size: 15px; }
+#flowInfo li b { color: var(--ink); }
+#flowInfo ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; }
+#flowInfo .more { font-weight: 600; align-self: flex-start; }
+.stack.split { height: 18px; border: 0; background: none; gap: 2px; }
+.stack.split i { border-radius: 2px; min-width: 2px; }
+.ledger i.sw { display: inline-block; width: 11px; height: 11px; border-radius: 2px; margin-right: 6px; }
+details.tbl summary { cursor: pointer; font-weight: 600; font-size: 15px; }
+details.tbl .cmp { margin-top: 8px; }
+details.tbl .cmp .grp th { text-align: left; font: 700 13px var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding-top: 14px; }
+details.tbl .scroll { overflow-x: auto; }
 </style>
 </head>
 <body>
@@ -217,12 +273,53 @@ select { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border
   <div class="draft"><span>Calgary · <span class="yr">2026</span> tax year · Draft</span><a class="navlink" href="./">The roads map</a></div>
   <h1>How we pay for Calgary</h1>
   <p class="subtitle">A plain-language, independent look at where the money comes from, where it goes, and what happens when you change it.</p>
-  <p class="lede">Every number here is built from the City's published tax rates and assessment roll, not from the City's own budget tools. Move the levers and see what moves.</p>
+  <p class="lede">Every number here comes from the City's published budget, tax rates and assessment roll. Start at the top and take it one step at a time.</p>
 </div></header>
 
 <main class="wrap">
+  <section class="block" id="start">
+    <div class="eyebrow">Start here</div>
+    <h2>A city does things, and a city owns things</h2>
+    <p class="plain">Calgary is two things at once. It is a set of services: someone answers 911, drives the bus, clears the snow and picks up the garbage. And it is an enormous collection of stuff: roads, pipes, bridges, buses, fire halls and rec centres. We pay for both, but not in the same way, and the City keeps two separate budgets to do it.</p>
+    <div class="pair">
+      <div class="side does">
+        <div class="eyebrow">The operating budget</div>
+        <h3>What the city does</h3>
+        <div class="num"><span id="opNum">$4.6 billion</span><small>a year to run services</small></div>
+        <p>Mostly people and running costs: police officers, firefighters, bus drivers, snow plows, lifeguards, the lights in the library.</p>
+        <p><b>At home, this is</b> groceries, gas and the power bill.</p>
+        <p><b>Paid mostly from</b> property tax and fees.</p>
+      </div>
+      <div class="side owns">
+        <div class="eyebrow">The capital budget</div>
+        <h3>What the city owns</h3>
+        <div class="num"><span id="capNum">$3.7 billion</span><small>this year to build, buy and replace things</small></div>
+        <p>Things that last for decades: water pipes, roads, bridges, buses and trains, fire halls, rec centres.</p>
+        <p><b>At home, this is</b> the house, the car and a new roof.</p>
+        <p><b>Paid mostly from</b> borrowing, savings and grants.</p>
+      </div>
+    </div>
+    <p class="plain">The two are tied together. Everything the city builds has to be run, repaired and one day replaced, and the list of what we own gets longer every year.</p>
+    <div class="owned"><b>$155 billion</b><span>is what the City says it would cost to replace everything it owns today, mostly roads and pipes. That is roughly $100,000 for every person in Calgary.</span></div>
+    <p class="plain">So the question behind every budget is not only what we want. It is whether we can afford to keep what we already have. The rest of this page follows the money, shows how your tax bill is worked out, and then lets you change things yourself.</p>
+  </section>
+
+  <section class="block" id="money">
+    <div class="eyebrow">1 · Follow the money</div>
+    <h2>Where the money comes from, and where it goes</h2>
+    <p>Pick a budget. Money flows from left to right: where it comes from, then what it pays for. The thicker the band, the more money. Tap any piece to see what it is.</p>
+    <div class="tabs" id="flowTabs"></div>
+    <p class="plain" id="flowLead"></p>
+    <div class="flowwrap">
+      <div class="flowbox" id="flowBox"><svg class="flow" id="flow" role="group"></svg><div class="tip" id="flowTip" hidden></div></div>
+      <div id="flowInfo" aria-live="polite"></div>
+    </div>
+    <details class="tbl"><summary>See these numbers as a table</summary><div class="scroll" id="flowTable"></div></details>
+    <p class="hint">Figures are the City's approved budget for <span class="yr">2026</span>: <a id="flowDoc" href="https://www.calgary.ca/our-finances/budget.html">Budget 2026</a> for where the money comes from, and the City's <a id="flowData" href="https://data.calgary.ca/">open budget data</a> for spending. Spending on services is counted after money moved between City departments is taken out.</p>
+  </section>
+
   <section class="block" id="s1">
-    <div class="eyebrow">1 · Your bill</div>
+    <div class="eyebrow">2 · Your bill</div>
     <h2>What does one home pay, and what does mobility get?</h2>
     <p>The City's tax is your home's assessed value times a rate. The province collects its own tax on the same bill. Only the City's part pays for roads, transit, sidewalks and everything else the City does.</p>
     <label class="lab"><span>Assessed value of the home <output id="homeOut"></output></span><input id="home" type="range" min="200000" max="2000000" step="10000"></label>
@@ -232,7 +329,7 @@ select { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border
   </section>
 
   <section class="block" id="rate">
-    <div class="eyebrow">2 · The rate</div>
+    <div class="eyebrow">3 · The rate</div>
     <h2>Where does the tax rate come from?</h2>
     <p>The City does not pick a rate and see what it raises. It works the other way round: Council decides how much money the City needs from property tax, then divides that by the value of everything that can be taxed. The rate is whatever comes out.</p>
     <div class="formula">
@@ -274,7 +371,7 @@ select { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border
   </section>
 
   <section class="block" id="s2">
-    <div class="eyebrow">3 · The whole city</div>
+    <div class="eyebrow">4 · The whole city</div>
     <h2>Play with the levers</h2>
     <p>Calgary's property tax raises about <b id="totRev"></b> a year. Mobility gets a set share of it. Roads are only one thing mobility pays for. Change a lever and see what is left for sidewalks, bike lanes, streetlights, signals and snow clearing.</p>
     <div class="sim">
@@ -298,7 +395,8 @@ select { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border
     <div class="eyebrow">How this works, and what it leaves out</div>
     <p><b>More homes on existing streets</b> raises assessed value without adding road. We apply it evenly across the city; in practice it varies by neighbourhood.</p>
     <p>Road cost is pavement only, using the pavement plans on the roads map. The mobility budget here is mobility's share of <i>property tax</i>; the City's full mobility budget is larger because it also draws on fees, grants and other revenue.</p>
-    <p>Not here yet: other City services, user fees, the province's tax, debt and reserves, and how timing across years changes things. This page is a first iteration; what would you want to move next?</p>
+    <p><b>The budget diagrams</b> use the City's approved 2026 budget. Spending by service is from the City's open budget data, grouped into plain-language categories. Where the money comes from is from the budget document. Each service's own fees and other revenue are shown staying with that service, and property tax and other general revenue cover the rest. Money moved in and out of reserves is shown as one net amount. The $155 billion replacement value is from the City's 2026 Corporate Asset Management Plan.</p>
+    <p>Not here yet: the province's tax, what debt costs over time, and how timing across years changes things. This page is a first iteration; what would you want to move next?</p>
     <p>Methods and sources: <a href="methods.html">methods page</a>.</p>
   </section>
 </main>
@@ -444,6 +542,154 @@ Promise.all(['scenarios.json', 'hexes.geojson'].map(f => fetch('data/' + f, {cac
   $('reset').addEventListener('click', () => { reset(); $('plan').value = S.default; renderSim(); });
   renderBill(); renderSim();
 }).catch(err => { console.error(err); $('totRev').textContent = 'data unavailable'; });
+// The budget as flows: where the money comes from on the left, what it pays for on the
+// right. Three columns, laid out by hand. Nodes marked `ghost` are not drawn: they carry
+// money that is not shared (fees, water bills) past the pot to the service it belongs to.
+let B, view = 'operating', picked = null, G = null, flowW = 0;
+const mil = v => money(v * 1e6).replace(/\.0(?=[MB])/, ''), tot = a => a.reduce((x, y) => x + y.v, 0);
+const esc = t => String(t).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const POT = {pot: 'The shared pot', fees: 'Its own fees and other revenue', water: 'Water bills'};
+
+function layout(V, W) {
+  const wide = W >= 620, nodeW = 12, pad = 8, top = 30, H = 640, mL = wide ? 150 : 0, mR = wide ? 200 : 0;
+  const x = [mL, (mL + W - mR - nodeW) / 2, W - mR - nodeW];
+  const N = Object.fromEntries(V.nodes.map(n => [n.id, {...n, in: [], out: []}])), nodes = Object.values(N);
+  const links = V.links.map(l => ({...l, S: N[l.s], T: N[l.t]}));
+  links.forEach(l => { l.S.out.push(l); l.T.in.push(l); });
+  nodes.forEach(n => { n.v = Math.max(tot(n.in), tot(n.out)); });
+  const cols = [0, 1, 2].map(c => nodes.filter(n => n.col === c));
+  const k = Math.min(...cols.map(c => (H - pad * (c.length - 1)) / tot(c)));
+  cols.forEach((c, i) => {
+    const used = tot(c) * k, gap = c.length > 1 ? (H - used) / (c.length - 1) : 0;
+    let y = top + (c.length > 1 ? 0 : (H - used) / 2);
+    c.forEach(n => { n.x = x[i]; n.y = y; n.h = n.v * k; y += n.h + gap; });
+  });
+  // stack each node's bands in the order of the nodes they join, so bands cross as little as possible
+  links.forEach(l => { l.h = l.v * k; l.c = l.S.ghost ? N[l.S.ghost].color : l.S.color || 'pot'; });
+  nodes.forEach(n => {
+    let y = n.y; n.out.sort((a, b) => a.T.y - b.T.y).forEach(l => { l.y0 = y + l.h / 2; y += l.h; });
+    y = n.y; n.in.sort((a, b) => a.S.y - b.S.y).forEach(l => { l.y1 = y + l.h / 2; y += l.h; });
+  });
+  return {N, nodes, links, wide, nodeW, W, height: top + H + 6};
+}
+
+// the bands lit up for a node: its own, plus the ones that carry its money past the pot
+const bands = n => new Set([...n.in, ...n.out, ...n.out.flatMap(l => l.T.ghost ? l.T.out : [])]);
+// where a node's money comes from or goes, looking through the ghosts
+const origins = n => n.in.map(l => ({id: l.S.ghost || l.S.id, v: l.v}));
+const targets = n => n.out.flatMap(l => l.T.ghost ? l.T.out : [l]).map(l => ({id: l.t, label: l.label || l.T.label, v: l.v}));
+
+function renderFlow() {
+  const V = B.views[view], W = Math.round($('flowBox').clientWidth);
+  if (!W) return;
+  flowW = W; G = layout(V, W);
+  const {nodes, links, wide, nodeW} = G, svg = $('flow');
+  const edge = n => n.x + (n.ghost ? nodeW / 2 : 0);
+  const band = (l, i) => { const x0 = edge(l.S) + (l.S.ghost ? 0 : nodeW), x1 = edge(l.T), xm = (x0 + x1) / 2;
+    return `<path class="lk" data-i="${i}" d="M${x0.toFixed(1)},${l.y0.toFixed(1)}C${xm.toFixed(1)},${l.y0.toFixed(1)} ${xm.toFixed(1)},${l.y1.toFixed(1)} ${x1.toFixed(1)},${l.y1.toFixed(1)}" stroke="var(--${l.c})" stroke-width="${Math.max(1, l.h).toFixed(1)}"/>`; };
+  const label = n => {
+    const cy = n.y + n.h / 2, nm = esc(n.label), val = mil(n.v);
+    if (n.col === 1) return `<text class="halo" x="${n.x + nodeW / 2}" y="${n.y - 9}" text-anchor="middle"><tspan class="nm">${nm}</tspan> <tspan class="val">${val}</tspan></text>`;
+    const out = wide ? (n.col ? 1 : -1) : (n.col ? -1 : 1), lx = out > 0 ? n.x + nodeW + 7 : n.x - 7, anchor = out > 0 ? 'start' : 'end';
+    if (n.col === 0 && n.h >= 34) return `<text class="halo" x="${lx}" y="${cy - 3}" text-anchor="${anchor}"><tspan class="nm">${nm}</tspan><tspan class="val" x="${lx}" dy="16">${val}</tspan></text>`;
+    return `<text class="halo" x="${lx}" y="${cy + 4.5}" text-anchor="${anchor}"><tspan class="nm">${nm}</tspan> <tspan class="val">${val}</tspan></text>`;
+  };
+  const real = nodes.filter(n => !n.ghost);
+  svg.setAttribute('viewBox', `0 0 ${W} ${G.height}`); svg.setAttribute('height', G.height);
+  svg.setAttribute('class', 'flow' + (wide ? '' : ' narrow'));
+  svg.setAttribute('aria-label', `The ${V.name}: where the money comes from and what it pays for. The same numbers are in the table below.`);
+  svg.innerHTML = `<text class="head" x="${wide ? G.N[real[0].id].x + nodeW : 0}" y="11" text-anchor="${wide ? 'end' : 'start'}">${V.heads[0]}</text>
+    <text class="head" x="${wide ? real[real.length - 1].x : W}" y="11" text-anchor="${wide ? 'start' : 'end'}">${V.heads[1]}</text>
+    <g>${links.map(band).join('')}</g>
+    ${real.map(n => `<g class="nd" data-id="${n.id}" tabindex="0" role="button" aria-label="${esc(n.label)}, ${mil(n.v)}. Show details.">
+      <rect class="hit" x="${n.col === 1 ? n.x - 14 : wide ? (n.col ? n.x : 0) : n.x - (n.col ? 150 : 0)}" y="${n.y - Math.max(0, 22 - n.h) / 2}" width="${n.col === 1 ? nodeW + 28 : wide ? (n.col ? W - n.x : n.x + nodeW) : nodeW + 150}" height="${Math.max(22, n.h)}" rx="3"/>
+      <rect class="bar" x="${n.x}" y="${n.y.toFixed(1)}" width="${nodeW}" height="${Math.max(2, n.h).toFixed(1)}" rx="2" fill="var(--${n.color || 'pot'})"/>${label(n)}</g>`).join('')}`;
+  focusFlow(picked);
+}
+
+function focusFlow(id) {
+  const svg = $('flow'), n = id && G.N[id], on = n ? bands(n) : null;
+  svg.classList.toggle('focus', !!n);
+  svg.querySelectorAll('.lk').forEach(p => p.classList.toggle('on', !!on && on.has(G.links[+p.dataset.i])));
+  const lit = new Set(n ? [n.id, ...[...on].flatMap(l => [l.S.ghost || l.s, l.t])] : []);
+  svg.querySelectorAll('.nd').forEach(g => { g.classList.toggle('on', lit.has(g.dataset.id)); g.classList.toggle('picked', g.dataset.id === picked); });
+}
+
+const rows = list => `<dl class="ledger">${list.map(([k, v, c]) => `<dt>${c ? `<i class="sw" style="background:var(--${c})"></i>` : ''}${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl>`;
+
+function renderInfo() {
+  const V = B.views[view], n = picked && G.N[picked], box = $('flowInfo');
+  if (!n) {
+    box.innerHTML = `<div class="eyebrow">Things to notice</div><ul>${V.takeaways.map(([a, b]) => `<li><b>${esc(a)}</b> ${esc(b)}</li>`).join('')}</ul><p>Tap any piece of the diagram to see what it is.</p>`;
+    return;
+  }
+  let h = `<div class="eyebrow">${n.col === 0 ? V.heads[0] : n.col === 2 ? V.heads[1] : 'In the middle'}</div><h3>${esc(n.label)}</h3>
+    <div class="num">${mil(n.v)}<small>${pct(n.v / V.total)} of the ${V.name}</small></div><p>${esc(n.desc)}</p>`;
+  const from = origins(n);
+  if (n.col === 2 && view === 'operating') {
+    h += `<div class="eyebrow">Who pays for it</div><div class="stack split" role="img" aria-label="Split of who pays">${seg(from.map(o => [o.v / n.v, '--' + (o.id === 'pot' ? 'pot' : G.N[o.id].color)]))}</div>
+      ${rows(from.map(o => [POT[o.id], `${mil(o.v)} <small>${pct(o.v / n.v)}</small>`, o.id === 'pot' ? 'pot' : G.N[o.id].color]))}`;
+  }
+  const to = n.col < 2 ? targets(n).sort((a, b) => b.v - a.v) : [];
+  if (to.length > 1) h += `<div class="eyebrow">Where it goes</div>${rows(to.map(t => [t.label, mil(t.v)]))}`;
+  if (n.items) h += `<div class="eyebrow">Largest pieces in ${B.year}</div>${rows(n.items.map(([k, v]) => [k, mil(v)]))}`;
+  if (n.link) h += `<a class="more" href="${n.link.href}">${esc(n.link.text)} →</a>`;
+  if (n.view) h += `<button class="reset" type="button" data-view="${n.view}">See the ${B.views[n.view].name}</button>`;
+  box.innerHTML = h + `<button class="reset" type="button" data-view="">Back to the overview</button>`;
+}
+
+function renderFlowTable() {
+  const V = B.views[view], split = view === 'operating', real = G.nodes.filter(n => !n.ghost);
+  const row = n => `<tr><th scope="row">${esc(n.label)}</th><td>${mil(n.v)}</td><td>${pct(n.v / V.total)}</td>${split ? `<td>${n.col === 2 ? mil(tot(n.in.filter(l => l.s === 'pot'))) : ''}</td>` : ''}</tr>`;
+  const grp = (t, c) => `<tr class="grp"><th scope="colgroup" colspan="${split ? 4 : 3}">${t}</th></tr>${real.filter(n => n.col === c).map(row).join('')}`;
+  $('flowTable').innerHTML = `<table class="cmp"><thead><tr><th scope="col"></th><th scope="col">Amount</th><th scope="col">Share</th>${split ? '<th scope="col">From the shared pot</th>' : ''}</tr></thead>
+    <tbody>${grp(V.heads[0], 0)}${grp(V.heads[1], 2)}</tbody></table>`;
+}
+
+function setFlow(v, id) {
+  view = v; picked = id || null;
+  document.querySelectorAll('#flowTabs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.view === view));
+  $('flowLead').textContent = B.views[view].lead;
+  renderFlow(); renderInfo(); renderFlowTable();
+}
+function pick(id) {
+  picked = id === picked ? null : id; focusFlow(picked); renderInfo();
+  // on a phone the details open below the diagram: bring them into view
+  const box = $('flowInfo');
+  if (picked && box.getBoundingClientRect().top > innerHeight - 120) box.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+}
+
+fetch('data/budget.json', {cache: 'no-cache'}).then(r => r.json()).then(b => {
+  B = b;
+  const spent = V => tot(V.links.filter(l => l.t !== 'reserve' && V.nodes.find(n => n.id === l.t).col === 2));
+  $('opNum').textContent = '$' + (spent(B.views.operating) / 1000).toFixed(1) + ' billion';
+  $('capNum').textContent = '$' + (spent(B.views.capital) / 1000).toFixed(1) + ' billion';
+  $('flowDoc').href = B.document; $('flowData').href = B.dataset;
+  $('flowTabs').innerHTML = Object.entries(B.views).map(([k, V]) => `<button type="button" data-view="${k}">${V.tab}: the ${V.name}</button>`).join('');
+  $('flowTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setFlow(b.dataset.view); });
+  const svg = $('flow'), tip = $('flowTip'), node = e => e.target.closest('.nd');
+  svg.addEventListener('click', e => { const g = node(e); if (g) pick(g.dataset.id); else if (picked) pick(picked); });
+  svg.addEventListener('keydown', e => { const g = node(e); if (g && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); pick(g.dataset.id); } });
+  svg.addEventListener('focusin', e => { const g = node(e); if (g) focusFlow(g.dataset.id); });
+  svg.addEventListener('focusout', () => focusFlow(picked));
+  // hover: light up one piece and say what it is
+  svg.addEventListener('pointermove', e => {
+    if (e.pointerType !== 'mouse') return;
+    const g = node(e), lk = e.target.closest('.lk'), l = lk && G.links[+lk.dataset.i], V = B.views[view];
+    if (!g && !l) { tip.hidden = true; focusFlow(picked); return; }
+    if (g) { const n = G.N[g.dataset.id]; focusFlow(n.id); tip.innerHTML = `<b>${esc(n.label)}</b><br>${mil(n.v)} · ${pct(n.v / V.total)} of the ${V.name}`; }
+    else { const a = l.S.ghost ? G.N[l.S.ghost] : l.S, b = l.T.ghost ? null : l.T;
+      svg.classList.add('focus'); svg.querySelectorAll('.lk').forEach(p => p.classList.toggle('on', p === lk));
+      tip.innerHTML = `<b>${mil(l.v)}</b><br>${esc(a.label)}${b ? ' → ' + esc(l.label || b.label) : ', kept by the services that collect it'}`; }
+    tip.hidden = false;
+    const r = $('flowBox').getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    tip.style.left = Math.max(0, Math.min(x + 14, r.width - tip.offsetWidth)) + 'px'; tip.style.top = (y + 16) + 'px';
+  });
+  svg.addEventListener('pointerleave', () => { tip.hidden = true; focusFlow(picked); });
+  $('flowInfo').addEventListener('click', e => { const b = e.target.closest('button[data-view]'); if (!b) return; if (b.dataset.view) setFlow(b.dataset.view); else pick(picked); });
+  new ResizeObserver(() => { if (Math.round($('flowBox').clientWidth) !== flowW) renderFlow(); }).observe($('flowBox'));
+  setFlow(view);
+}).catch(err => { console.error(err); $('flowLead').textContent = 'Budget data unavailable.'; });
 </script>
 </body>
 </html>
