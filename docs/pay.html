@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>How We Pay for Calgary</title>
+<meta name="description" content="An independent, interactive walk through how Calgary's property tax works, and what happens when you change the levers.">
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+:root {
+  --bg: #f4f6f9; --surface: #ffffff; --ink: #101b2d; --muted: #586579; --line: #dde2ea;
+  --band: #12305c; --band-ink: #ffffff; --band-muted: #b9c8de; --accent: #e8751a;
+  --u0: #1f7a8c; --u1: #9fd3db; --o0: #fbd3a6; --o1: #f29b4b; --o2: #d1611a; --o3: #8a3608;
+  --good: #1f7a8c; --bad: #c2410c;
+  --special: #d5dae2; --hexline: #ffffff; --select: #101b2d; --ward: #12305c;
+  --display: "Archivo", "Arial Narrow", Arial, sans-serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b131f; --surface: #121d2d; --ink: #e9eef5; --muted: #9aa8ba; --line: #24334b;
+  --band: #0e2547; --band-ink: #ffffff; --band-muted: #a9bbd6; --accent: #f08a35;
+  --u0: #5cc3d3; --u1: #24606b; --o0: #6b3a12; --o1: #b3561a; --o2: #e8822e; --o3: #fdc58c;
+  --good: #5cc3d3; --bad: #f29b4b;
+  --special: #263143; --hexline: #0b131f; --select: #ffffff; --ward: #c9d6ea; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0b131f; --surface: #121d2d; --ink: #e9eef5; --muted: #9aa8ba; --line: #24334b;
+  --band: #0e2547; --band-ink: #ffffff; --band-muted: #a9bbd6; --accent: #f08a35;
+  --u0: #5cc3d3; --u1: #24606b; --o0: #6b3a12; --o1: #b3561a; --o2: #e8822e; --o3: #fdc58c;
+  --good: #5cc3d3; --bad: #f29b4b;
+  --special: #263143; --hexline: #0b131f; --select: #ffffff; --ward: #c9d6ea; color-scheme: dark }
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.5; }
+h1, h2, h3, h4 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.15; }
+p { margin: 0; }
+a { color: inherit; text-underline-offset: 2px; }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-inline: 16px; }
+
+.band { background: var(--band); color: var(--band-ink); }
+.band .wrap { padding-block: 22px 26px; display: flex; flex-direction: column; gap: 10px; }
+.draft { font-family: var(--display); font-weight: 700; font-size: 12px; letter-spacing: .09em; text-transform: uppercase; color: var(--band-muted); display: flex; gap: 10px; flex-wrap: wrap; }
+.draft b { color: var(--accent); }
+.draft .navlink { margin-left: auto; color: var(--band-ink); }
+h1 { font-weight: 800; font-size: clamp(36px, 7.5vw, 80px); letter-spacing: -.015em; line-height: 1.02; }
+.lede { color: var(--band-muted); font-size: clamp(17px, 1.6vw, 20px); }
+.subtitle { font-family: var(--display); font-weight: 700; font-size: clamp(21px, 2.6vw, 30px); line-height: 1.25; text-wrap: balance; color: var(--band-ink); }
+.subtitle strong { color: var(--accent); font-weight: 800; }
+.lede strong { color: var(--band-ink); }
+.srcline { color: var(--band-muted); font-size: 13px; }
+.srcline a { color: var(--band-muted); }
+
+main.wrap { padding-block: 20px 40px; display: flex; flex-direction: column; gap: 28px; }
+.block { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.block > h3, .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); font-family: var(--display); }
+.hint { font-size: 14px; color: var(--muted); }
+
+/* scenario picker */
+.picker { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 880px) { .picker { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.options { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 8px; }
+.opt { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; background: var(--surface); }
+.opt input { accent-color: var(--band); margin: 0; width: 17px; height: 17px; }
+.opt b { font-family: var(--display); font-weight: 700; font-size: 16px; line-height: 1.25; }
+.opt.proposed { border-color: var(--accent); border-width: 2px; padding: 9px 11px; }
+.opt .tag { grid-column: 2; justify-self: start; font-family: var(--display); font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--bad); }
+.opt:hover { border-color: color-mix(in srgb, var(--band) 40%, var(--line)); }
+.opt:has(input:checked) { background: color-mix(in srgb, var(--band) 9%, var(--surface)); border-color: var(--band); }
+.opt:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+.about { display: flex; flex-direction: column; gap: 10px; }
+.about h2 { font-size: 22px; font-weight: 800; }
+.pickcol { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.alert { background: color-mix(in srgb, var(--accent) 14%, var(--surface)); border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--surface)); border-left: 5px solid var(--accent); border-radius: 6px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.alert b { font-family: var(--display); font-size: 13px; letter-spacing: .07em; text-transform: uppercase; color: var(--bad); }
+.alert p { font-size: 16px; font-weight: 600; }
+.sources { font-size: 14px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; padding-top: 4px; }
+@media (min-width: 620px) { .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 880px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.stat b { display: block; font-family: var(--display); font-weight: 800; font-size: clamp(20px, 5vw, 27px); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.stat span { font-size: 13px; color: var(--muted); line-height: 1.3; display: block; }
+
+/* map + budget */
+.work { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 880px) { .work { grid-template-columns: minmax(0, 1fr) 380px; align-items: start; } }
+.mapcard { gap: 10px; padding: 12px; }
+.maphead { display: flex; justify-content: space-between; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; }
+.maphead h2 { font-size: 17px; font-weight: 700; }
+.maphead span { color: var(--muted); font-size: 14px; }
+.search { display: flex; gap: 8px; }
+.search input { flex: 1; min-width: 0; font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
+.search button { font: 600 15px var(--body); padding: 8px 14px; border: 0; border-radius: 6px; background: var(--band); color: var(--band-ink); cursor: pointer; }
+#map { width: 100%; height: 62vh; min-height: 380px; border-radius: 4px; overflow: hidden; background: var(--special); }
+@media (min-width: 880px) { #map { height: min(76vh, 740px); } }
+.legend { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); }
+.legend > b { color: var(--ink); font: 700 14px var(--display); }
+.legend .grp { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; }
+.legend .grp > b { color: var(--ink); font-weight: 600; margin-right: 2px; }
+.legend i { display: inline-block; width: 14px; height: 14px; border-radius: 2px; vertical-align: -2px; margin-right: 5px; border: 1px solid var(--line); }
+
+/* the hexagon's budget */
+#budget h4 { font-size: 20px; font-weight: 700; }
+#budget .tag { color: var(--muted); font-size: 14px; }
+.ledger { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 12px; font-size: 15px; font-variant-numeric: tabular-nums; }
+.ledger .sec { grid-column: 1 / -1; font-family: var(--display); font-weight: 700; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding-top: 8px; }
+.ledger .sec:first-child { padding-top: 0; }
+.ledger .sub { grid-column: 1 / -1; font-size: 14px; color: var(--muted); padding-bottom: 2px; }
+.ledger .sec.divide { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 12px; }
+.ledger dt { color: var(--muted); }
+.ledger dd { margin: 0; text-align: right; font-weight: 600; }
+.ledger .tot { border-top: 1px solid var(--line); padding-top: 4px; color: var(--ink); font-weight: 600; }
+.ledger dd.tot { font-weight: 800; }
+.ledger small { color: var(--muted); font-weight: 400; font-size: 13px; }
+.meter { display: flex; flex-direction: column; gap: 6px; }
+.meter .track { position: relative; height: 16px; border-radius: 3px; background: color-mix(in srgb, var(--good) 14%, var(--surface)); border: 1px solid var(--line); }
+.meter .fill { position: absolute; inset: 0 auto 0 0; border-radius: 2px; }
+.meter .cap { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.verdict { font-size: 15px; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--line); display: flex; gap: 8px; align-items: baseline; }
+.verdict b { font-family: var(--display); white-space: nowrap; }
+.verdict.over b { color: var(--bad); } .verdict.under b { color: var(--good); }
+
+/* evidence */
+.evidence { display: flex; flex-direction: column; gap: 12px; }
+.evidence h2 { font-size: 22px; font-weight: 800; }
+.evidence > p { color: var(--muted); }
+.bars { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; gap: 8px 12px; align-items: center; font-size: 15px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px; }
+.bars .track { position: relative; height: 16px; }
+.bars .bar { height: 100%; border-radius: 0 4px 4px 0; min-width: 2px; }
+.bars .line { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--ink); }
+.bars .v { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
+.bars .key { grid-column: 1 / -1; font-size: 13px; color: var(--muted); display: flex; gap: 6px 16px; flex-wrap: wrap; }
+.bars .key i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.ways { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+.way { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.way h3 { font-size: 19px; font-weight: 800; }
+.way .num { font-family: var(--display); font-weight: 800; font-size: 26px; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.way p { color: var(--muted); }
+.way.best { border-color: var(--good); background: color-mix(in srgb, var(--good) 8%, var(--surface)); }
+.way .kicker { font: 700 12px var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.way.best .kicker { color: var(--good); }
+
+main.wrap { padding-block: 20px 40px; display: flex; flex-direction: column; gap: 28px; }
+.block { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.block h2 { font-size: 22px; font-weight: 800; }
+.block > p, .step > p { color: var(--muted); }
+.eyebrow { font: 700 13px var(--display); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.lab { display: flex; flex-direction: column; gap: 4px; font-size: 15px; }
+.lab span { display: flex; justify-content: space-between; gap: 12px; font-weight: 600; }
+.lab output { font-variant-numeric: tabular-nums; font-family: var(--display); font-weight: 800; }
+input[type=range] { width: 100%; accent-color: var(--band); }
+select { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); max-width: 100%; }
+.sim { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+@media (min-width: 880px) { .sim { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.levers { display: flex; flex-direction: column; gap: 16px; }
+.stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; }
+.stat b { display: block; font-family: var(--display); font-weight: 800; font-size: clamp(20px, 5vw, 27px); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.stat span { font-size: 13px; color: var(--muted); line-height: 1.3; display: block; }
+.stack { display: flex; height: 34px; border-radius: 4px; overflow: hidden; border: 1px solid var(--line); background: var(--bg); }
+.stack i { display: block; height: 100%; }
+.cap { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; flex-wrap: wrap; }
+.verdict { font-size: 15px; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--line); display: flex; gap: 8px; align-items: baseline; }
+.verdict b { font-family: var(--display); white-space: nowrap; }
+.verdict.over b { color: var(--bad); } .verdict.under b { color: var(--good); }
+.nums { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.nums div { border: 1px solid var(--line); border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 2px; }
+.nums b { font: 800 24px var(--display); font-variant-numeric: tabular-nums; }
+.nums span { font-size: 14px; color: var(--muted); }
+.reset { font: 600 15px var(--body); align-self: flex-start; padding: 8px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); cursor: pointer; }
+.notes { color: var(--muted); font-size: 15px; display: flex; flex-direction: column; gap: 8px; }
+
+/* the rate: Strong, AB */
+.block > h3.sub { font-size: 18px; font-weight: 800; letter-spacing: 0; text-transform: none; color: var(--ink); border-top: 1px solid var(--line); padding-top: 16px; margin-top: 4px; }
+.formula { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 6px; background: color-mix(in srgb, var(--band) 7%, var(--surface)); }
+.formula div { display: flex; align-items: center; gap: 6px 10px; flex-wrap: wrap; }
+.formula b { font-family: var(--display); font-weight: 800; }
+.frac { display: inline-flex; flex-direction: column; text-align: center; }
+.frac i { font-style: normal; padding: 2px 6px; }
+.frac i + i { border-top: 2px solid var(--ink); }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.tabs button { font: 600 14px var(--body); padding: 7px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); cursor: pointer; }
+.tabs button:hover { border-color: color-mix(in srgb, var(--band) 40%, var(--line)); }
+.tabs button[aria-pressed=true] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+.streets { display: flex; flex-direction: column; gap: 14px; }
+.street { display: flex; flex-direction: column; gap: 6px; }
+.street .homes { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.home { display: flex; flex-direction: column; align-items: center; padding: 6px 2px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); font-variant-numeric: tabular-nums; line-height: 1.2; }
+.home svg { width: 26px; height: 24px; fill: currentColor; }
+.home.small svg { width: 20px; height: 18px; margin-top: 6px; }
+.home small { font-size: 12px; }
+.home b { font: 800 clamp(13px, 3.6vw, 15px) var(--display); color: var(--ink); }
+.home em { font: 700 10px var(--display); font-style: normal; letter-spacing: .07em; text-transform: uppercase; color: var(--bad); }
+.home.hi { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 9%, var(--surface)); }
+.home.hi svg { color: var(--accent); }
+.road { font: 700 12px var(--display); letter-spacing: .05em; text-transform: uppercase; padding: 4px 8px; border-radius: 3px; background: var(--special); color: var(--ink); }
+.road.new { outline: 2px solid var(--accent); outline-offset: -2px; }
+.road.due { background: var(--bad); color: var(--surface); }
+.townside { display: flex; flex-direction: column; gap: 12px; }
+.townside h3 { font-size: 20px; font-weight: 800; }
+.townside > p { color: var(--muted); }
+.townside .nums { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.townside .nums b { font-size: clamp(19px, 5vw, 24px); }
+.stepnav { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
+.stepnav button:disabled { opacity: .45; cursor: default; }
+.cmp { width: 100%; border-collapse: collapse; font-size: 15px; font-variant-numeric: tabular-nums; }
+.cmp th, .cmp td { text-align: right; padding: 7px 8px; border-bottom: 1px solid var(--line); }
+.cmp th:first-child { text-align: left; padding-left: 0; }
+.cmp thead th { font: 700 13px var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.cmp tbody th { font-weight: 400; color: var(--muted); }
+.cmp td { font-weight: 600; }
+</style>
+</head>
+<body>
+<header class="band"><div class="wrap">
+  <div class="draft"><span>Calgary · <span class="yr">2026</span> tax year · Draft</span><a class="navlink" href="./">The roads map</a></div>
+  <h1>How we pay for Calgary</h1>
+  <p class="subtitle">A plain-language, independent look at where the money comes from, where it goes, and what happens when you change it.</p>
+  <p class="lede">Every number here is built from the City's published tax rates and assessment roll, not from the City's own budget tools. Move the levers and see what moves.</p>
+</div></header>
+
+<main class="wrap">
+  <section class="block" id="s1">
+    <div class="eyebrow">1 · Your bill</div>
+    <h2>What does one home pay, and what does mobility get?</h2>
+    <p>The City's tax is your home's assessed value times a rate. The province collects its own tax on the same bill. Only the City's part pays for roads, transit, sidewalks and everything else the City does.</p>
+    <label class="lab"><span>Assessed value of the home <output id="homeOut"></output></span><input id="home" type="range" min="200000" max="2000000" step="10000"></label>
+    <div class="nums" id="bill"></div>
+    <div class="cap"><span>Municipal tax on this home, by where it goes (Mobility's share is the City's own breakdown)</span></div>
+    <div class="stack" id="billStack" role="img" aria-label="Municipal tax split into mobility and everything else"></div>
+  </section>
+
+  <section class="block" id="rate">
+    <div class="eyebrow">2 · The rate</div>
+    <h2>Where does the tax rate come from?</h2>
+    <p>The City does not pick a rate and see what it raises. It works the other way round: Council decides how much money the City needs from property tax, then divides that by the value of everything that can be taxed. The rate is whatever comes out.</p>
+    <div class="formula">
+      <div><b>The rate</b><span>=</span><span class="frac"><i>Money needed from property tax</i><i>Total assessed value of all taxable property</i></span></div>
+      <div><b>Your bill</b><span>=</span><span>Your assessed value × the rate</span></div>
+    </div>
+    <p class="hint">Rates are often quoted in mills. A mill is a thousandth: 5 mills means $5 of tax for every $1,000 of assessed value.</p>
+    <p>To see what that does to a tax bill, take a made-up town of ten homes: <b>Strong, Alberta</b>. Step through what happens as the town changes.</p>
+    <div class="tabs" id="townTabs"></div>
+    <div class="sim">
+      <div class="streets" id="streets"></div>
+      <div class="townside" aria-live="polite">
+        <h3 id="townTitle"></h3>
+        <p id="townText"></p>
+        <div class="nums" id="townNums"></div>
+        <div class="stepnav"><button class="reset" id="townBack" type="button">Back</button><button class="reset" id="townNext" type="button">Next</button><span id="townStep"></span></div>
+      </div>
+    </div>
+    <p class="hint">On each home: its assessed value, then its tax bill for the year.</p>
+
+    <h3 class="sub">Now scale it up to Calgary</h3>
+    <p>Calgary works the same way, with more zeros. These are the figures for homes in <span class="yr">2026</span>.</p>
+    <table class="cmp">
+      <thead><tr><th scope="col"></th><th scope="col">Strong, AB</th><th scope="col">Calgary, AB</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">The pie: tax needed from homes</th><td>$25,000</td><td id="cPie"></td></tr>
+        <tr><th scope="row">The base: total assessed value of homes</th><td>$5M</td><td id="cBase"></td></tr>
+        <tr><th scope="row">The rate</th><td>5.00 mills</td><td id="cRate"></td></tr>
+        <tr><th scope="row">A typical home</th><td>$500K pays $2,500</td><td id="cHome"></td></tr>
+        <tr><th scope="row">Your slice of the pie</th><td>1 in 10</td><td id="cSlice"></td></tr>
+      </tbody>
+    </table>
+
+    <h3 class="sub">One more step: Calgary cuts the pie in two first</h3>
+    <p>Before any rate is set, Council decides how much of the pie comes from homes and how much from businesses. Each side then gets its own rate from its own total value. Today homes pay about <b id="splitNow"></b> of the pie. Move the split and see what it does to a home's bill.</p>
+    <label class="lab"><span>Share of the pie paid by homes <output id="splitOut"></output></span><input id="split" type="range" min="40" max="70" step="0.1"></label>
+    <div class="nums" id="splitNums"></div>
+    <p class="hint" id="splitRule"></p>
+  </section>
+
+  <section class="block" id="s2">
+    <div class="eyebrow">3 · The whole city</div>
+    <h2>Play with the levers</h2>
+    <p>Calgary's property tax raises about <b id="totRev"></b> a year. Mobility gets a set share of it. Roads are only one thing mobility pays for. Change a lever and see what is left for sidewalks, bike lanes, streetlights, signals and snow clearing.</p>
+    <div class="sim">
+      <div class="levers">
+        <label class="lab"><span>Pavement plan</span><select id="plan"></select></label>
+        <label class="lab"><span>Change in the tax rate <output id="taxOut"></output></span><input id="tax" type="range" min="-10" max="40" step="1" value="0"></label>
+        <label class="lab"><span>More homes and businesses on the streets we already have <output id="growOut"></output></span><input id="grow" type="range" min="0" max="50" step="1" value="0"></label>
+        <label class="lab"><span>Share of each tax dollar given to mobility <output id="shareOut"></output></span><input id="share" type="range" min="3" max="20" step="0.1"></label>
+        <button class="reset" id="reset" type="button">Reset to today</button>
+      </div>
+      <div class="results" style="display:flex;flex-direction:column;gap:14px">
+        <div class="stats" id="stats"></div>
+        <div class="stack" id="stack" role="img" aria-label="Mobility budget split between road pavement and everything else"></div>
+        <div class="cap" id="stackCap"></div>
+        <div id="verdict"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="notes block">
+    <div class="eyebrow">How this works, and what it leaves out</div>
+    <p><b>More homes on existing streets</b> raises assessed value without adding road. We apply it evenly across the city; in practice it varies by neighbourhood.</p>
+    <p>Road cost is pavement only, using the pavement plans on the roads map. The mobility budget here is mobility's share of <i>property tax</i>; the City's full mobility budget is larger because it also draws on fees, grants and other revenue.</p>
+    <p>Not here yet: other City services, user fees, the province's tax, debt and reserves, and how timing across years changes things. This page is a first iteration; what would you want to move next?</p>
+    <p>Methods and sources: <a href="methods.html">methods page</a>.</p>
+  </section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const money = v => { const a = Math.abs(v), s = v < 0 ? '−$' : '$';
+  return a >= 1e9 ? s + (a / 1e9).toFixed(2) + 'B' : a >= 1e6 ? s + (a / 1e6).toFixed(a >= 1e8 ? 0 : 1) + 'M' : s + Math.round(a).toLocaleString(); };
+const pct = v => (v * 100 < 10 ? (v * 100).toFixed(1) : Math.round(v * 100)) + '%';
+const sgn = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v) + '%';
+let S, H, rev = 0, pm2 = 0;
+const seg = (parts) => parts.map(([w, c]) => `<i style="width:${Math.max(0, w * 100).toFixed(2)}%;background:var(${c})"></i>`).join('');
+
+function planCost(sc, n) { const r = (sc.low + sc.high) / 2; return sc.kind === 'budget' ? r : r * H.reduce((a, h) => a + (sc.kind === 'life' ? h.pm2y : h.pm2), 0); }
+
+function renderBill() {
+  const v = +$('home').value, tax = v * S.res_rate, mob = tax * S.mobility_share;
+  $('homeOut').textContent = money(v);
+  $('bill').innerHTML = `<div><b>${money(tax)}</b><span>City property tax a year (${(S.res_rate * 100).toFixed(4)}% of value)</span></div>
+    <div><b>${money(mob)}</b><span>of it goes to mobility, ${(S.mobility_share * 100).toFixed(1)}¢ of each dollar</span></div>
+    <div><b>${money(mob / 12)}</b><span>a month, for roads, sidewalks, bike lanes, streetlights, signals and snow</span></div>`;
+  $('billStack').innerHTML = seg([[S.mobility_share, '--accent'], [1 - S.mobility_share, '--band']]);
+}
+
+function renderSim() {
+  const t = +$('tax').value / 100, g = +$('grow').value / 100, sh = +$('share').value / 100;
+  const sc = S.scenarios.find(s => s.id === $('plan').value), road = planCost(sc);
+  $('taxOut').textContent = sgn(+$('tax').value); $('growOut').textContent = sgn(+$('grow').value) + ' value'; $('shareOut').textContent = (sh * 100).toFixed(1) + '¢';
+  const r = rev * (1 + t) * (1 + g), mob = r * sh, left = mob - road;
+  const home = S.typical_home_value * S.res_rate * (1 + t);
+  // neighbourhood hexagons whose own mobility budget covers their roads
+  let ok = 0, n = 0;
+  H.forEach(h => { if (h.special || h.rev <= 0) return; n++; if (road * h.pm2 / pm2 <= h.rev * (1 + t) * (1 + g) * sh) ok++; });
+  $('totRev').textContent = money(rev);
+  $('stats').innerHTML = `<div class="stat"><b>${money(r)}</b><span>City property tax raised</span></div>
+    <div class="stat"><b>${money(mob)}</b><span>mobility's share</span></div>
+    <div class="stat"><b>${money(road)}</b><span>road pavement under this plan</span></div>
+    <div class="stat"><b>${money(home)}</b><span>tax on a typical $${S.typical_home_value.toLocaleString()} home</span></div>
+    <div class="stat"><b>${pct(ok / n)}</b><span>of neighbourhood hexagons raise enough to cover their own roads</span></div>`;
+  const used = Math.min(road / mob, 1);
+  $('stack').innerHTML = seg([[used, '--bad'], [1 - used, '--good']]);
+  $('stackCap').innerHTML = `<span><span style="color:var(--bad)">■</span> Roads ${pct(road / mob)} of the mobility budget</span><span><span style="color:var(--good)">■</span> Left for everything else</span>`;
+  $('verdict').innerHTML = left < 0
+    ? `<div class="verdict over"><b>${money(-left)} short</b><span>Roads alone cost more than mobility's whole share. Nothing is left for sidewalks, bike lanes, streetlights, signals or snow clearing.</span></div>`
+    : `<div class="verdict under"><b>${money(left)} left</b><span>That is what remains for sidewalks, bike lanes, streetlights, signals and snow clearing.</span></div>`;
+}
+
+// Strong, AB: a made-up town used to show where a tax rate comes from. Each step
+// gives what the town needs from property tax and the homes on each street
+// (values in $ thousands). Rates and bills are worked out from these.
+const homes = (n, v = 500, flag) => Array.from({length: n}, () => ({v: v * 1000, flag}));
+const TOWN = [
+  {tab: 'Start', need: 25000, title: 'Strong needs $25,000 to run',
+    text: 'Ten homes, each assessed at $500,000. Council adds up what the town needs from property tax, then divides it by the total value of the homes. That gives the rate. Every home pays the same.',
+    streets: [{name: 'First Street', homes: homes(5)}, {name: 'Second Street', homes: homes(5)}]},
+  {tab: 'Every value rises', need: 25000, title: 'Every home’s value goes up 10%',
+    text: 'The town still needs $25,000, so the rate falls to match. Nobody’s bill changes. A higher assessment does not, on its own, mean a higher tax bill.',
+    streets: [{name: 'First Street', homes: homes(5, 550)}, {name: 'Second Street', homes: homes(5, 550)}]},
+  {tab: 'One value rises', need: 25000, title: 'One home’s value goes up',
+    text: 'Only one home is reassessed, to $600,000. Its bill goes up, and the other nine each pay a little less. What moves your bill is how your value changed compared with everyone else’s.',
+    streets: [{name: 'First Street', homes: [...homes(2), ...homes(1, 600, 'up'), ...homes(2)]}, {name: 'Second Street', homes: homes(5)}]},
+  {tab: 'The town grows out', need: 27000, title: 'The town grows out',
+    text: 'Five new homes go up on a new street, built by the developer and handed over to the town. Running Strong now costs $27,000, shared among 15 homes. Growth looks like a tax cut.',
+    streets: [{name: 'First Street', homes: homes(5)}, {name: 'Second Street', homes: homes(5)}, {name: 'Third Street: new', road: 'new', homes: homes(5, 500, 'new')}]},
+  {tab: 'The bill comes due', need: 40000, title: 'The new street’s bill comes due',
+    text: 'Years later Third Street wears out. The developer built it, but replacing it is the town’s job. Rebuilding the street and the pipes under it costs $260,000. Spread over 20 years, that is $13,000 a year on top of the $27,000. Every home now pays more than it did before the town grew, and First and Second Street will need the same one day.',
+    streets: [{name: 'First Street', homes: homes(5)}, {name: 'Second Street', homes: homes(5)}, {name: 'Third Street: needs replacing', road: 'due', homes: homes(5)}]},
+  {tab: 'Or it grows in', need: 27000, title: 'Or the town grows in instead',
+    text: 'Go back to the ten homes and add five smaller ones, assessed at $400,000 each, on the two streets Strong already has. The town needs the same $27,000 as when it grew out, but there is no new street to replace later. When First and Second Street do need rebuilding, 15 homes share the cost instead of 10.',
+    streets: [{name: 'First Street', homes: [...homes(5), ...homes(3, 400, 'new')]}, {name: 'Second Street', homes: [...homes(5), ...homes(2, 400, 'new')]}]},
+];
+const HOUSE = '<svg viewBox="0 0 24 22" aria-hidden="true"><path d="M12 1 1 10h3v11h16V10h3z"/></svg>';
+const dollars = v => '$' + Math.round(v).toLocaleString();
+let step = 0;
+
+function renderTown() {
+  const st = TOWN[step], all = st.streets.flatMap(s => s.homes);
+  const total = all.reduce((a, h) => a + h.v, 0), rate = st.need / total;
+  // follow one of the original ten homes from step to step
+  const first = TOWN[0], bill0 = 500000 * first.need / first.streets.flatMap(s => s.homes).reduce((a, h) => a + h.v, 0);
+  const mine = all[0].v, bill = Math.round(mine * rate), diff = bill - Math.round(bill0);
+  $('streets').innerHTML = st.streets.map(s => `<div class="street"><div class="homes">${s.homes.map(h =>
+    `<div class="home${h.flag ? ' hi' : ''}${h.v < 500000 ? ' small' : ''}">${HOUSE}<small>$${h.v / 1000}K</small><b>${dollars(h.v * rate)}</b>${h.flag ? `<em>${h.flag}</em>` : ''}</div>`).join('')}</div>
+    <div class="road${s.road ? ' ' + s.road : ''}">${s.name}</div></div>`).join('');
+  $('townTitle').textContent = st.title; $('townText').textContent = st.text;
+  $('townNums').innerHTML = `<div><b>${dollars(st.need)}</b><span>needed from property tax</span></div>
+    <div><b>${dollars(total)}</b><span>total assessed value, ${all.length} homes</span></div>
+    <div><b>${(rate * 1000).toFixed(2)} mills</b><span>${dollars(st.need)} ÷ ${dollars(total)} = ${rate.toFixed(5)}</span></div>
+    <div><b>${dollars(bill)}</b><span>tax on a ${dollars(mine)} home${step ? ', ' + (diff ? dollars(Math.abs(diff)) + (diff > 0 ? ' more than' : ' less than') : 'the same as') + ' at the start' : ''}</span></div>`;
+  document.querySelectorAll('#townTabs button').forEach((b, i) => b.setAttribute('aria-pressed', i === step));
+  $('townBack').disabled = step === 0; $('townNext').disabled = step === TOWN.length - 1;
+  $('townStep').textContent = `Step ${step + 1} of ${TOWN.length}`;
+}
+function goTown(i) { step = Math.max(0, Math.min(TOWN.length - 1, i)); renderTown(); }
+$('townTabs').innerHTML = TOWN.map(s => `<button type="button">${s.tab}</button>`).join('');
+document.querySelectorAll('#townTabs button').forEach((b, i) => b.addEventListener('click', () => goTown(i)));
+$('townBack').addEventListener('click', () => goTown(step - 1));
+$('townNext').addEventListener('click', () => goTown(step + 1));
+renderTown();
+
+// Calgary's residential side, set beside Strong, and the residential / non-residential split
+const HOMES = 500000; // rough count of Calgary homes, for "your slice"
+let resRev = 0, split0 = 0;
+const sgn1 = v => Math.abs(v) < 0.05 ? 'no change' : (v > 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '%';
+
+function renderCalgary() {
+  const v = S.typical_home_value;
+  $('cPie').textContent = money(resRev);
+  $('cBase').textContent = '$' + Math.round(resRev / S.res_rate / 1e9) + 'B';
+  $('cRate').textContent = (S.res_rate * 1000).toFixed(2) + ' mills';
+  $('cHome').textContent = `$${Math.round(v / 1000)}K pays ${dollars(v * S.res_rate)}`;
+  $('cSlice').textContent = 'about 1 in ' + HOMES.toLocaleString();
+  $('splitNow').textContent = (split0 * 100).toFixed(1) + '%';
+  $('splitRule').textContent = `Every point of the pie moved onto homes raises each home's bill by about ${(1 / split0).toFixed(1)}%, with no change in the budget.`;
+}
+
+function renderSplit() {
+  const sh = +$('split').value / 100, k = sh / split0, v = S.typical_home_value;
+  $('splitOut').textContent = (sh * 100).toFixed(1) + '%' + (Math.abs(sh - split0) < 0.0005 ? ' (today)' : '');
+  $('splitNums').innerHTML = `<div><b>${dollars(v * S.res_rate * k)}</b><span>tax on a typical $${v.toLocaleString()} home (${sgn1((k - 1) * 100)})</span></div>
+    <div><b>${(S.res_rate * k * 1000).toFixed(2)} mills</b><span>the rate on homes</span></div>
+    <div><b>${sgn1(((1 - sh) / (1 - split0) - 1) * 100)}</b><span>on every business's tax bill</span></div>`;
+}
+
+function reset() { $('tax').value = 0; $('grow').value = 0; $('share').value = S.mobility_share * 100; $('plan').value = S.current; renderSim(); }
+
+Promise.all(['scenarios.json', 'hexes.geojson'].map(f => fetch('data/' + f, {cache: 'no-cache'}).then(r => r.json()))).then(([s, g]) => {
+  S = s;
+  H = g.features.map(f => ({...f.properties, rev: f.properties.rev_res + f.properties.rev_com}));
+  // pavement per hexagon: own streets plus an equal slice of the shared main roads (the site's default basis)
+  const n = H.length, sh = H.reduce((a, h) => a + h.m2_sh, 0), shy = H.reduce((a, h) => a + h.m2y_sh, 0);
+  H.forEach(h => { h.pm2 = h.m2 + sh / n; h.pm2y = h.m2y + shy / n; });
+  rev = H.reduce((a, h) => a + h.rev, 0); pm2 = H.reduce((a, h) => a + h.pm2, 0);
+  document.querySelectorAll('.yr').forEach(e => { e.textContent = S.tax_year; });
+  $('home').value = S.typical_home_value; $('share').value = S.mobility_share * 100;
+  $('plan').innerHTML = S.scenarios.map(s => `<option value="${s.id}">${s.label}</option>`).join('');
+  $('plan').value = S.default;
+  resRev = H.reduce((a, h) => a + h.rev_res, 0); split0 = Math.round(resRev / rev * 1000) / 1000;
+  $('split').value = split0 * 100; $('split').addEventListener('input', renderSplit);
+  renderCalgary(); renderSplit();
+  ['home'].forEach(i => $(i).addEventListener('input', renderBill));
+  ['plan', 'tax', 'grow', 'share'].forEach(i => $(i).addEventListener('input', renderSim));
+  $('reset').addEventListener('click', () => { reset(); $('plan').value = S.default; renderSim(); });
+  renderBill(); renderSim();
+}).catch(err => { console.error(err); $('totRev').textContent = 'data unavailable'; });
+</script>
+</body>
+</html>
