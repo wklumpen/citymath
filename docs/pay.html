@@ -166,6 +166,12 @@ input[type=range] { width: 100%; accent-color: var(--band); }
 .nums div { border: 1px solid var(--line); border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 2px; }
 .nums b { font: 800 24px var(--display); font-variant-numeric: tabular-nums; }
 .nums span { font-size: 14px; color: var(--muted); }
+.whatif { border: 1px dashed var(--muted); border-radius: 6px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.whatif > p { color: var(--muted); }
+.flags { display: flex; flex-wrap: wrap; gap: 6px; }
+span.flag { font: 700 11px var(--display); letter-spacing: .07em; text-transform: uppercase; color: var(--ink); border: 1px solid var(--muted); border-radius: 4px; padding: 2px 6px; white-space: nowrap; }
+.nums .flags { margin-top: 4px; }
+#chgOut { white-space: nowrap; }
 .sim { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
 @media (min-width: 880px) { .sim { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
 .reset { font: 600 15px var(--body); align-self: flex-start; padding: 8px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); cursor: pointer; }
@@ -374,6 +380,13 @@ details.tbl .scroll { overflow-x: auto; }
     <p>The City's proposed budget for <span class="next"></span> needs <b id="propUp"></b> more property tax from the properties that already exist. That is the top of the fraction getting bigger. It is a proposal, not a decision: <span id="propWhen"></span>.</p>
     <div class="nums" id="propNums"></div>
     <p class="hint" id="propWhy"></p>
+    <div class="whatif">
+      <div class="flags"><span class="flag">What if</span><span class="flag">Estimated arithmetic</span></div>
+      <p>What would that do to the home in <a href="#s1">Your bill</a>? It depends on how the home's value changes compared with everyone else's. You may not know its new assessed value yet, so try a few.</p>
+      <label class="lab"><span>Change in the home's value next year <output id="chgOut"></output></span><input id="chg" type="range" min="-15" max="10" step="0.5"></label>
+      <div class="nums" id="ifNums"></div>
+      <p class="hint" id="ifNote"></p>
+    </div>
   </section>
 
   <section class="notes block">
@@ -394,11 +407,11 @@ let T, P; // property tax figures and next year's proposal, from budget.json
 const seg = (parts) => parts.map(([w, c]) => `<i style="width:${Math.max(0, w * 100).toFixed(2)}%;background:var(${c})"></i>`).join('');
 
 function renderBill() {
-  const v = +$('home').value, tax = v * T.res_rate;
+  const v = +$('home').value, tax = v * T.res_rate, w = whatIf();
   $('homeOut').textContent = money(v);
   $('bill').innerHTML = `<div><b>${dollars(tax)}</b><span>City property tax a year (${(T.res_rate * 100).toFixed(4)}% of value)</span></div>
     <div><b>${dollars(tax / 12)}</b><span>a month</span></div>
-    <div><b>about ${dollars(Math.round(tax * P.increase / 10) * 10)}</b><span>more a year in ${P.year}, if the City's <a href="#proposed">proposed ${pct(P.increase)} increase</a> passes</span></div>`;
+    <div><b>about ${dollars(Math.round((w.next - tax) / 10) * 10)}</b><span>more a year in ${P.year}, if the City's <a href="#proposed">proposed budget</a> passes and the home's value ${Math.abs(w.c) < 0.05 ? 'does not change' : 'changes by ' + sgn1(w.c)}</span><span class="flags"><span class="flag">What if</span><span class="flag">Estimated arithmetic</span></span></div>`;
   // the shared pot's split, largest first
   const out = B.views.operating.links.filter(l => l.s === 'pot').sort((a, b) => b.v - a.v), all = tot(out);
   const name = Object.fromEntries(B.views.operating.nodes.map(n => [n.id, n.label]));
@@ -474,15 +487,29 @@ function renderCalgary() {
   $('splitRule').textContent = `Every point of the pie moved onto homes raises each home's bill by about ${(1 / split0).toFixed(1)}%, with no change in the budget.`;
 }
 
-// next year's proposal, in the City's own example of a typical home
+// Next year's proposal. The City has not published a rate, so this works one out from its
+// example of a typical home: that home's tax over its value, next year against this year.
+const rateUp = () => (P.home_monthly_tax[1] / P.home_value[1]) / (P.home_monthly_tax[0] / P.home_value[0]);
+// the home in "Your bill" next year, if its value changes by the what-if slider
+function whatIf() {
+  const v = +$('home').value, c = +$('chg').value, rate = T.res_rate * rateUp();
+  return {v, c, rate, now: v * T.res_rate, next: v * (1 + c / 100) * rate};
+}
 function renderProposed() {
-  const [v0, v1] = P.home_value, [m0, m1] = P.home_monthly_tax, rate = (m1 / v1) / (m0 / v0) - 1;
+  const [v0, v1] = P.home_value, [m0, m1] = P.home_monthly_tax, typical = Math.round((v1 / v0 - 1) * 200) / 2;
   document.querySelectorAll('.next').forEach(e => { e.textContent = P.year; });
   $('propUp').textContent = pct(P.increase); $('propWhen').textContent = P.decision;
   $('propNums').innerHTML = `<div><b>+${pct(P.increase)}</b><span>more tax needed from existing properties</span></div>
     <div><b>$${m0} → $${m1}</b><span>a month on the City's typical home, $${m1 - m0} more</span></div>
-    <div><b>about +${Math.round(rate * 100)}%</b><span>the rate on that home</span></div>`;
-  $('propWhy').innerHTML = `Why the rate rises more than the bill: the City's typical home is assessed at ${dollars(v0)} in ${P.year - 1} and ${dollars(v1)} in ${P.year}. The money needed goes up while the value goes down, so the rate has to climb further. The rate is our arithmetic from the City's example in its <a href="${P.source}">proposed ${P.year} budget</a>.`;
+    <div><b>about +${Math.round((rateUp() - 1) * 100)}%</b><span>the rate on homes</span><span class="flags"><span class="flag">Estimated arithmetic</span></span></div>`;
+  $('propWhy').innerHTML = `Why the rate rises more than the money needed: the City's typical home is assessed at ${dollars(v0)} in ${P.year - 1} and ${dollars(v1)} in ${P.year}. When values fall, the rate has to climb further to raise the same money. The City has not published a ${P.year} rate. This one is our estimated arithmetic from the example in its <a href="${P.source}">proposed ${P.year} budget</a>.`;
+
+  const w = whatIf(), up = w.next - w.now;
+  $('chgOut').textContent = sgn1(w.c) + (w.c === typical ? ' (typical)' : '');
+  $('ifNums').innerHTML = `<div><b>${dollars(w.now)} → ${dollars(w.next)}</b><span>City tax a year on a home assessed at ${money(w.v)} today</span></div>
+    <div><b>${sgn1(up / w.now * 100)}</b><span>${dollars(Math.abs(up))} ${up < 0 ? 'less' : 'more'} a year, ${dollars(Math.abs(up) / 12)} a month</span></div>
+    <div><b>about ${(w.rate * 1000).toFixed(2)} mills</b><span>the ${P.year} rate on homes, up from ${(T.res_rate * 1000).toFixed(2)}</span></div>`;
+  $('ifNote').textContent = `Every home gets the same rate, so the home's own value decides the rest. A home that lost more value than most sees a smaller increase. A home that held its value sees the full rise in the rate. The real rate is set after Council decides the budget and the new assessments are final.`;
 }
 
 function renderSplit() {
@@ -614,7 +641,8 @@ fetch('data/budget.json', {cache: 'no-cache'}).then(r => r.json()).then(b => {
   B = b; T = B.tax; P = B.proposed;
   document.querySelectorAll('.yr').forEach(e => { e.textContent = T.year; });
   resRev = T.homes; split0 = Math.round(T.homes / (T.homes + T.businesses) * 1000) / 1000;
-  $('home').value = T.typical_home_value; $('home').addEventListener('input', renderBill);
+  $('home').value = T.typical_home_value; $('chg').value = Math.round((P.home_value[1] / P.home_value[0] - 1) * 200) / 2;
+  for (const id of ['home', 'chg']) $(id).addEventListener('input', () => { renderBill(); renderProposed(); });
   $('split').value = split0 * 100; $('split').addEventListener('input', renderSplit);
   renderBill(); renderCalgary(); renderSplit(); renderProposed();
   const spent = V => tot(V.links.filter(l => l.t !== 'reserve' && V.nodes.find(n => n.id === l.t).col === 2));
