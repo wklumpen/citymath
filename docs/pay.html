@@ -395,7 +395,7 @@ details.tbl .scroll { overflow-x: auto; }
     <div class="eyebrow">How this works, and what it leaves out</div>
     <p><b>More homes on existing streets</b> raises assessed value without adding road. We apply it evenly across the city; in practice it varies by neighbourhood.</p>
     <p>Road cost is pavement only, using the pavement plans on the roads map. The mobility budget here is mobility's share of <i>property tax</i>; the City's full mobility budget is larger because it also draws on fees, grants and other revenue.</p>
-    <p><b>The budget diagrams</b> use the City's approved 2026 budget. Spending by service is from the City's open budget data, grouped into plain-language categories. Where the money comes from is from the budget document. Each service's own fees and other revenue are shown staying with that service, and property tax and other general revenue cover the rest. Money moved in and out of reserves is shown as one net amount. The $155 billion replacement value is from the City's 2026 Corporate Asset Management Plan.</p>
+    <p><b>The budget diagrams</b> use the City's approved 2026 budget. Spending by service is from the City's open budget data, grouped into plain-language categories. Where the money comes from is from the budget document. Each service's own fees and other revenue are shown going to that service, because that is how the budget counts them. Outside the utilities this is bookkeeping, not a legal earmark. Property tax and other general revenue cover the rest. Money moved in and out of reserves is shown as one net amount. The $155 billion replacement value is from the City's 2026 Corporate Asset Management Plan.</p>
     <p>Not here yet: the province's tax, what debt costs over time, and how timing across years changes things. This page is a first iteration; what would you want to move next?</p>
     <p>Methods and sources: <a href="methods.html">methods page</a>.</p>
   </section>
@@ -544,7 +544,7 @@ Promise.all(['scenarios.json', 'hexes.geojson'].map(f => fetch('data/' + f, {cac
 }).catch(err => { console.error(err); $('totRev').textContent = 'data unavailable'; });
 // The budget as flows: where the money comes from on the left, what it pays for on the
 // right. Three columns, laid out by hand. Nodes marked `ghost` are not drawn: they carry
-// money that is not shared (fees, water bills) past the pot to the service it belongs to.
+// money the budget counts against one service (fees, water bills) past the pot to that service.
 let B, view = 'operating', picked = null, G = null, flowW = 0;
 const mil = v => money(v * 1e6).replace(/\.0(?=[MB])/, ''), tot = a => a.reduce((x, y) => x + y.v, 0);
 const esc = t => String(t).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
@@ -680,7 +680,7 @@ fetch('data/budget.json', {cache: 'no-cache'}).then(r => r.json()).then(b => {
     if (g) { const n = G.N[g.dataset.id]; focusFlow(n.id); tip.innerHTML = `<b>${esc(n.label)}</b><br>${mil(n.v)} · ${pct(n.v / V.total)} of the ${V.name}`; }
     else { const a = l.S.ghost ? G.N[l.S.ghost] : l.S, b = l.T.ghost ? null : l.T;
       svg.classList.add('focus'); svg.querySelectorAll('.lk').forEach(p => p.classList.toggle('on', p === lk));
-      tip.innerHTML = `<b>${mil(l.v)}</b><br>${esc(a.label)}${b ? ' → ' + esc(l.label || b.label) : ', kept by the services that collect it'}`; }
+      tip.innerHTML = `<b>${mil(l.v)}</b><br>${esc(a.label)}${b ? ' → ' + esc(l.label || b.label) : ', counted against the services that collect it'}`; }
     tip.hidden = false;
     const r = $('flowBox').getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
     tip.style.left = Math.max(0, Math.min(x + 14, r.width - tip.offsetWidth)) + 'px'; tip.style.top = (y + 16) + 'px';

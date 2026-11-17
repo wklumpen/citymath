@@ -22,7 +22,7 @@ operating:
   takeaways:
     - [Half of it is property tax., "$2.55 billion of the $5.12 billion."]
     - [Most of it is not earmarked., "Property tax and other general revenue go into one shared pot, and Council divides it up. There is no roads tax or police tax."]
-    - [Fees stay with the service that charges them., "Transit fares cover about 28% of what transit costs to run. The shared pot covers the rest."]
+    - [Fees are counted against the service that charges them., "Transit fares cover about 28% of what transit costs to run, and the shared pot covers the rest. Only water is truly walled off."]
     - [Water pays its own way., "Your water bill runs the whole water system. No property tax goes in."]
 
   # What the budget document says the totals are; budget.py stops if the flows do not add up to these.
@@ -50,7 +50,7 @@ operating:
       label: Fees, fares & permits
       # value is worked out: the sum of each service's own revenue below
       color: s3
-      desc: What services charge directly. Transit fares, garbage cart fees, building permits, parking, rec centre admissions, fines, and grants tied to a service. This money stays with the service that collects it.
+      desc: What services charge directly. Transit fares, garbage cart fees, building permits, parking, rec centre admissions, fines, and grants tied to a service. In the budget, this money is counted against the cost of the service that collects it, so that service needs less from the shared pot. It is not legally set aside for that service, except for utilities like water.
     - id: water
       label: Water bills
       value: 984 # p. 30: water 365, wastewater 517, stormwater 102

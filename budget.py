@@ -78,7 +78,7 @@ def operating(cfg, rows, year):
     values = {"tax": src["tax"]["value"], "water": src["water"]["value"], "fees": fees,
               "general": cfg["corporate_revenue"] - src["tax"]["value"]}
 
-    # Money that is not shared passes the pot on its way to the service it belongs to.
+    # Money the budget counts against one service passes the pot on its way to that service.
     nodes = [node(s, 0) for s in cfg["sources"]]
     nodes += [node({"id": "pot", **cfg["pot"]}, 1), {"id": "fees_", "col": 1, "ghost": "fees"}, {"id": "water_", "col": 1, "ghost": "water"}]
     nodes += [node(u, 2) for u in cfg["uses"]] + [node({"id": "reserve", **cfg["reserve"]}, 2)]
