@@ -2,6 +2,27 @@
  "year": 2026,
  "document": "https://www.calgary.ca/content/dam/www/cfod/finance/documents/plans-budgets-and-financial-reports/2023-2026-service-plans-budgets/2026-budget-as-approved-dec-3-2025.pdf",
  "dataset": "https://data.calgary.ca/d/fqax-i3nz",
+ "tax": {
+  "year": 2026,
+  "res_rate": 0.0038906,
+  "typical_home_value": 718000,
+  "homes": 1387742398,
+  "businesses": 1160143282
+ },
+ "proposed": {
+  "year": 2027,
+  "source": "https://www.calgary.ca/our-finances/2027-budget.html",
+  "increase": 0.15,
+  "home_value": [
+   706000,
+   688000
+  ],
+  "home_monthly_tax": [
+   229,
+   266
+  ],
+  "decision": "Council starts debating it on November 23 and decides in December"
+ },
  "views": {
   "operating": {
    "tab": "What the city does",
@@ -106,7 +127,7 @@
     {
      "id": "roads",
      "label": "Roads & sidewalks",
-     "desc": "Snow clearing, pothole and sidewalk repair, street sweeping, traffic signals, streetlights and parking. Repaving and rebuilding is in the capital budget. Add what it sets aside in reserves and the $156 million of road work in the capital budget, and you get the $377 million Mobility budget the roads map refers to.",
+     "desc": "Snow clearing, pothole and sidewalk repair, street sweeping, traffic signals, streetlights and parking. Repaving and rebuilding is in the capital budget.",
      "link": {
       "href": "./",
       "text": "Do your streets pay for themselves?"

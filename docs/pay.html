@@ -154,11 +154,6 @@ main.wrap { padding-block: 20px 40px; display: flex; flex-direction: column; gap
 .lab span { display: flex; justify-content: space-between; gap: 12px; font-weight: 600; }
 .lab output { font-variant-numeric: tabular-nums; font-family: var(--display); font-weight: 800; }
 input[type=range] { width: 100%; accent-color: var(--band); }
-select { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); max-width: 100%; }
-.sim { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
-@media (min-width: 880px) { .sim { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
-.levers { display: flex; flex-direction: column; gap: 16px; }
-.stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; }
 .stat b { display: block; font-family: var(--display); font-weight: 800; font-size: clamp(20px, 5vw, 27px); font-variant-numeric: tabular-nums; line-height: 1.1; }
 .stat span { font-size: 13px; color: var(--muted); line-height: 1.3; display: block; }
 .stack { display: flex; height: 34px; border-radius: 4px; overflow: hidden; border: 1px solid var(--line); background: var(--bg); }
@@ -171,6 +166,8 @@ select { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border
 .nums div { border: 1px solid var(--line); border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 2px; }
 .nums b { font: 800 24px var(--display); font-variant-numeric: tabular-nums; }
 .nums span { font-size: 14px; color: var(--muted); }
+.sim { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+@media (min-width: 880px) { .sim { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
 .reset { font: 600 15px var(--body); align-self: flex-start; padding: 8px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); cursor: pointer; }
 .notes { color: var(--muted); font-size: 15px; display: flex; flex-direction: column; gap: 8px; }
 
@@ -228,6 +225,9 @@ select { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border
 @media (min-width: 720px) { .owned { grid-template-columns: auto minmax(0, 1fr); } }
 .owned b { font: 800 clamp(30px, 7vw, 42px) var(--display); line-height: 1.05; }
 .block > p.plain { color: var(--ink); font-size: 17px; }
+.bars.bill { padding: 12px 14px; gap: 6px 12px; }
+.bars.bill .bar { background: var(--s1); }
+@media (max-width: 480px) { .bars.bill { font-size: 14px; gap: 6px 8px; } }
 
 /* follow the money: the budget as flows */
 .flowwrap { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
@@ -272,7 +272,7 @@ details.tbl .scroll { overflow-x: auto; }
 <header class="band"><div class="wrap">
   <div class="draft"><span>Calgary · <span class="yr">2026</span> tax year · Draft</span><a class="navlink" href="./">The roads map</a></div>
   <h1>How we pay for Calgary</h1>
-  <p class="subtitle">A plain-language, independent look at where the money comes from, where it goes, and what happens when you change it.</p>
+  <p class="subtitle">A plain-language, independent look at where the money comes from, where it goes, and how your tax bill is set.</p>
   <p class="lede">Every number here comes from the City's published budget, tax rates and assessment roll. Start at the top and take it one step at a time.</p>
 </div></header>
 
@@ -301,7 +301,7 @@ details.tbl .scroll { overflow-x: auto; }
     </div>
     <p class="plain">The two are tied together. Everything the city builds has to be run, repaired and one day replaced, and the list of what we own gets longer every year.</p>
     <div class="owned"><b>$155 billion</b><span>is what the City says it would cost to replace everything it owns today, mostly roads and pipes. That is roughly $100,000 for every person in Calgary.</span></div>
-    <p class="plain">So the question behind every budget is not only what we want. It is whether we can afford to keep what we already have. The rest of this page follows the money, shows how your tax bill is worked out, and then lets you change things yourself.</p>
+    <p class="plain">So the question behind every budget is not only what we want. It is whether we can afford to keep what we already have. The rest of this page follows the money, then shows where your own tax bill goes and how the rate is set.</p>
   </section>
 
   <section class="block" id="money">
@@ -320,12 +320,13 @@ details.tbl .scroll { overflow-x: auto; }
 
   <section class="block" id="s1">
     <div class="eyebrow">2 · Your bill</div>
-    <h2>What does one home pay, and what does mobility get?</h2>
-    <p>The City's tax is your home's assessed value times a rate. The province collects its own tax on the same bill. Only the City's part pays for roads, transit, sidewalks and everything else the City does.</p>
+    <h2>What does one home pay, and where does it go?</h2>
+    <p>The City's tax is your home's assessed value times a rate. The province collects its own tax on the same bill. This is only the City's part.</p>
     <label class="lab"><span>Assessed value of the home <output id="homeOut"></output></span><input id="home" type="range" min="200000" max="2000000" step="10000"></label>
     <div class="nums" id="bill"></div>
-    <div class="cap"><span>Municipal tax on this home, by where it goes (Mobility's share is the City's own breakdown)</span></div>
-    <div class="stack" id="billStack" role="img" aria-label="Municipal tax split into mobility and everything else"></div>
+    <div class="cap"><span>Where this home's City tax goes in a year</span></div>
+    <div class="bars bill" id="billBars"></div>
+    <p class="hint">Property tax is not tracked to a service, so this splits your bill the same way the shared pot is split above. Water is not on the list, and waste and recycling barely is, because your utility bill pays for them.</p>
   </section>
 
   <section class="block" id="rate">
@@ -368,33 +369,15 @@ details.tbl .scroll { overflow-x: auto; }
     <label class="lab"><span>Share of the pie paid by homes <output id="splitOut"></output></span><input id="split" type="range" min="40" max="70" step="0.1"></label>
     <div class="nums" id="splitNums"></div>
     <p class="hint" id="splitRule"></p>
-  </section>
 
-  <section class="block" id="s2">
-    <div class="eyebrow">4 · The whole city</div>
-    <h2>Play with the levers</h2>
-    <p>Calgary's property tax raises about <b id="totRev"></b> a year. Mobility gets a set share of it. Roads are only one thing mobility pays for. Change a lever and see what is left for sidewalks, bike lanes, streetlights, signals and snow clearing.</p>
-    <div class="sim">
-      <div class="levers">
-        <label class="lab"><span>Pavement plan</span><select id="plan"></select></label>
-        <label class="lab"><span>Change in the tax rate <output id="taxOut"></output></span><input id="tax" type="range" min="-10" max="40" step="1" value="0"></label>
-        <label class="lab"><span>More homes and businesses on the streets we already have <output id="growOut"></output></span><input id="grow" type="range" min="0" max="50" step="1" value="0"></label>
-        <label class="lab"><span>Share of each tax dollar given to mobility <output id="shareOut"></output></span><input id="share" type="range" min="3" max="20" step="0.1"></label>
-        <button class="reset" id="reset" type="button">Reset to today</button>
-      </div>
-      <div class="results" style="display:flex;flex-direction:column;gap:14px">
-        <div class="stats" id="stats"></div>
-        <div class="stack" id="stack" role="img" aria-label="Mobility budget split between road pavement and everything else"></div>
-        <div class="cap" id="stackCap"></div>
-        <div id="verdict"></div>
-      </div>
-    </div>
+    <h3 class="sub" id="proposed">What the City is proposing for <span class="next"></span></h3>
+    <p>The City's proposed budget for <span class="next"></span> needs <b id="propUp"></b> more property tax from the properties that already exist. That is the top of the fraction getting bigger. It is a proposal, not a decision: <span id="propWhen"></span>.</p>
+    <div class="nums" id="propNums"></div>
+    <p class="hint" id="propWhy"></p>
   </section>
 
   <section class="notes block">
     <div class="eyebrow">How this works, and what it leaves out</div>
-    <p><b>More homes on existing streets</b> raises assessed value without adding road. We apply it evenly across the city; in practice it varies by neighbourhood.</p>
-    <p>Road cost is pavement only, using the pavement plans on the roads map. The mobility budget here is mobility's share of <i>property tax</i>; the City's full mobility budget is larger because it also draws on fees, grants and other revenue.</p>
     <p><b>The budget diagrams</b> use the City's approved 2026 budget. Spending by service is from the City's open budget data, grouped into plain-language categories. Where the money comes from is from the budget document. Each service's own fees and other revenue are shown going to that service, because that is how the budget counts them. Outside the utilities this is bookkeeping, not a legal earmark. Property tax and other general revenue cover the rest. Money moved in and out of reserves is shown as one net amount. The $155 billion replacement value is from the City's 2026 Corporate Asset Management Plan.</p>
     <p>Not here yet: the province's tax, what debt costs over time, and how timing across years changes things. This page is a first iteration; what would you want to move next?</p>
     <p>Methods and sources: <a href="methods.html">methods page</a>.</p>
@@ -407,41 +390,19 @@ const money = v => { const a = Math.abs(v), s = v < 0 ? '−$' : '$';
   return a >= 1e9 ? s + (a / 1e9).toFixed(2) + 'B' : a >= 1e6 ? s + (a / 1e6).toFixed(a >= 1e8 ? 0 : 1) + 'M' : s + Math.round(a).toLocaleString(); };
 const pct = v => (v * 100 < 10 ? (v * 100).toFixed(1) : Math.round(v * 100)) + '%';
 const sgn = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v) + '%';
-let S, H, rev = 0, pm2 = 0;
+let T, P; // property tax figures and next year's proposal, from budget.json
 const seg = (parts) => parts.map(([w, c]) => `<i style="width:${Math.max(0, w * 100).toFixed(2)}%;background:var(${c})"></i>`).join('');
 
-function planCost(sc, n) { const r = (sc.low + sc.high) / 2; return sc.kind === 'budget' ? r : r * H.reduce((a, h) => a + (sc.kind === 'life' ? h.pm2y : h.pm2), 0); }
-
 function renderBill() {
-  const v = +$('home').value, tax = v * S.res_rate, mob = tax * S.mobility_share;
+  const v = +$('home').value, tax = v * T.res_rate;
   $('homeOut').textContent = money(v);
-  $('bill').innerHTML = `<div><b>${money(tax)}</b><span>City property tax a year (${(S.res_rate * 100).toFixed(4)}% of value)</span></div>
-    <div><b>${money(mob)}</b><span>of it goes to mobility, ${(S.mobility_share * 100).toFixed(1)}¢ of each dollar</span></div>
-    <div><b>${money(mob / 12)}</b><span>a month, for roads, sidewalks, bike lanes, streetlights, signals and snow</span></div>`;
-  $('billStack').innerHTML = seg([[S.mobility_share, '--accent'], [1 - S.mobility_share, '--band']]);
-}
-
-function renderSim() {
-  const t = +$('tax').value / 100, g = +$('grow').value / 100, sh = +$('share').value / 100;
-  const sc = S.scenarios.find(s => s.id === $('plan').value), road = planCost(sc);
-  $('taxOut').textContent = sgn(+$('tax').value); $('growOut').textContent = sgn(+$('grow').value) + ' value'; $('shareOut').textContent = (sh * 100).toFixed(1) + '¢';
-  const r = rev * (1 + t) * (1 + g), mob = r * sh, left = mob - road;
-  const home = S.typical_home_value * S.res_rate * (1 + t);
-  // neighbourhood hexagons whose own mobility budget covers their roads
-  let ok = 0, n = 0;
-  H.forEach(h => { if (h.special || h.rev <= 0) return; n++; if (road * h.pm2 / pm2 <= h.rev * (1 + t) * (1 + g) * sh) ok++; });
-  $('totRev').textContent = money(rev);
-  $('stats').innerHTML = `<div class="stat"><b>${money(r)}</b><span>City property tax raised</span></div>
-    <div class="stat"><b>${money(mob)}</b><span>mobility's share</span></div>
-    <div class="stat"><b>${money(road)}</b><span>road pavement under this plan</span></div>
-    <div class="stat"><b>${money(home)}</b><span>tax on a typical $${S.typical_home_value.toLocaleString()} home</span></div>
-    <div class="stat"><b>${pct(ok / n)}</b><span>of neighbourhood hexagons raise enough to cover their own roads</span></div>`;
-  const used = Math.min(road / mob, 1);
-  $('stack').innerHTML = seg([[used, '--bad'], [1 - used, '--good']]);
-  $('stackCap').innerHTML = `<span><span style="color:var(--bad)">■</span> Roads ${pct(road / mob)} of the mobility budget</span><span><span style="color:var(--good)">■</span> Left for everything else</span>`;
-  $('verdict').innerHTML = left < 0
-    ? `<div class="verdict over"><b>${money(-left)} short</b><span>Roads alone cost more than mobility's whole share. Nothing is left for sidewalks, bike lanes, streetlights, signals or snow clearing.</span></div>`
-    : `<div class="verdict under"><b>${money(left)} left</b><span>That is what remains for sidewalks, bike lanes, streetlights, signals and snow clearing.</span></div>`;
+  $('bill').innerHTML = `<div><b>${dollars(tax)}</b><span>City property tax a year (${(T.res_rate * 100).toFixed(4)}% of value)</span></div>
+    <div><b>${dollars(tax / 12)}</b><span>a month</span></div>
+    <div><b>about ${dollars(Math.round(tax * P.increase / 10) * 10)}</b><span>more a year in ${P.year}, if the City's <a href="#proposed">proposed ${pct(P.increase)} increase</a> passes</span></div>`;
+  // the shared pot's split, largest first
+  const out = B.views.operating.links.filter(l => l.s === 'pot').sort((a, b) => b.v - a.v), all = tot(out);
+  const name = Object.fromEntries(B.views.operating.nodes.map(n => [n.id, n.label]));
+  $('billBars').innerHTML = out.map(l => `<span>${esc(name[l.t])}</span><div class="track"><div class="bar" style="width:${(l.v / out[0].v * 100).toFixed(1)}%"></div></div><span class="v">${dollars(tax * l.v / all)}</span>`).join('');
 }
 
 // Strong, AB: a made-up town used to show where a tax rate comes from. Each step
@@ -503,45 +464,35 @@ let resRev = 0, split0 = 0;
 const sgn1 = v => Math.abs(v) < 0.05 ? 'no change' : (v > 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '%';
 
 function renderCalgary() {
-  const v = S.typical_home_value;
+  const v = T.typical_home_value;
   $('cPie').textContent = money(resRev);
-  $('cBase').textContent = '$' + Math.round(resRev / S.res_rate / 1e9) + 'B';
-  $('cRate').textContent = (S.res_rate * 1000).toFixed(2) + ' mills';
-  $('cHome').textContent = `$${Math.round(v / 1000)}K pays ${dollars(v * S.res_rate)}`;
+  $('cBase').textContent = '$' + Math.round(resRev / T.res_rate / 1e9) + 'B';
+  $('cRate').textContent = (T.res_rate * 1000).toFixed(2) + ' mills';
+  $('cHome').textContent = `$${Math.round(v / 1000)}K pays ${dollars(v * T.res_rate)}`;
   $('cSlice').textContent = 'about 1 in ' + HOMES.toLocaleString();
   $('splitNow').textContent = (split0 * 100).toFixed(1) + '%';
   $('splitRule').textContent = `Every point of the pie moved onto homes raises each home's bill by about ${(1 / split0).toFixed(1)}%, with no change in the budget.`;
 }
 
+// next year's proposal, in the City's own example of a typical home
+function renderProposed() {
+  const [v0, v1] = P.home_value, [m0, m1] = P.home_monthly_tax, rate = (m1 / v1) / (m0 / v0) - 1;
+  document.querySelectorAll('.next').forEach(e => { e.textContent = P.year; });
+  $('propUp').textContent = pct(P.increase); $('propWhen').textContent = P.decision;
+  $('propNums').innerHTML = `<div><b>+${pct(P.increase)}</b><span>more tax needed from existing properties</span></div>
+    <div><b>$${m0} → $${m1}</b><span>a month on the City's typical home, $${m1 - m0} more</span></div>
+    <div><b>about +${Math.round(rate * 100)}%</b><span>the rate on that home</span></div>`;
+  $('propWhy').innerHTML = `Why the rate rises more than the bill: the City's typical home is assessed at ${dollars(v0)} in ${P.year - 1} and ${dollars(v1)} in ${P.year}. The money needed goes up while the value goes down, so the rate has to climb further. The rate is our arithmetic from the City's example in its <a href="${P.source}">proposed ${P.year} budget</a>.`;
+}
+
 function renderSplit() {
-  const sh = +$('split').value / 100, k = sh / split0, v = S.typical_home_value;
+  const sh = +$('split').value / 100, k = sh / split0, v = T.typical_home_value;
   $('splitOut').textContent = (sh * 100).toFixed(1) + '%' + (Math.abs(sh - split0) < 0.0005 ? ' (today)' : '');
-  $('splitNums').innerHTML = `<div><b>${dollars(v * S.res_rate * k)}</b><span>tax on a typical $${v.toLocaleString()} home (${sgn1((k - 1) * 100)})</span></div>
-    <div><b>${(S.res_rate * k * 1000).toFixed(2)} mills</b><span>the rate on homes</span></div>
+  $('splitNums').innerHTML = `<div><b>${dollars(v * T.res_rate * k)}</b><span>tax on a typical $${v.toLocaleString()} home (${sgn1((k - 1) * 100)})</span></div>
+    <div><b>${(T.res_rate * k * 1000).toFixed(2)} mills</b><span>the rate on homes</span></div>
     <div><b>${sgn1(((1 - sh) / (1 - split0) - 1) * 100)}</b><span>on every business's tax bill</span></div>`;
 }
 
-function reset() { $('tax').value = 0; $('grow').value = 0; $('share').value = S.mobility_share * 100; $('plan').value = S.current; renderSim(); }
-
-Promise.all(['scenarios.json', 'hexes.geojson'].map(f => fetch('data/' + f, {cache: 'no-cache'}).then(r => r.json()))).then(([s, g]) => {
-  S = s;
-  H = g.features.map(f => ({...f.properties, rev: f.properties.rev_res + f.properties.rev_com}));
-  // pavement per hexagon: own streets plus an equal slice of the shared main roads (the site's default basis)
-  const n = H.length, sh = H.reduce((a, h) => a + h.m2_sh, 0), shy = H.reduce((a, h) => a + h.m2y_sh, 0);
-  H.forEach(h => { h.pm2 = h.m2 + sh / n; h.pm2y = h.m2y + shy / n; });
-  rev = H.reduce((a, h) => a + h.rev, 0); pm2 = H.reduce((a, h) => a + h.pm2, 0);
-  document.querySelectorAll('.yr').forEach(e => { e.textContent = S.tax_year; });
-  $('home').value = S.typical_home_value; $('share').value = S.mobility_share * 100;
-  $('plan').innerHTML = S.scenarios.map(s => `<option value="${s.id}">${s.label}</option>`).join('');
-  $('plan').value = S.default;
-  resRev = H.reduce((a, h) => a + h.rev_res, 0); split0 = Math.round(resRev / rev * 1000) / 1000;
-  $('split').value = split0 * 100; $('split').addEventListener('input', renderSplit);
-  renderCalgary(); renderSplit();
-  ['home'].forEach(i => $(i).addEventListener('input', renderBill));
-  ['plan', 'tax', 'grow', 'share'].forEach(i => $(i).addEventListener('input', renderSim));
-  $('reset').addEventListener('click', () => { reset(); $('plan').value = S.default; renderSim(); });
-  renderBill(); renderSim();
-}).catch(err => { console.error(err); $('totRev').textContent = 'data unavailable'; });
 // The budget as flows: where the money comes from on the left, what it pays for on the
 // right. Three columns, laid out by hand. Nodes marked `ghost` are not drawn: they carry
 // money the budget counts against one service (fees, water bills) past the pot to that service.
@@ -660,7 +611,12 @@ function pick(id) {
 }
 
 fetch('data/budget.json', {cache: 'no-cache'}).then(r => r.json()).then(b => {
-  B = b;
+  B = b; T = B.tax; P = B.proposed;
+  document.querySelectorAll('.yr').forEach(e => { e.textContent = T.year; });
+  resRev = T.homes; split0 = Math.round(T.homes / (T.homes + T.businesses) * 1000) / 1000;
+  $('home').value = T.typical_home_value; $('home').addEventListener('input', renderBill);
+  $('split').value = split0 * 100; $('split').addEventListener('input', renderSplit);
+  renderBill(); renderCalgary(); renderSplit(); renderProposed();
   const spent = V => tot(V.links.filter(l => l.t !== 'reserve' && V.nodes.find(n => n.id === l.t).col === 2));
   $('opNum').textContent = '$' + (spent(B.views.operating) / 1000).toFixed(1) + ' billion';
   $('capNum').textContent = '$' + (spent(B.views.capital) / 1000).toFixed(1) + ' billion';

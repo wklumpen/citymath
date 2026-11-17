@@ -7,6 +7,8 @@
 Groupings, labels and the figures typed in from the budget document are in
 budget.yaml. Spending by business unit comes from the City's open data. The
 script stops if the flows do not add up to the totals the budget document gives.
+The tax rate, typical home and tax raised from homes and businesses come from the
+files citymath.py writes to docs/data/ (run it first if they are stale).
 """
 import argparse
 import json
@@ -17,6 +19,7 @@ import yaml
 
 ROOT = Path(__file__).parent
 OUT = ROOT / "docs" / "data" / "budget.json"
+SITE = ROOT / "docs" / "data"  # scenarios.json and hexes.geojson, written by citymath.py
 TOLERANCE = 1.5  # $ millions; the budget document rounds to the nearest million
 
 
@@ -122,6 +125,18 @@ def capital(cfg, rows, year):
     return nodes, links, sum(spend.values())
 
 
+def tax():
+    """The property tax figures for the bill and rate sections, from the files citymath.py
+    writes for the website: the rate and typical home, and tax raised from homes and from
+    businesses, summed over the hexagons."""
+    site = json.loads((SITE / "scenarios.json").read_text())
+    hexes = [f["properties"] for f in json.loads((SITE / "hexes.geojson").read_text())["features"]]
+    homes, businesses = (sum(h[k] for h in hexes) for k in ("rev_res", "rev_com"))
+    print(f"Property tax\n  homes {homes / 1e6:,.0f} + businesses {businesses / 1e6:,.0f} = {(homes + businesses) / 1e6:,.0f}")
+    return {"year": site["tax_year"], "res_rate": site["res_rate"], "typical_home_value": site["typical_home_value"],
+            "homes": round(homes), "businesses": round(businesses)}
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--cache", type=Path, help="saved copy of the open data (JSON) to use instead of fetching")
@@ -142,7 +157,8 @@ def main():
         }
 
     out = {"year": cfg["year"], "document": cfg["document"],
-           "dataset": f"https://data.calgary.ca/d/{cfg['dataset']}", "views": views}
+           "dataset": f"https://data.calgary.ca/d/{cfg['dataset']}",
+           "tax": tax(), "proposed": cfg["proposed"], "views": views}
     OUT.write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n")
     print(f"wrote {OUT.relative_to(ROOT)}")
 
