@@ -162,12 +162,19 @@ table.wards { width: 100%; border-collapse: collapse; font-size: 15px; font-vari
 .notes b { color: var(--ink); font-family: var(--display); }
 #tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 13px; padding: 5px 8px; border-radius: 4px; z-index: 5; max-width: 240px; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+.brand { display: block; width: fit-content; }
+.brand img { display: block; height: 52px; width: auto; }
+.sitefoot { margin-top: 8px; }
+.sitefoot .wrap { padding-block: 28px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; color: var(--band-muted); font-size: 14px; }
+.sitefoot img { display: block; height: 64px; width: auto; }
+.sitefoot b { color: var(--band-ink); font-weight: 600; }
 </style>
 </head>
 <body>
 
 <header class="band"><div class="wrap">
-  <div class="draft"><span>Calgary · <span id="year">2026</span> tax year</span><a class="navlink" href="methods.html">Methods</a></div>
+  <a class="brand" href="https://strongtownscalgary.substack.com" target="_blank" rel="noopener"><img src="stc_gold.svg" alt="Strong Towns Calgary"></a>
+  <div class="draft"><span>Calgary · <span id="year">2026</span> tax year</span><span class="navlink"><a href="pay.html">How we pay for Calgary</a> · <a href="methods.html">Methods</a></span></div>
   <h1>The math doesn't work</h1>
   <p class="subtitle">Calgary needs $54 billion of infrastructure over the next ten years, but has funded only half of it. That leaves us with a <strong>$27 billion shortfall</strong>.</p>
   <p class="lede">Here we explore just one piece of that budget: the roads. <span id="thesis">Funding the City's option to put half of roads in good condition would use up most of the mobility budget just on road repair, before addressing a single sidewalk, streetlight or bike lane.</span></p>
@@ -229,6 +236,10 @@ table.wards { width: 100%; border-collapse: collapse; font-size: 15px; font-vari
     <div><b>Mobility budget</b><p>Here, the mobility budget means mobility's share of property tax: <span id="mob-note"></span>. That is the City's own breakdown from its <a href="https://www.calgary.ca/property-owners/taxes/calculator.html" target="_blank" rel="noopener">property tax calculator</a>, where Mobility is 3.87% of the whole bill, or 6.6% once the provincial share is set aside. Each area is measured against what its own taxes put toward mobility. The City's full Mobility budget is larger (<span id="mob-total"></span> in <span class="yr">2026</span>) because it also draws on fees, grants and other revenue. We leave those out because property tax is the lever the city and each neighbourhood control.</p></div>
   </section>
 </main>
+<footer class="band sitefoot"><div class="wrap">
+  <a href="https://strongtownscalgary.substack.com" target="_blank" rel="noopener"><img src="stc_gold.svg" alt="Strong Towns Calgary"></a>
+  <p>A Strong Towns Calgary project. Created by <b>Willem Klumpenhouwer</b> and <b>Nathan Hawryluk</b>.</p>
+</div></footer>
 <div id="tip" hidden></div>
 
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.js"></script>

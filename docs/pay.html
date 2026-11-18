@@ -272,10 +272,17 @@ details.tbl summary { cursor: pointer; font-weight: 600; font-size: 15px; }
 details.tbl .cmp { margin-top: 8px; }
 details.tbl .cmp .grp th { text-align: left; font: 700 13px var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding-top: 14px; }
 details.tbl .scroll { overflow-x: auto; }
+.brand { display: block; width: fit-content; }
+.brand img { display: block; height: 52px; width: auto; }
+.sitefoot { margin-top: 8px; }
+.sitefoot .wrap { padding-block: 28px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; color: var(--band-muted); font-size: 14px; }
+.sitefoot img { display: block; height: 64px; width: auto; }
+.sitefoot b { color: var(--band-ink); font-weight: 600; }
 </style>
 </head>
 <body>
 <header class="band"><div class="wrap">
+  <a class="brand" href="https://strongtownscalgary.substack.com" target="_blank" rel="noopener"><img src="stc_gold.svg" alt="Strong Towns Calgary"></a>
   <div class="draft"><span>Calgary · <span class="yr">2026</span> tax year · Draft</span><a class="navlink" href="./">The roads map</a></div>
   <h1>How we pay for Calgary</h1>
   <p class="subtitle">A plain-language, independent look at where the money comes from, where it goes, and how your tax bill is set.</p>
@@ -396,6 +403,10 @@ details.tbl .scroll { overflow-x: auto; }
     <p>Methods and sources: <a href="methods.html">methods page</a>.</p>
   </section>
 </main>
+<footer class="band sitefoot"><div class="wrap">
+  <a href="https://strongtownscalgary.substack.com" target="_blank" rel="noopener"><img src="stc_gold.svg" alt="Strong Towns Calgary"></a>
+  <p>A Strong Towns Calgary project. Created by <b>Willem Klumpenhouwer</b> and <b>Nathan Hawryluk</b>.</p>
+</div></footer>
 
 <script>
 const $ = id => document.getElementById(id);

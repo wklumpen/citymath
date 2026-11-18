@@ -75,10 +75,17 @@ table.plain { width: 100%; border-collapse: collapse; font-size: 15px; }
 .plain th, .plain td { padding: 8px 12px; text-align: left; border-top: 1px solid var(--line); vertical-align: top; }
 .plain thead th { border-top: 0; font: 700 12px var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .plain tr:nth-child(even) td { background: color-mix(in srgb, var(--band) 3%, var(--surface)); }
+.brand { display: block; width: fit-content; }
+.brand img { display: block; height: 52px; width: auto; }
+.sitefoot { margin-top: 8px; }
+.sitefoot .wrap { padding-block: 28px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; color: var(--band-muted); font-size: 14px; }
+.sitefoot img { display: block; height: 64px; width: auto; }
+.sitefoot b { color: var(--band-ink); font-weight: 600; }
 </style>
 </head>
 <body>
 <header class="band"><div class="wrap">
+  <a class="brand" href="https://strongtownscalgary.substack.com" target="_blank" rel="noopener"><img src="stc_gold.svg" alt="Strong Towns Calgary"></a>
   <div class="draft"><span>Calgary · 2026 tax year</span><a class="navlink" href="./">&larr; Back to the map</a></div>
   <h1>Methods</h1>
   <p class="lede">How the numbers are made: the formulas, the data behind them and what we assumed, in plain language with enough detail to reproduce them.</p>
@@ -237,6 +244,10 @@ table.plain { width: 100%; border-collapse: collapse; font-size: 15px; }
 </section>
 
 </main>
+<footer class="band sitefoot"><div class="wrap">
+  <a href="https://strongtownscalgary.substack.com" target="_blank" rel="noopener"><img src="stc_gold.svg" alt="Strong Towns Calgary"></a>
+  <p>A Strong Towns Calgary project. Created by <b>Willem Klumpenhouwer</b> and <b>Nathan Hawryluk</b>.</p>
+</div></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script>
 document.querySelectorAll('.math').forEach(function (el) {
