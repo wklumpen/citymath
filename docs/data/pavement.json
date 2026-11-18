@@ -1,0 +1,320 @@
+{
+ "sources": {
+  "report": {
+   "title": "Pavement quality review, IP2024-1043 Attachment 2 (Background Report)",
+   "url": "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347"
+  },
+  "budget_2026": {
+   "title": "Budget 2026 as approved, pp. 76-78",
+   "url": "https://www.calgary.ca/content/dam/www/cfod/finance/documents/plans-budgets-and-financial-reports/2023-2026-service-plans-budgets/2026-budget-as-approved-dec-3-2025.pdf"
+  },
+  "proposed": {
+   "title": "City of Calgary proposed 2027-2030 budget",
+   "url": "https://pub-calgary.escribemeetings.com/FileStream.ashx?DocumentId=377372"
+  }
+ },
+ "condition_2024": {
+  "good": 0.38,
+  "fair": 0.36,
+  "poor": 0.26,
+  "below_threshold": 0.032,
+  "below_threshold_lane_km": 544
+ },
+ "canadian_average_good": 0.6,
+ "good": [
+  {
+   "year": 2015,
+   "value": 0.57
+  },
+  {
+   "year": 2016,
+   "value": 0.537,
+   "read": true
+  },
+  {
+   "year": 2017,
+   "value": 0.492,
+   "read": true
+  },
+  {
+   "year": 2018,
+   "value": 0.421,
+   "read": true
+  },
+  {
+   "year": 2019,
+   "value": 0.42,
+   "read": true
+  },
+  {
+   "year": 2020,
+   "value": 0.415,
+   "read": true
+  },
+  {
+   "year": 2021,
+   "value": 0.414,
+   "read": true
+  },
+  {
+   "year": 2022,
+   "value": 0.41,
+   "read": true
+  },
+  {
+   "year": 2023,
+   "value": 0.384,
+   "read": true
+  },
+  {
+   "year": 2024,
+   "value": 0.38
+  }
+ ],
+ "lane_km": [
+  {
+   "year": 2011,
+   "value": 14870
+  },
+  {
+   "year": 2012,
+   "value": 14880,
+   "read": true
+  },
+  {
+   "year": 2013,
+   "value": 14890,
+   "read": true
+  },
+  {
+   "year": 2014,
+   "value": 15320,
+   "read": true
+  },
+  {
+   "year": 2015,
+   "value": 15760,
+   "read": true
+  },
+  {
+   "year": 2016,
+   "value": 15760,
+   "read": true
+  },
+  {
+   "year": 2017,
+   "value": 15760,
+   "read": true
+  },
+  {
+   "year": 2018,
+   "value": 15790,
+   "read": true
+  },
+  {
+   "year": 2019,
+   "value": 15900,
+   "read": true
+  },
+  {
+   "year": 2020,
+   "value": 15970,
+   "read": true
+  },
+  {
+   "year": 2021,
+   "value": 16290,
+   "read": true
+  },
+  {
+   "year": 2022,
+   "value": 16460,
+   "read": true
+  },
+  {
+   "year": 2023,
+   "value": 17070,
+   "read": true
+  },
+  {
+   "year": 2024,
+   "value": 17080,
+   "read": true
+  },
+  {
+   "year": 2025,
+   "value": 17271
+  },
+  {
+   "year": 2026,
+   "value": 17461
+  }
+ ],
+ "spending": [
+  {
+   "year": 2011,
+   "value": 31.7,
+   "read": true
+  },
+  {
+   "year": 2012,
+   "value": 32.8,
+   "read": true
+  },
+  {
+   "year": 2013,
+   "value": 35.9,
+   "read": true
+  },
+  {
+   "year": 2014,
+   "value": 37.6,
+   "read": true
+  },
+  {
+   "year": 2015,
+   "value": 39.0,
+   "read": true
+  },
+  {
+   "year": 2016,
+   "value": 45.5,
+   "read": true
+  },
+  {
+   "year": 2017,
+   "value": 38.6,
+   "read": true
+  },
+  {
+   "year": 2018,
+   "value": 33.6,
+   "read": true
+  },
+  {
+   "year": 2019,
+   "value": 32.4,
+   "read": true
+  },
+  {
+   "year": 2020,
+   "value": 47.7,
+   "read": true
+  },
+  {
+   "year": 2021,
+   "value": 43.3,
+   "read": true
+  },
+  {
+   "year": 2022,
+   "value": 51.6,
+   "read": true
+  },
+  {
+   "year": 2023,
+   "value": 43.6,
+   "read": true
+  },
+  {
+   "year": 2024,
+   "value": 50.1,
+   "read": true
+  },
+  {
+   "year": 2025,
+   "value": 49.8,
+   "read": true
+  },
+  {
+   "year": 2026,
+   "value": 64,
+   "status": "approved"
+  },
+  {
+   "year": 2027,
+   "value": 51,
+   "status": "proposed"
+  },
+  {
+   "year": 2028,
+   "value": 83,
+   "status": "proposed"
+  },
+  {
+   "year": 2029,
+   "value": 136,
+   "status": "proposed"
+  },
+  {
+   "year": 2030,
+   "value": 150,
+   "status": "proposed"
+  }
+ ],
+ "break_even": 88,
+ "best_practice": 300,
+ "mobility_proposed": [
+  {
+   "year": 2027,
+   "operating": 259,
+   "capital": 113,
+   "total": 372
+  },
+  {
+   "year": 2028,
+   "operating": 284,
+   "capital": 221,
+   "total": 504
+  },
+  {
+   "year": 2029,
+   "operating": 307,
+   "capital": 307,
+   "total": 614
+  },
+  {
+   "year": 2030,
+   "operating": 326,
+   "capital": 274,
+   "total": 600
+  }
+ ],
+ "per_lane_km": {
+  "average": 10205,
+  "cities": [
+   {
+    "city": "Calgary",
+    "value": 1900
+   },
+   {
+    "city": "Vancouver",
+    "value": 2800
+   },
+   {
+    "city": "Halifax",
+    "value": 8300
+   },
+   {
+    "city": "Regina",
+    "value": 11200
+   },
+   {
+    "city": "Montreal",
+    "value": 12300
+   },
+   {
+    "city": "Toronto",
+    "value": 12800
+   },
+   {
+    "city": "Winnipeg",
+    "value": 14400
+   },
+   {
+    "city": "Edmonton",
+    "value": 17600
+   }
+  ]
+ }
+}

@@ -9,7 +9,7 @@
   "snow and ice clearing"
  ],
  "mobility_total": 377000000,
- "current": "budget_2026",
+ "current": "proposed_budget",
  "typical_home_value": 718000,
  "tax_year": 2026,
  "res_rate": 0.0038906,
@@ -25,7 +25,7 @@
    "consequence": "Pavement kept getting worse under this level of spending. After 10 years of funding at this rate, 26% of roads will be in good condition and 52% will be in poor condition (from 38% in good condition and 26% in poor condition in 2024).",
    "sources": [
     {
-     "title": "Pavement Quality report, p. 7",
+     "title": "Pavement quality review, Attachment 2, p. 7",
      "url": "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347"
     },
     {
@@ -119,7 +119,7 @@
    "consequence": "This only works if pavement never slips into the fair or poor categories (below 6 out of 10). Anything below 6 needs repaving. In 2024, 62% of roads were beyond crack filling.",
    "sources": [
     {
-     "title": "Pavement Quality report, p. 4",
+     "title": "Pavement quality review, Attachment 2, p. 4",
      "url": "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347"
     }
    ]
@@ -134,7 +134,7 @@
    "consequence": "Mill and fill. This only works if pavement never slips into the poor category (below 4 out of 10). Anything below 4 needs to be rebuilt. In 2024, 26% of roads were beyond repaving.",
    "sources": [
     {
-     "title": "Pavement Quality report, p. 4",
+     "title": "Pavement quality review, Attachment 2, p. 4",
      "url": "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347"
     },
     {

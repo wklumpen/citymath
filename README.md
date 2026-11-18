@@ -45,15 +45,25 @@ Assessments (Parcel)" CSV into the spatial database.
 
 ## Website
 
-`docs/` is a static site served by GitHub Pages: `index.html` reads the
-scenario definitions in `data/scenarios.json` and
-`data/hexes.geojson` and recomputes road cost in the browser as the reader
-changes the scenario. Preview it locally with
+`docs/` is a static site served by GitHub Pages. Preview it locally with
 `python3 -m http.server -d docs`.
 
-`pay.html` explains the City's budget and the property tax. Its budget diagrams
-read `data/budget.json`, which `uv run budget.py` builds from the City's open
-budget data and the figures and groupings in `budget.yaml`.
+- `index.html`, the landing page: why the site exists, how the City's budget
+  and the property tax work, and links to the deep dives. Its budget diagrams
+  read `data/budget.json`, which `uv run budget.py` builds from the City's open
+  budget data and the figures and groupings in `budget.yaml`.
+- `roads.html`, the roads deep dive: pavement condition and spending history,
+  the gap, whether property tax can close it, the map and the methods. It reads
+  `data/scenarios.json`, `data/hexes.geojson` and `data/wards.geojson`, and
+  recomputes road cost in the browser as the reader changes the plan. The
+  history and the City's proposed 2027-2030 pavement budget are typed in, with
+  their sources, in `pavement.yaml`; `uv run pavement.py` writes
+  `data/pavement.json`.
+- `downloads/`: the spreadsheets readers can check our numbers with.
+  `uv run downloads.py` writes them from the files above, with the same
+  formulas as the pages. Re-run it after any of the other scripts.
+- `pay.html` and `methods.html` only redirect to the pages above, so old links
+  keep working.
 
 Source data (the hex grid, assessment rolls and street width samples) is not
 included in this repository; only the derived per-hex file for the website is.

@@ -1,0 +1,1035 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Send the full page address to Mapbox: its token is restricted to this site's /citymath path,
+     and browsers otherwise send only the domain. -->
+<meta name="referrer" content="no-referrer-when-downgrade">
+<title>The Math Doesn't Work: Calgary's Roads</title>
+<meta name="description" content="Where Calgary's roads are, how they got there, what fixing them would cost, and whether property tax can pay for it.">
+<link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<style>
+/* Layout: navy masthead; then the story from simple to complex: where the roads are, how they
+   got there, the gap, whether property tax can close it (with the map), what else we could do,
+   the downloads and the methods. Map colour is diverging around one line: the mobility budget.
+   Teal fits, orange overruns. In the charts, orange is spending below break-even. */
+:root {
+  --bg: #f4f6f9; --surface: #ffffff; --ink: #101b2d; --muted: #586579; --line: #dde2ea;
+  --band: #12305c; --band-ink: #ffffff; --band-muted: #b9c8de; --accent: #e8751a;
+  --u0: #1f7a8c; --u1: #9fd3db; --o0: #fbd3a6; --o1: #f29b4b; --o2: #d1611a; --o3: #8a3608;
+  --good: #1f7a8c; --bad: #c2410c;
+  --special: #d5dae2; --hexline: #ffffff; --select: #101b2d; --ward: #12305c;
+  --display: "Archivo", "Arial Narrow", Arial, sans-serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b131f; --surface: #121d2d; --ink: #e9eef5; --muted: #9aa8ba; --line: #24334b;
+  --band: #0e2547; --band-ink: #ffffff; --band-muted: #a9bbd6; --accent: #f08a35;
+  --u0: #5cc3d3; --u1: #24606b; --o0: #6b3a12; --o1: #b3561a; --o2: #e8822e; --o3: #fdc58c;
+  --good: #5cc3d3; --bad: #f29b4b;
+  --special: #263143; --hexline: #0b131f; --select: #ffffff; --ward: #c9d6ea; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0b131f; --surface: #121d2d; --ink: #e9eef5; --muted: #9aa8ba; --line: #24334b;
+  --band: #0e2547; --band-ink: #ffffff; --band-muted: #a9bbd6; --accent: #f08a35;
+  --u0: #5cc3d3; --u1: #24606b; --o0: #6b3a12; --o1: #b3561a; --o2: #e8822e; --o3: #fdc58c;
+  --good: #5cc3d3; --bad: #f29b4b;
+  --special: #263143; --hexline: #0b131f; --select: #ffffff; --ward: #c9d6ea; color-scheme: dark }
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.5; }
+h1, h2, h3, h4 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.15; }
+p { margin: 0; }
+a { color: inherit; text-underline-offset: 2px; }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-inline: 16px; }
+
+.band { background: var(--band); color: var(--band-ink); }
+.band .wrap { padding-block: 22px 26px; display: flex; flex-direction: column; gap: 10px; }
+.draft { font-family: var(--display); font-weight: 700; font-size: 12px; letter-spacing: .09em; text-transform: uppercase; color: var(--band-muted); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.draft b { color: var(--accent); }
+.draft .navlink { margin-left: auto; color: var(--band-ink); }
+.navlink a[aria-current] { text-decoration: none; color: var(--accent); }
+h1 { font-weight: 800; font-size: clamp(36px, 7.5vw, 80px); letter-spacing: -.015em; line-height: 1.02; }
+.lede { color: var(--band-muted); font-size: clamp(17px, 1.6vw, 20px); }
+.subtitle { font-family: var(--display); font-weight: 700; font-size: clamp(21px, 2.6vw, 30px); line-height: 1.25; text-wrap: balance; color: var(--band-ink); }
+.subtitle strong { color: var(--accent); font-weight: 800; }
+.lede strong { color: var(--band-ink); }
+.srcline { color: var(--band-muted); font-size: 13px; }
+.srcline a { color: var(--band-muted); }
+.brand { display: block; width: fit-content; }
+.brand img { display: block; height: 52px; width: auto; }
+.sitefoot { margin-top: 8px; }
+.sitefoot .wrap { padding-block: 28px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; color: var(--band-muted); font-size: 14px; }
+.sitefoot img { display: block; height: 64px; width: auto; }
+.sitefoot b { color: var(--band-ink); font-weight: 600; }
+
+main.wrap { padding-block: 20px 40px; display: flex; flex-direction: column; gap: 40px; }
+.block { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.block > h3, .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); font-family: var(--display); }
+.hint { font-size: 14px; color: var(--muted); }
+.nums { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.nums > div { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 2px; }
+.nums b { font: 800 clamp(24px, 5vw, 30px) var(--display); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.nums span { font-size: 14px; color: var(--muted); }
+
+/* story sections */
+.evidence { display: flex; flex-direction: column; gap: 14px; scroll-margin-top: 12px; }
+.evidence h2 { font-size: clamp(24px, 3vw, 30px); font-weight: 800; }
+.evidence h3 { font-size: 20px; font-weight: 800; margin-top: 10px; }
+.evidence > p { color: var(--muted); max-width: 72ch; }
+.evidence > p.take { color: var(--ink); font-size: 18px; }
+.evidence > .eyebrow { color: var(--accent); }
+
+/* condition today */
+.cond, .condlab { display: flex; gap: 2px; }
+.cond { height: 36px; }
+.cond div:first-child { border-radius: 4px 0 0 4px; } .cond div:last-child { border-radius: 0 4px 4px 0; }
+.condlab div { min-width: 0; font: 700 16px var(--display); font-variant-numeric: tabular-nums; }
+.condlab small { display: block; font: 400 13px var(--body); color: var(--muted); }
+.condkey { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+
+/* svg charts */
+.chartbox { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px 14px 8px; }
+.chart { display: block; width: 100%; overflow: visible; }
+.chart text { font: 12px var(--body); fill: var(--muted); font-variant-numeric: tabular-nums; }
+.chart .ttl { font: 700 14px var(--display); fill: var(--ink); }
+.chart .lbl { font: 700 13px var(--display); fill: var(--ink); }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .ref { stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.chart .ln { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart .dot { stroke: var(--surface); stroke-width: 2; }
+.chart .xh { stroke: var(--muted); stroke-width: 1; }
+.tip { position: absolute; z-index: 2; pointer-events: none; max-width: 250px; padding: 7px 10px; border-radius: 6px; background: var(--ink); color: var(--surface); font-size: 13px; line-height: 1.35; }
+.tip b { font-family: var(--display); }
+.duo { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+@media (min-width: 880px) { .duo { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); align-items: start; } }
+.spark { display: flex; flex-direction: column; gap: 6px; }
+.spark svg { width: 100%; height: 64px; overflow: visible; }
+
+/* ladders: one row per plan, label | bar | value */
+.ladder { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 2fr) max-content; gap: 10px 12px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px; font-size: 15px; }
+.ladder .nm b { display: block; font-family: var(--display); font-weight: 700; line-height: 1.2; }
+.ladder .nm small { display: block; color: var(--muted); font-size: 13px; line-height: 1.25; }
+.ladder .nm em { font: 700 11px var(--display); font-style: normal; letter-spacing: .07em; text-transform: uppercase; color: var(--bad); }
+.ladder .track { position: relative; height: 18px; }
+.ladder .bar { height: 100%; border-radius: 0 4px 4px 0; min-width: 2px; }
+.ladder .line { position: absolute; top: -6px; bottom: -6px; width: 0; border-left: 2px dashed var(--ink); }
+.ladder .v { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
+.ladder .v small { display: block; color: var(--muted); font-weight: 400; font-size: 13px; }
+.ladder .key { grid-column: 1 / -1; font-size: 13px; color: var(--muted); display: flex; gap: 6px 16px; flex-wrap: wrap; }
+.ladder .key i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.ladder .key i.dash { width: 0; height: 13px; border-left: 2px dashed var(--ink); border-radius: 0; }
+.ladder .covered { color: var(--muted); font-size: 14px; }
+@media (max-width: 560px) { .ladder { grid-template-columns: minmax(0, 1fr) max-content; grid-auto-flow: dense; gap: 4px 12px; } .ladder .nm { grid-column: 1; padding-top: 8px; } .ladder .v { grid-column: 2; padding-top: 8px; } .ladder .track, .ladder .covered { grid-column: 1 / -1; } }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.tabs button { font: 600 14px var(--body); padding: 7px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); cursor: pointer; }
+.tabs button:hover { border-color: color-mix(in srgb, var(--band) 40%, var(--line)); }
+.tabs button[aria-pressed=true] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+.callout { background: color-mix(in srgb, var(--accent) 12%, var(--surface)); border-left: 5px solid var(--accent); border-radius: 6px; padding: 12px 16px; font-size: 17px; }
+
+/* scenario picker */
+.picker { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 880px) { .picker { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.options { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 8px; }
+.opt { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; background: var(--surface); }
+.opt input { accent-color: var(--band); margin: 0; width: 17px; height: 17px; }
+.opt b { font-family: var(--display); font-weight: 700; font-size: 16px; line-height: 1.25; }
+.opt.proposed { border-color: var(--accent); border-width: 2px; padding: 9px 11px; }
+.opt .tag { grid-column: 2; justify-self: start; font-family: var(--display); font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--bad); }
+.opt:hover { border-color: color-mix(in srgb, var(--band) 40%, var(--line)); }
+.opt:has(input:checked) { background: color-mix(in srgb, var(--band) 9%, var(--surface)); border-color: var(--band); }
+.opt:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+.about { display: flex; flex-direction: column; gap: 10px; }
+.about h2 { font-size: 22px; font-weight: 800; }
+.pickcol { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.alert { background: color-mix(in srgb, var(--accent) 14%, var(--surface)); border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--surface)); border-left: 5px solid var(--accent); border-radius: 6px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.alert b { font-family: var(--display); font-size: 13px; letter-spacing: .07em; text-transform: uppercase; color: var(--bad); }
+.alert p { font-size: 16px; font-weight: 600; }
+.sources { font-size: 14px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; padding-top: 4px; }
+@media (min-width: 620px) { .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 880px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.stat b { display: block; font-family: var(--display); font-weight: 800; font-size: clamp(20px, 5vw, 27px); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.stat span { font-size: 13px; color: var(--muted); line-height: 1.3; display: block; }
+
+/* map + budget */
+.work { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 880px) { .work { grid-template-columns: minmax(0, 1fr) 380px; align-items: start; } }
+.mapcard { gap: 10px; padding: 12px; }
+.maphead { display: flex; justify-content: space-between; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; }
+.maphead h2 { font-size: 17px; font-weight: 700; }
+.maphead span { color: var(--muted); font-size: 14px; }
+.search { display: flex; gap: 8px; }
+.search input { flex: 1; min-width: 0; font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
+.search button { font: 600 15px var(--body); padding: 8px 14px; border: 0; border-radius: 6px; background: var(--band); color: var(--band-ink); cursor: pointer; }
+#map { width: 100%; height: 62vh; min-height: 380px; border-radius: 4px; overflow: hidden; background: var(--special); }
+@media (min-width: 880px) { #map { height: min(76vh, 740px); } }
+.legend { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); }
+.legend > b { color: var(--ink); font: 700 14px var(--display); }
+.legend .grp { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; }
+.legend .grp > b { color: var(--ink); font-weight: 600; margin-right: 2px; }
+.legend i { display: inline-block; width: 14px; height: 14px; border-radius: 2px; vertical-align: -2px; margin-right: 5px; border: 1px solid var(--line); }
+
+/* the hexagon's budget */
+#budget h4 { font-size: 20px; font-weight: 700; }
+#budget .tag { color: var(--muted); font-size: 14px; }
+.ledger { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 12px; font-size: 15px; font-variant-numeric: tabular-nums; }
+.ledger .sec { grid-column: 1 / -1; font-family: var(--display); font-weight: 700; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding-top: 8px; }
+.ledger .sec:first-child { padding-top: 0; }
+.ledger .sub { grid-column: 1 / -1; font-size: 14px; color: var(--muted); padding-bottom: 2px; }
+.ledger .sec.divide { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 12px; }
+.ledger dt { color: var(--muted); }
+.ledger dd { margin: 0; text-align: right; font-weight: 600; }
+.ledger .tot { border-top: 1px solid var(--line); padding-top: 4px; color: var(--ink); font-weight: 600; }
+.ledger dd.tot { font-weight: 800; }
+.ledger small { color: var(--muted); font-weight: 400; font-size: 13px; }
+.meter { display: flex; flex-direction: column; gap: 6px; }
+.meter .track { position: relative; height: 16px; border-radius: 3px; background: color-mix(in srgb, var(--good) 14%, var(--surface)); border: 1px solid var(--line); }
+.meter .fill { position: absolute; inset: 0 auto 0 0; border-radius: 2px; }
+.meter .cap { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.verdict { font-size: 15px; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--line); display: flex; gap: 8px; align-items: baseline; }
+.verdict b { font-family: var(--display); white-space: nowrap; }
+.verdict.over b { color: var(--bad); } .verdict.under b { color: var(--good); }
+
+/* what else could we do */
+.bars { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; gap: 8px 12px; align-items: center; font-size: 15px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px; }
+.bars .track { position: relative; height: 16px; }
+.bars .bar { height: 100%; border-radius: 0 4px 4px 0; min-width: 2px; }
+.bars .line { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--ink); }
+.bars .v { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
+.bars .key { grid-column: 1 / -1; font-size: 13px; color: var(--muted); display: flex; gap: 6px 16px; flex-wrap: wrap; }
+.bars .key i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.ways { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+.way { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.way h3 { font-size: 19px; font-weight: 800; margin: 0; }
+.way .num { font-family: var(--display); font-weight: 800; font-size: 26px; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.way p { color: var(--muted); }
+.way.best { border-color: var(--good); background: color-mix(in srgb, var(--good) 8%, var(--surface)); }
+.way .kicker { font: 700 12px var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.way.best .kicker { color: var(--good); }
+.way.decline { border-color: color-mix(in srgb, var(--accent) 55%, var(--surface)); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+.tablewrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+table.wards { width: 100%; border-collapse: collapse; font-size: 15px; font-variant-numeric: tabular-nums; }
+.wards th, .wards td { padding: 8px 12px; text-align: right; border-top: 1px solid var(--line); white-space: nowrap; }
+.wards th:first-child, .wards td:first-child { text-align: left; }
+.wards thead th { border-top: 0; font: 700 12px var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); vertical-align: bottom; white-space: normal; }
+.wards button { font: 600 15px var(--body); color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+.compare tr.on td { background: color-mix(in srgb, var(--band) 9%, var(--surface)); }
+.compare tr.on button { text-decoration: none; font-weight: 800; }
+.wards .over { color: var(--bad); font-weight: 700; } .wards .under { color: var(--good); font-weight: 700; }
+#tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 13px; padding: 5px 8px; border-radius: 4px; z-index: 5; max-width: 240px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+/* check our numbers */
+.files { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 12px; }
+.file { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+.file a.dl { font: 700 16px var(--display); align-self: flex-start; }
+.file p { color: var(--muted); font-size: 15px; }
+.file details summary { cursor: pointer; font-size: 14px; font-weight: 600; }
+.file dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 10px; font-size: 14px; margin: 8px 0 0; }
+.file dt { font-weight: 600; } .file dd { margin: 0; color: var(--muted); }
+.worked { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 8px; }
+.worked b { font-variant-numeric: tabular-nums; }
+.srclist { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; color: var(--muted); }
+.srclist a { color: var(--ink); }
+
+/* methods */
+.doc { display: flex; flex-direction: column; gap: 14px; border-top: 1px solid var(--line); padding-top: 28px; scroll-margin-top: 12px; }
+.doc > h2 { font-size: clamp(28px, 3.4vw, 36px); font-weight: 800; }
+.doc h3 { font-size: 24px; font-weight: 800; margin-top: 20px; }
+.doc h4 { font-size: 18px; font-weight: 700; margin-top: 6px; }
+.doc ul, .doc ol { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; }
+.doc code { font-size: .92em; background: color-mix(in srgb, var(--band) 8%, var(--surface)); padding: 1px 5px; border-radius: 3px; overflow-wrap: anywhere; }
+.math { overflow-x: auto; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 4px; }
+table.plain { width: 100%; border-collapse: collapse; font-size: 15px; }
+.plain th, .plain td { padding: 8px 12px; text-align: left; border-top: 1px solid var(--line); vertical-align: top; }
+.plain thead th { border-top: 0; font: 700 12px var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.plain tr:nth-child(even) td { background: color-mix(in srgb, var(--band) 3%, var(--surface)); }
+</style>
+</head>
+<body>
+
+<header class="band"><div class="wrap">
+  <a class="brand" href="https://strongtownscalgary.substack.com" target="_blank" rel="noopener"><img src="stc_gold.svg" alt="Strong Towns Calgary"></a>
+  <div class="draft"><span>Deep dive · Roads</span><span class="navlink"><a href="./">How we pay for Calgary</a> · <a href="roads.html" aria-current="page">Roads</a> · <a href="#methods">Methods</a></span></div>
+  <h1>The math doesn't work</h1>
+  <p class="subtitle">In 2015, 57% of Calgary's roads were in good condition. By 2024, only <strong>38%</strong> were.</p>
+  <p class="lede">For more than a decade we built more road and spent less than half of what it takes to keep it in shape. Here is where our roads are, how they got there, what fixing them would cost, whether property tax can pay for it, and the one fix that lasts.</p>
+  <p class="srcline">Sources: <a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347" target="_blank" rel="noopener">City of Calgary, pavement quality review, IP2024-1043 Attachment 2, pp. 6–9</a> · <a href="https://pub-calgary.escribemeetings.com/FileStream.ashx?DocumentId=377372" target="_blank" rel="noopener">Proposed 2027–2030 budget</a> · <a href="#data">all sources and data</a></p>
+</div></header>
+
+<main class="wrap">
+  <section class="evidence" id="now">
+    <div class="eyebrow">1 · Where we are</div>
+    <h2>Most of our roads are no longer in good condition</h2>
+    <p>The City rates every road on a 10-point pavement quality scale. In its 2024 review, just over a third of the network was in good condition, and a quarter was poor: past the point where repaving helps, so the road has to be rebuilt.</p>
+    <div class="block">
+      <div class="cond" id="cond" role="img"></div><div class="condlab" id="condLab" aria-hidden="true"></div>
+      <div class="condkey"><span>Condition of Calgary's road network, 2024</span><span>Share of lane-km</span></div>
+    </div>
+    <div class="nums" id="nowNums"></div>
+  </section>
+
+  <section class="evidence" id="then">
+    <div class="eyebrow">2 · How we got here</div>
+    <h2>We built more road, and didn't pay to keep it up</h2>
+    <p class="take" id="thenTake"></p>
+    <div class="chartbox" id="histBox"><svg class="chart" id="hist" role="img"></svg><div class="tip" id="histTip" hidden></div></div>
+    <p class="hint">Hover or tap the chart for each year. Only 57%, 38% and some network lengths are printed in the City's report. The other years are read off its charts, so treat them as close, not exact. The City changed its condition thresholds in 2021. Its report says the decline is the same either way. Spending for 2026 is the approved budget, which added $24M from reserves.</p>
+    <h3>Other cities spend far more on each lane of road</h3>
+    <p>Annual pavement investment per lane-km in 2018, the comparison the City's own review uses.</p>
+    <div class="ladder" id="cities"></div>
+    <p class="hint">From the 2018 ARA report as charted in the City's review, p. 8. The average is printed; the city values are read off the chart.</p>
+  </section>
+
+  <section class="evidence" id="gap">
+    <div class="eyebrow">3 · The gap</div>
+    <h2>What it takes to fix our roads, and what we spend</h2>
+    <p>Every option the City and its reviewers have put a price on, from what we used to spend to rebuilding every road as it wears out. The dashed line is break-even: what it takes just to stop the roads getting worse.</p>
+    <div class="ladder" id="ladder"></div>
+    <h3>The City's proposal, year by year</h3>
+    <p id="propLead"></p>
+    <div class="duo">
+      <div class="chartbox" id="propBox"><svg class="chart" id="prop" role="img"></svg><div class="tip" id="propTip" hidden></div></div>
+      <div class="block spark">
+        <div class="eyebrow">Pavement's share of Mobility's whole budget</div>
+        <div class="nums"><div style="border:0;padding:0"><b id="sparkNum"></b><span id="sparkText"></span></div></div>
+        <svg id="spark" role="img"></svg>
+      </div>
+    </div>
+  </section>
+
+  <section class="evidence" id="tax">
+    <div class="eyebrow">4 · Can property tax pay for it?</div>
+    <h2>What if we just raised property taxes?</h2>
+    <p>Suppose we leaned on property tax alone and changed nothing else about the city: same streets, same homes, same businesses. How much more would each year take, on top of what the City already proposes for pavement?</p>
+    <div class="tabs" id="taxTabs"></div>
+    <p class="callout" id="taxLead"></p>
+    <div class="ladder" id="taxRows"></div>
+    <p class="hint" id="taxNote"></p>
+
+    <h3>Can each neighbourhood pay for its own roads?</h3>
+    <p>Another way to ask it: if every part of the city had to pay for its own streets out of the share of its property tax meant for mobility, could it? Pick a pavement plan, then find your own neighbourhood.</p>
+    <div class="block picker" aria-labelledby="pick-h">
+      <div class="pickcol"><div class="eyebrow" id="pick-h">Choose a pavement plan</div>
+      <div class="options" id="options" role="radiogroup" aria-label="Pavement plan"></div></div>
+      <div class="about" id="about"></div>
+    </div>
+    <div class="work">
+      <div class="block mapcard">
+        <div class="maphead"><h2>Where roads alone use up the area's mobility budget</h2><span id="maphint">Loading map…</span></div>
+        <form class="search" id="search">
+          <input id="q" type="search" placeholder="Find an address or neighbourhood" aria-label="Find an address or neighbourhood" autocomplete="off">
+          <button type="submit">Find</button>
+        </form>
+        <div id="map" role="application" aria-label="Map of Calgary in hexagons, coloured by how this plan's road cost compares with each area's share of the mobility budget"></div>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div class="block" id="budget" aria-live="polite"></div>
+    </div>
+    <h3>Every plan side by side</h3>
+    <p>What each pavement plan costs, and how much of the mobility budget it leaves for everything else. The tax increase is on top of the City's proposal, in an average year. Select a plan to show it on the map.</p>
+    <div class="tablewrap"><table class="wards compare" id="compare"></table></div>
+  </section>
+
+  <section class="evidence" id="else">
+    <div class="eyebrow">5 · What else could we do?</div>
+    <h2>What would sustainable roads look like?</h2>
+    <p id="gap-intro"></p>
+    <div class="ways" id="ways"></div>
+    <h3>More homes and businesses per street means roads that pay for themselves</h3>
+    <p>Cents of every property tax dollar this plan needs for roads, by type of neighbourhood. The black line is the mobility budget's share. Parks, undeveloped land and special districts such as the airport are left out.</p>
+    <div class="bars" id="bars"></div>
+    <p id="bars-take"></p>
+    <h3>By ward</h3>
+    <p>Each ward's hexagons added up under this plan. A hexagon belongs to the ward its centre falls in, so the outlines on the map follow the hexagon grid, not the exact legal boundary. Select a ward to zoom to it.</p>
+    <div class="tablewrap"><table class="wards" id="wards"></table></div>
+  </section>
+
+  <section class="evidence" id="data">
+    <div class="eyebrow">6 · Check our numbers</div>
+    <h2>Download the data and check our work</h2>
+    <p>Every number on this page can be checked in a spreadsheet. These files open in Excel, Google Sheets or Numbers, with no code needed. Each one is worked out with the same formulas as this page.</p>
+    <div class="files">
+      <div class="file"><a class="dl" href="downloads/calgary-hexagons.csv" download>calgary-hexagons.csv</a>
+        <p>One row per 800 m hexagon: what it raises in municipal property tax, how much pavement it has, and what its roads cost under every plan.</p>
+        <details><summary>What the columns mean</summary><dl>
+          <dt>Community, Ward</dt><dd>Where the hexagon's centre falls</dd>
+          <dt>Community type</dt><dd>The City's era for the community, such as 1960s/1970s or Inner city</dd>
+          <dt>Special area</dt><dd>"yes" for parks, undeveloped land and special districts such as the airport</dd>
+          <dt>Latitude, Longitude</dt><dd>Roughly the hexagon's centre, to find it on a map</dd>
+          <dt>Total municipal tax</dt><dd>Residential plus other tax, the City's share only</dd>
+          <dt>Mobility budget</dt><dd>6.62% of that tax: the part meant for streets, sidewalks, lights and signals</dd>
+          <dt>Pavement counted</dt><dd>The hexagon's own local streets plus an equal share of the main roads</dd>
+          <dt>Road cost: …</dt><dd>What that pavement costs a year under each plan</dd>
+        </dl></details></div>
+      <div class="file"><a class="dl" href="downloads/calgary-pavement-plans.csv" download>calgary-pavement-plans.csv</a>
+        <p>Every pavement plan: its inputs, its cost a year citywide, the tax increase on top of the City's proposal and what that means for a typical home.</p></div>
+      <div class="file"><a class="dl" href="downloads/calgary-pavement-history.csv" download>calgary-pavement-history.csv</a>
+        <p>Road condition, network length and pavement spending from 2011, then the City's proposal to 2030. Each figure says whether the report prints it or we read it off the City's chart.</p></div>
+      <div class="file"><a class="dl" href="downloads/calgary-wards.csv" download>calgary-wards.csv</a>
+        <p>Each ward's municipal tax and road cost under every plan.</p></div>
+      <div class="file"><a class="dl" href="downloads/pavement-spending-per-lane-km.csv" download>pavement-spending-per-lane-km.csv</a>
+        <p>The 2018 comparison of pavement spending per lane-km across eight Canadian cities.</p></div>
+    </div>
+
+    <div class="block">
+      <h3>Check one number yourself</h3>
+      <p id="workedLead"></p>
+      <ol class="worked" id="worked"></ol>
+      <p class="hint">Plans priced per square metre work the same way: multiply the pavement counted by the plan's rate, which is in <code>calgary-pavement-plans.csv</code>.</p>
+    </div>
+
+    <h3>Sources</h3>
+    <ul class="srclist">
+      <li><a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347" target="_blank" rel="noopener">City of Calgary, pavement quality review, IP2024-1043 Attachment 2 (Background Report)</a>: road condition (p. 6), network growth, condition trend and spending history (p. 7), best practice and the per-lane-km comparison (p. 8), the funding options (p. 9).</li>
+      <li><a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304348" target="_blank" rel="noopener">City of Calgary, pavement quality presentation</a>: break-even and the 50% and 60% options (pp. 5–8).</li>
+      <li><a href="https://www.calgary.ca/content/dam/www/cfod/finance/documents/plans-budgets-and-financial-reports/2023-2026-service-plans-budgets/2026-budget-as-approved-dec-3-2025.pdf" target="_blank" rel="noopener">City of Calgary, Budget 2026 as approved</a>: the 2026 pavement and Mobility budgets (pp. 76–78).</li>
+      <li><a href="https://pub-calgary.escribemeetings.com/FileStream.ashx?DocumentId=377372" target="_blank" rel="noopener">City of Calgary, proposed 2027–2030 budget</a>: pavement and Mobility spending for each year.</li>
+      <li><a href="https://www.calgary.ca/property-owners/taxes/calculator.html" target="_blank" rel="noopener">City of Calgary, property tax calculator</a>: Mobility's share of the tax bill.</li>
+      <li><a href="https://data.calgary.ca/browse?q=property%20assessments%20parcel" target="_blank" rel="noopener">City of Calgary open data, property assessments (parcel)</a>: the 2026 roll, and 2025 to check the method.</li>
+      <li><a href="https://data.calgary.ca/browse?q=community%20district%20boundaries" target="_blank" rel="noopener">City of Calgary open data, community boundaries</a> and <a href="https://data.calgary.ca/d/tz8z-hyaz" target="_blank" rel="noopener">ward boundaries</a>.</li>
+      <li><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>: road lengths and classes, 2025 extract.</li>
+      <li>Our own sample of 110 residential street widths, measured in Google Maps (see Methods).</li>
+    </ul>
+  </section>
+
+  <section class="doc" id="methods">
+    <div class="eyebrow">7 · Methods</div>
+    <h2>How the numbers are made</h2>
+    <p>The formulas, the data behind them and what we assumed, in plain language with enough detail to reproduce them.</p>
+
+    <h3>Overview</h3>
+    <p>We split Calgary into equal hexagons and, for each one, compare what its properties pay in municipal property tax with what it costs to look after its roads. The roads are measured against mobility's share of that tax, 6.62 cents of every dollar, because that is the part of the tax bill meant for streets, sidewalks, lights and signals.</p>
+    <p>The method has four steps:</p>
+    <ol>
+    <li><strong>Grid.</strong> Cover the city in 800 m hexagons and tag each with its community, era and ward.</li>
+    <li><strong>Revenue.</strong> Spread every property's assessed value into the hexagons it sits in, then apply the 2026 municipal tax rates.</li>
+    <li><strong>Roads.</strong> Measure the length of each class of road in each hexagon and turn it into square metres of pavement.</li>
+    <li><strong>Cost.</strong> Price that pavement under each pavement plan and compare it with the hexagon's mobility share.</li>
+    </ol>
+    <p>All figures are for the 2026 tax year unless noted. The 2025 roll was used to check the method against the City's published totals. The history in sections 1 to 3 of this page comes straight from the City's documents, as listed under Sources.</p>
+
+    <h3>1. The hex grid</h3>
+    <p>Each hexagon is 800 m across, about a ten-minute walk, and covers 55.4 hectares (0.55 km²). Equal-sized cells let us compare places fairly; community boundaries vary too much in size to do that.</p>
+    <div class="tablewrap"><table class="plain"><thead><tr><th>Measure</th><th>Value</th></tr></thead><tbody>
+    <tr><td>Width, flat side to flat side</td><td>800 m</td></tr>
+    <tr><td>Width, corner to corner</td><td>924 m</td></tr>
+    <tr><td>Side length</td><td>462 m</td></tr>
+    <tr><td>Area of a full hexagon</td><td>55.4 ha</td></tr>
+    <tr><td>Hexagons in the grid</td><td>1,683 (1,411 full, 272 cut by the city limit)</td></tr>
+    <tr><td>Total area covered</td><td>853 km²</td></tr>
+    <tr><td>Ordinary neighbourhood hexagons used in the counts</td><td>1,236</td></tr>
+    </tbody></table></div>
+    <p>The grid was built in QGIS and clipped to the city boundary, so hexagons along the edge are smaller. It is stored in NAD83 / UTM zone 12N (EPSG:26912), so all lengths and areas are in true metres.</p>
+    <p><strong>Tags.</strong> Each hexagon takes the community, community structure (era, such as "1960s/1970s" or "Inner city") and ward that its centre point falls in. Three edge hexagons whose centres fall outside every community take the nearest one instead.</p>
+    <p><strong>Special areas.</strong> Hexagons tagged Parks, Undeveloped or Other (special districts such as the airport) stay in every citywide total but are greyed out on the map and left out of the neighbourhood counts. There are 435 of them. They are not expected to pay for their own roads.</p>
+
+    <h3>2. Revenue: what each hexagon pays</h3>
+    <p>Each property's assessed value is shared among the hexagons it overlaps, in proportion to how much of its land falls in each, and then taxed at the City's 2026 municipal rates. In 2026 the model raises $2,548M in municipal property tax from $421B of taxable assessed value.</p>
+    <p><strong>Step 1: one value per parcel.</strong> The 2026 assessment roll lists each account (roll number) with its land parcel. Where one roll covers several parcels, the roll repeats its full value on each, so we split it by land area:</p>
+    <div class="math">V_{\text{parcel}} = V_{\text{roll}} \times \frac{\text{area of the parcel}}{\text{total area of all the roll's parcels}}</div>
+    <p>Without this step, about $25B of value was counted twice.</p>
+    <p><strong>Step 2: from parcels to hexagons.</strong> A parcel that straddles a hexagon edge is split by area:</p>
+    <div class="math">\text{share}_{p,h} = \frac{\text{area}(p \cap h)}{\sum_{h'} \text{area}(p \cap h')} \qquad V_{h} = \sum_{p} \text{share}_{p,h} \times V_{p}</div>
+    <p>The denominator is the parcel's area inside the whole grid, so every dollar of a parcel's value lands in some hexagon. This is done separately for residential, non-residential and farm value.</p>
+    <p><strong>Step 3: tax.</strong> Revenue is the value of each class times its 2026 municipal rate:</p>
+    <div class="math">R_h = V_{h,\text{res}} \times 0.0038906 + V_{h,\text{nonres}} \times 0.0179986 + V_{h,\text{farm}} \times 0.0339557</div>
+    <p>The provincial education tax (0.0027593 residential and farm, 0.0041502 non-residential) is calculated too, but only to check totals. It is never counted as money available for roads.</p>
+    <p><strong>Exempt property.</strong> Property in two groups of the roll's sub-type codes pays no tax in the model: institutional (codes starting with S: hospitals, schools, universities) and recreation (codes starting with P: parks, recreation centres, the Stampede grounds). That is $27.8B of value in 2026. Its land still counts toward the hexagon it sits in.</p>
+    <p><strong>Calibration.</strong> The same method applied to the 2025 roll and 2025 rates (where the exempt codes are IS and RC) gives $3,473M of total property tax, municipal plus provincial. The City reported $3,471M for 2025, a difference of under 0.1%.</p>
+
+    <h3>3. Roads: how much pavement each hexagon has</h3>
+    <p>We measure the length of City-maintained, paved road in each hexagon and multiply it by a typical width to get square metres of pavement. Citywide that comes to 6,288 km of road and 62.1 km² of pavement.</p>
+    <p><strong>Which roads count.</strong> Roads come from OpenStreetMap (2025 extract). We keep five classes of OSM <code>highway</code> tag and drop the rest:</p>
+    <div class="tablewrap"><table class="plain"><thead><tr><th>Class</th><th>OSM tags kept</th><th>Length</th><th>Width used</th><th>Pavement</th></tr></thead><tbody>
+    <tr><td>Highway</td><td>motorway, trunk and their links</td><td>335 km</td><td>11.0 m</td><td>3.7 km²</td></tr>
+    <tr><td>Primary (arterial)</td><td>primary, primary_link</td><td>226 km</td><td>11.0 m</td><td>2.5 km²</td></tr>
+    <tr><td>Secondary (arterial)</td><td>secondary, secondary_link</td><td>909 km</td><td>11.0 m</td><td>10.0 km²</td></tr>
+    <tr><td>Tertiary (collector)</td><td>tertiary, tertiary_link</td><td>1,162 km</td><td>11.0 m</td><td>12.8 km²</td></tr>
+    <tr><td>Residential (local)</td><td>residential, living_street</td><td>3,656 km</td><td>9.1 m on average</td><td>33.1 km²</td></tr>
+    </tbody></table></div>
+    <p>Left out: lanes and alleys, service roads, unclassified roads, private roads, paths and tracks. Also left out:</p>
+    <ul>
+    <li><strong>Unpaved roads:</strong> OSM <code>surface</code> of gravel, dirt, compacted and similar. Roads with no surface tag, about a third of the network, are assumed paved.</li>
+    <li><strong>Provincial roads:</strong> Stoney Trail (Highway 201) and Deerfoot Trail (Highway 2), which the Province maintains. Ramps within 300 m of them are dropped too.</li>
+    </ul>
+    <p><strong>Width.</strong> Divided roads are drawn in OSM as two separate lines, one per direction, so the bigger classes use the width of one carriageway, 11 m. That figure is a placeholder, not a measured value. Residential widths come from 110 sampled streets, 10 in each community structure. Within each structure, 10 random points were placed and snapped to the nearest residential road, and the road width at each point was measured with the Google Maps "Measure distance" tool. Each hexagon uses the median of its community structure's samples, from about 8.8 m in post-2000 suburbs to 10.3 m in Centre City. Where a structure has no samples, the 9.0 m default applies.</p>
+    <div class="math">\text{pavement}_h = \sum_{\text{class}} \text{length}_{h,\text{class}} \times \text{width}_{\text{class}}</div>
+    <p><strong>Shared roads.</strong> Highways and arterials (primary and secondary) are used by everyone, not just the people who live beside them. So their 16.2 km² of pavement is pooled and split equally across all 1,683 hexagons, about 9,600 m² each, instead of being charged to whichever hexagon they run through. Collectors and local streets stay with the hexagon they are in.</p>
+    <div class="math">\text{pavement}_h = \text{local pavement}_h + \frac{\text{shared pavement, citywide}}{1{,}683}</div>
+
+    <h3>4. Cost: pricing the pavement</h3>
+    <p>Each pavement plan turns square metres of pavement into dollars a year, in one of three ways. Where a plan gives a low and a high figure, the headline uses the midpoint.</p>
+    <p><strong>City budget plans</strong> are a single citywide amount a year. Each hexagon gets the share that matches its share of the city's pavement:</p>
+    <div class="math">C_h = B \times \frac{\text{pavement}_h}{\text{pavement, citywide}}</div>
+    <p>That works out to the same dollars per square metre everywhere, whatever the road class.</p>
+    <p><strong>Maintenance-cycle plans</strong> give a cost per square metre per year, applied to all pavement:</p>
+    <div class="math">C_h = \text{rate} \times \text{pavement}_h</div>
+    <p><strong>Full replacement</strong> is a one-off rebuild cost per square metre, spread over each class's life. Local streets last 40 years; every other class lasts 21.</p>
+    <div class="math">C_h = \text{unit cost} \times \sum_{\text{class}} \frac{\text{pavement}_{h,\text{class}}}{\text{life}_{\text{class}}}</div>
+    <div class="tablewrap"><table class="plain"><thead><tr><th>Plan</th><th>Type</th><th>Input</th><th>Citywide, a year</th><th>Source</th></tr></thead><tbody>
+    <tr><td>Historical spending</td><td>Budget</td><td>$40M a year</td><td>$40M</td><td><a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347" target="_blank" rel="noopener">Pavement quality review, Attachment 2, p. 7</a></td></tr>
+    <tr><td>2026 budget</td><td>Budget</td><td>$64M a year</td><td>$64M</td><td><a href="https://www.calgary.ca/content/dam/www/cfod/finance/documents/plans-budgets-and-financial-reports/2023-2026-service-plans-budgets/2026-budget-as-approved-dec-3-2025.pdf" target="_blank" rel="noopener">Budget 2026, pp. 76–78</a></td></tr>
+    <tr><td>Break even</td><td>Budget</td><td>$88M a year</td><td>$88M</td><td><a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304348" target="_blank" rel="noopener">Pavement quality presentation, p. 7</a></td></tr>
+    <tr><td>Proposed budget</td><td>Budget</td><td>$51M, $83M, $136M and $150M in 2027–2030</td><td>$105M on average</td><td><a href="https://pub-calgary.escribemeetings.com/FileStream.ashx?DocumentId=377372" target="_blank" rel="noopener">Proposed 2027–2030 budget</a></td></tr>
+    <tr><td>50% of roads in good condition</td><td>Budget</td><td>$116M a year</td><td>$116M</td><td><a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304348" target="_blank" rel="noopener">Pavement quality presentation, pp. 7–8</a></td></tr>
+    <tr><td>60% of roads in good condition</td><td>Budget</td><td>$132M a year</td><td>$132M</td><td><a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304348" target="_blank" rel="noopener">Pavement quality presentation, p. 7</a></td></tr>
+    <tr><td>Seal cracks every 10 years</td><td>Cycle</td><td>$1.00–2.50 per m² a year</td><td>$109M</td><td><a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347" target="_blank" rel="noopener">Pavement quality review, Attachment 2, p. 4</a></td></tr>
+    <tr><td>Repave every 12–17 years</td><td>Cycle</td><td>$2.92–4.17 per m² a year</td><td>$220M</td><td><a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347" target="_blank" rel="noopener">Pavement quality review, Attachment 2, p. 4</a></td></tr>
+    <tr><td>Full replacement</td><td>Rebuild</td><td>$300–350 per m², over 21 or 40 years</td><td>$717M</td><td><a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347" target="_blank" rel="noopener">Pavement quality review, 2024</a></td></tr>
+    </tbody></table></div>
+    <p>The ladder in section 3 also shows the review's best-practice figure, 2% of the roads' value or $300M a year (p. 8). It is a citywide figure only, so it is not one of the map's plans.</p>
+    <p>The City's proposal is the baseline: the tax increase in section 4 and the gap in section 5 are measured against it. Section 4 compares each plan with the proposal year by year; the map, the table and section 5 use its four-year average, $105M.</p>
+    <p>Per-square-metre costs are in 2024 dollars. The pipeline can inflate them to 2026, but the inflation rate is set to zero, so no adjustment is applied.</p>
+
+    <h3>5. Comparing with the mobility budget</h3>
+    <p>Each hexagon's road cost is measured against the part of its own tax bill that goes to mobility: 6.62 cents of every municipal tax dollar, or $169M citywide.</p>
+    <p><strong>Where 6.62% comes from.</strong> The City's <a href="https://www.calgary.ca/property-owners/taxes/calculator.html" target="_blank" rel="noopener">property tax calculator</a> breaks the full bill into services. Mobility is 3.87% of the whole bill, which includes the Province's 41.49%. As a share of the City's portion alone, that is 3.87 ÷ 58.51 = 6.62%. The City's full Mobility budget is larger ($377M in 2026) because it also draws on fees, grants and other revenue. Those are left out here, because property tax is the lever the City and each neighbourhood control.</p>
+    <p><strong>The hexagon's mobility budget and the overrun:</strong></p>
+    <div class="math">M_h = 0.0662 \times R_h \qquad \text{ratio}_h = \frac{C_h}{M_h} \qquad \text{overrun}_h = \text{ratio}_h - 1 \quad (\text{when ratio}_h &gt; 1)</div>
+    <p>A ratio of 0.4 means roads use 40% of the area's mobility budget, leaving 60% for sidewalks, bike lanes, streetlights, signals and snow clearing. A ratio of 3 is shown as a 200% overrun. The map colours hexagons at ratios of 0.5, 1, 2, 4 and 8.</p>
+    <p><strong>Cents per tax dollar</strong> is the road cost over all municipal revenue, C<sub>h</sub> ÷ R<sub>h</sub>, set against the 6.62¢ line. For a group of hexagons (a ward, or a type of neighbourhood) it is total cost over total revenue, not an average of the hexagons' ratios.</p>
+    <p><strong>Tax increase needed.</strong> This is how much the municipal tax rate would have to rise to pay for a plan on top of the City's proposal, if nothing else changed. It uses the 2026 tax base and is never shown as negative.</p>
+    <div class="math">\text{increase} = \max\left(0,\ \frac{C_{\text{plan}} - C_{\text{proposal}}}{R_{\text{city}}}\right)</div>
+    <p><strong>Per median household.</strong> The median 2026 assessment of a single residential property (code R110) is $718,000, which pays $2,793 in municipal tax. The extra cost is that bill times the increase:</p>
+    <div class="math">\text{extra a year} = \text{increase} \times 718{,}000 \times 0.0038906</div>
+    <p><strong>Overrun counts</strong> include only ordinary neighbourhood hexagons that pay some tax: 1,236 in 2026. Parks, undeveloped land, special districts and hexagons with no taxable property are left out.</p>
+
+    <h3>6. Assumptions and limitations</h3>
+    <p>The model counts only road pavement against only municipal property tax, so it understates what a neighbourhood really costs. Every other piece of infrastructure, and the rest of the mobility budget, comes on top.</p>
+    <h4>What is counted</h4>
+    <ul>
+    <li>Road pavement only. Not sidewalks, curbs, bridges, signals, lighting, snow clearing, pipes, transit or any other service.</li>
+    <li>Municipal property tax only. Not provincial education tax, fees, grants, franchise fees or other City revenue.</li>
+    <li>Mobility's 6.62% share is taken as fixed. Some road capital may also come from the separate "Contribution to Capital Investments" line (8.94% of the bill), so the true tax share for roads may be a little higher.</li>
+    </ul>
+    <h4>Road assumptions</h4>
+    <ul>
+    <li>OpenStreetMap stands in for the City's road inventory. Its classes, surface tags and ownership are not official.</li>
+    <li>The 11 m width for highways, arterials and collectors is a placeholder. Undivided four-lane arterials are likely wider. As a check, 62.1 km² of pavement over the City's roughly 17,400 lane-km works out to about 3.6 m a lane, which is plausible.</li>
+    <li>Budget plans spend the same per square metre on every road class. The City actually prioritises by class, and its plans leave local streets in worse shape than arterials, so these plans likely overstate spending on local streets.</li>
+    <li>One cost per square metre applies to every class. Arterial work likely costs more per square metre.</li>
+    <li>Sharing highways and arterials equally across hexagons is a choice. The pipeline can also share them by area or by revenue, or leave them in place.</li>
+    <li>Lifespans of 40 years (local) and 21 years (all others) apply to full replacement only.</li>
+    <li>No inflation is applied to the 2024 unit costs.</li>
+    </ul>
+    <h4>Tax assumptions</h4>
+    <ul>
+    <li>Exemptions are set by sub-type code groups (institutional and recreation), which match the City's 2025 totals but may include or miss individual properties.</li>
+    <li>Value is spread by land area, so a tower's value is spread evenly over its parcel. Large parcels that straddle hexagon edges, such as malls or campuses, are split by area rather than by where the buildings are.</li>
+    <li>Rates are applied directly to assessed value. Phase-ins, rebates, supplementary assessments and appeals are ignored.</li>
+    <li>The tax increase assumes the whole gap is paid by a higher rate on the same 2026 tax base, with nothing else changing.</li>
+    </ul>
+    <h4>History assumptions</h4>
+    <ul>
+    <li>Only the 2015 and 2024 condition figures, the 2011, 2025 and 2026 network lengths and the $40M average are printed in the City's review. Every other year is read off its charts.</li>
+    <li>The review's text gives 17,461 lane-km for both 2024 and 2026, but its chart shows about 17,080 in 2024. We use the chart.</li>
+    <li>Break-even, $88M, is the City's figure for the 2024 network. Earlier, smaller networks would have needed somewhat less.</li>
+    </ul>
+    <h4>Grid assumptions</h4>
+    <ul>
+    <li>Each hexagon takes one community and ward, from its centre point, even if it straddles a boundary.</li>
+    <li>Edge hexagons are smaller, so they hold less road and less property than full ones, but still get an equal share of the shared roads.</li>
+    </ul>
+
+    <h3>7. Reproducing it</h3>
+    <p>The whole method is a set of SQL scripts run in order by one Python script, with every setting in one file. Code: <a href="https://github.com/wklumpen/citymath" target="_blank" rel="noopener">github.com/wklumpen/citymath</a>.</p>
+    <h4>Inputs</h4>
+    <div class="tablewrap"><table class="plain"><thead><tr><th>Input</th><th>Source</th><th>Notes</th></tr></thead><tbody>
+    <tr><td>Hex grid</td><td>Project file <code>citymath.gpkg</code>, layer <code>hex_800m_clipped</code></td><td>800 m hexagons built in QGIS, clipped to the city limit</td></tr>
+    <tr><td>Communities</td><td>City of Calgary community boundaries, 2025</td><td>Name, community structure (era)</td></tr>
+    <tr><td>Wards</td><td>City of Calgary ward boundaries, 2025 (<a href="https://data.calgary.ca/d/tz8z-hyaz" target="_blank" rel="noopener">data.calgary.ca</a>, dataset tz8z-hyaz)</td><td>Current 14 wards</td></tr>
+    <tr><td>Roads</td><td>OpenStreetMap, 2025 extract</td><td><code>highway</code>, <code>surface</code>, <code>ref</code> tags</td></tr>
+    <tr><td>Assessments</td><td>City of Calgary property assessments (parcel), 2026 roll; 2025 historical roll for calibration</td><td>Value by class, sub-type code, roll number, parcel shape</td></tr>
+    <tr><td>Street widths</td><td>Project sample of 110 residential streets</td><td>10 random points per community structure, measured in Google Maps</td></tr>
+    <tr><td>Tax rates</td><td>City of Calgary 2026 (and 2025) municipal and provincial rates</td><td></td></tr>
+    <tr><td>Pavement history and the proposal</td><td>Project file <code>pavement.yaml</code></td><td>Typed in from the City's review and budgets, each figure with its page</td></tr>
+    </tbody></table></div>
+    <p>The source data is not in the repository; only the derived per-hexagon files for the website are.</p>
+    <h4>Steps</h4>
+    <ol>
+    <li>Load the sources into a PostGIS database and list their table names in <code>config.yaml</code>.</li>
+    <li>Put the database login in <code>.env</code>.</li>
+    <li>Run <code>uv run citymath.py</code>. It loads the grid, tags communities and wards, measures roads, allocates assessments, then builds the summary and plan tables (<code>sql/00_staging.sql</code> to <code>sql/05_hex_scenario.sql</code>).</li>
+    <li>The last step, <code>export</code>, writes the website's data files to <code>docs/data/</code>.</li>
+    <li>Run <code>uv run pavement.py</code> for the history and the proposal, then <code>uv run downloads.py</code> to write the spreadsheets in <code>docs/downloads/</code>.</li>
+    </ol>
+    <p>After changing a setting, re-run only the later steps, for example <code>uv run citymath.py roads summary</code>.</p>
+    <p><strong>Outputs.</strong> One row per hexagon in <code>hex_summary</code>, with community, ward, road length by class, pavement, assessed value and revenue by class, road cost and net. <code>hex_scenario</code> adds one row per hexagon per plan. Both open directly in QGIS.</p>
+    <p><strong>Website and slides.</strong> The website recomputes each plan in the browser from the exported files, with the same formulas as above. <code>uv run slides.py</code> draws the presentation charts from the same files.</p>
+  </section>
+</main>
+<footer class="band sitefoot"><div class="wrap">
+  <a href="https://strongtownscalgary.substack.com" target="_blank" rel="noopener"><img src="stc_gold.svg" alt="Strong Towns Calgary"></a>
+  <p>A Strong Towns Calgary project. Created by <b>Willem Klumpenhouwer</b> and <b>Nathan Hawryluk</b>.</p>
+</div></footer>
+<div id="tip" hidden></div>
+
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script>
+document.querySelectorAll('.math').forEach(el => {
+  try { katex.render(el.textContent, el, {displayMode: true, throwOnError: false}); } catch (e) { console.error(e); }
+});
+
+const MAPBOX_TOKEN = 'pk.eyJ1Ijoid2tsdW1wZW4iLCJhIjoiY211eWVyeXg5MGlqcTJ4b3RycWJwOHRkMCJ9.uF0fIM1cJwxGwrEdw0_-EA';  // public token
+const ORDER = ['CENTRE CITY','INNER CITY','1950s','1960s/1970s','1980s/1990s','2000s','2010s','2020s','BUILDING OUT','EMPLOYMENT'];
+const NICE = {'CENTRE CITY':'Centre City','INNER CITY':'Inner city','BUILDING OUT':'Still building out','EMPLOYMENT':'Employment area','OTHER':'Special district','PARKS':'Park','UNDEVELOPED':'Undeveloped'};
+// Map classes: road cost as a multiple of the area's mobility budget.
+const STEPS = [0.5, 1, 2, 4, 8];
+const COLORS = ['--u0', '--u1', '--o0', '--o1', '--o2', '--o3'];
+const LABELS = ['Roads use under half', 'Roads use half to all of it', 'Up to 100% overrun', '100–300% overrun', '300–700% overrun', 'Over 700% overrun'];
+
+const $ = id => document.getElementById(id);
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const dark = () => { const t = document.documentElement.dataset.theme; return t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches; };
+const nice = s => NICE[s] || s;
+const money = v => { const a = Math.abs(v), s = v < 0 ? '−$' : '$';
+  return a >= 1e9 ? s + (a / 1e9).toFixed(2) + 'B' : a >= 1e6 ? s + (a / 1e6).toFixed(a >= 1e8 ? 0 : 1).replace(/\.0$/, '') + 'M' : a >= 1e4 ? s + Math.round(a / 1e3) + 'K' : s + Math.round(a).toLocaleString(); };
+const cents = v => v == null || !isFinite(v) ? 'n/a' : v >= 1 ? '$' + v.toFixed(2) : (v * 100 < 10 ? (v * 100).toFixed(1) : Math.round(v * 100)) + '¢';
+const pct = v => v == null || !isFinite(v) ? 'n/a' : (v * 100 < 10 ? (v * 100).toFixed(1) : Math.round(v * 100).toLocaleString()) + '%';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'})[c]);
+const dollars = v => '$' + Math.round(v).toLocaleString();
+
+let S = null, W = null, P = null, BP = null, H = [], byId = new Map(), map = null, ready = false, bounds = null, tot = {};
+const state = {scenario: null, sel: null, year: 2027};
+
+// ---- the money -----------------------------------------------------------
+function prepare() {
+  // each hexagon's pavement: its own local streets plus its slice of the shared main roads
+  const n = H.length, area = H.reduce((a, h) => a + h.area_ha, 0), rev = H.reduce((a, h) => a + h.rev, 0);
+  const sh = H.reduce((a, h) => a + h.m2_sh, 0), shy = H.reduce((a, h) => a + h.m2y_sh, 0);
+  H.forEach(h => {
+    const w = {equal: 1 / n, area: h.area_ha / area, revenue: h.rev / rev}[S.shared_basis];
+    h.pm2 = h.m2 + (w == null ? h.m2_sh : w * sh);
+    h.pm2y = h.m2y + (w == null ? h.m2y_sh : w * shy);
+  });
+  tot = {rev, pm2: H.reduce((a, h) => a + h.pm2, 0)};
+}
+function cost(h, sc, end) {  // end: 'low' | 'high' | undefined for the midpoint
+  const rate = end ? sc[end] : (sc.low + sc.high) / 2;
+  if (sc.kind === 'budget') return rate * h.pm2 / tot.pm2;
+  return rate * (sc.kind === 'life' ? h.pm2y : h.pm2);
+}
+function cityCost(sc) { return H.reduce((a, h) => a + cost(h, sc), 0); }
+const plan = id => S.scenarios.find(s => s.id === id);
+// Property tax increase needed to pay for a plan on top of the City's proposal,
+// if the extra came only from a higher tax rate and nothing else changed.
+function taxRise(sc) { return (cityCost(sc) - cityCost(plan(S.current))) / tot.rev; }
+const homeTax = () => S.typical_home_value * S.res_rate;
+const perHome = v => '+$' + Math.round(Math.max(0, v) * homeTax()).toLocaleString();
+function ratio(h) { return h.rev > 0 ? h.cost / (h.rev * S.mobility_share) : null; }
+function cls(h) { if (h.special || h.rev <= 0) return 6; const r = ratio(h); let i = 0; while (i < STEPS.length && r >= STEPS[i]) i++; return i; }
+const spend = y => P.spending.find(r => r.year === y);
+const PROPOSAL_YEARS = () => P.spending.filter(r => r.status === 'proposed');
+
+// ---- shared chart bits -----------------------------------------------------
+// bar with its top corners rounded, anchored to the baseline
+const vbar = (x, y, w, h, fill, r = 3) => { r = Math.min(r, h, w / 2);
+  return `<path d="M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z" fill="var(${fill})"/>`; };
+function showTip(tip, box, e, html) {
+  tip.innerHTML = html; tip.hidden = false;
+  const r = box.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  tip.style.left = Math.max(0, Math.min(x + 14, r.width - tip.offsetWidth)) + 'px';
+  tip.style.top = Math.max(0, y - tip.offsetHeight - 12) + 'px';
+}
+const widths = {};
+function onResize(id, fn) { new ResizeObserver(() => { const w = Math.round($(id).clientWidth); if (w && w !== widths[id]) { widths[id] = w; fn(); } }).observe($(id)); }
+
+// ---- 1. where we are ------------------------------------------------------
+function renderNow() {
+  const c = P.condition_2024, parts = [['Good', c.good, '--u0'], ['Fair', c.fair, '--special'], ['Poor', c.poor, '--o1']];
+  $('cond').innerHTML = parts.map(([k, v, col]) => `<div style="flex:${v};background:var(${col})"></div>`).join('');
+  $('condLab').innerHTML = parts.map(([k, v]) => `<div style="flex:${v}">${pct(v)}<small>${k}</small></div>`).join('');
+  $('cond').setAttribute('aria-label', parts.map(([k, v]) => `${k} ${pct(v)}`).join(', '));
+  const g = P.good, first = g[0], last = g[g.length - 1];
+  $('nowNums').innerHTML = `<div><b>${pct(last.value)}</b><span>of roads in good condition in ${last.year}, down from ${pct(first.value)} in ${first.year}</span></div>
+    <div><b>${pct(P.canadian_average_good)}</b><span>in good condition: the Canadian municipal average</span></div>
+    <div><b>${c.below_threshold_lane_km.toLocaleString()} lane-km</b><span>${pct(c.below_threshold)} of the network, already below the City's acceptable threshold</span></div>`;
+}
+
+// ---- 2. how we got here: three panels on one timeline -----------------------
+// Small multiples, not a dual axis: condition, network size and spending each get their own scale.
+const HIST = [
+  {key: 'good', title: 'Roads in good condition', h: 96, lo: 0, hi: 0.6, ticks: [0, 0.3, 0.6], fmt: v => Math.round(v * 100) + '%', col: '--u0'},
+  {key: 'lane_km', title: 'Size of the road network, lane-km', h: 96, lo: 14000, hi: 18000, ticks: [14000, 16000, 18000], fmt: v => (v / 1000) + 'K', col: '--ink'},
+  {key: 'spending', title: 'Pavement spending a year', h: 120, lo: 0, hi: 100, ticks: [0, 50, 100], fmt: v => '$' + v + 'M'},
+];
+let HX = null;
+function renderHistory() {
+  const svg = $('hist'), Wd = Math.round($('histBox').clientWidth) - 28; if (Wd <= 0) return;
+  const y0 = 2011, y1 = 2026, mL = 44, mR = 10, step = (Wd - mL - mR) / (y1 - y0 + 1), x = y => mL + (y - y0 + 0.5) * step;
+  const be = P.break_even;
+  let top = 0, out = '';
+  HIST.forEach(p => {
+    const t = top + 36, b = t + p.h, Y = v => b - (v - p.lo) / (p.hi - p.lo) * p.h;
+    Object.assign(p, {t, b, Y});
+    out += `<text class="ttl" x="0" y="${top + 14}">${p.title}</text>`;
+    out += p.ticks.map(v => `<line class="grid" x1="${mL}" x2="${Wd - mR}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${mL - 6}" y="${Y(v) + 4}" text-anchor="end">${p.fmt(v)}</text>`).join('');
+    const rows = P[p.key].filter(r => r.year >= y0 && r.year <= y1);
+    if (p.key === 'spending') {
+      const bw = Math.max(3, step * 0.62);
+      out += rows.map(r => vbar(x(r.year) - bw / 2, Y(r.value), bw, b - Y(r.value), '--o1')).join('');
+      out += `<line class="ref" x1="${mL}" x2="${Wd - mR}" y1="${Y(be)}" y2="${Y(be)}"/>
+        <text class="lbl" x="${Wd - mR}" y="${Y(be) - 6}" text-anchor="end">Break-even: $${be}M a year</text>`;
+    } else {
+      out += `<path class="ln" stroke="var(${p.col})" d="${rows.map((r, i) => (i ? 'L' : 'M') + x(r.year).toFixed(1) + ',' + Y(r.value).toFixed(1)).join('')}"/>`;
+      // label the printed end points only; the years between are read off the City's chart
+      const ends = [rows[0], rows[rows.length - 1]];
+      out += ends.map((r, i) => `<circle class="dot" cx="${x(r.year)}" cy="${Y(r.value)}" r="5" fill="var(${p.col})"/>
+        <text class="lbl" x="${x(r.year) + (i ? -8 : 8)}" y="${Y(r.value) + (p.key === 'good' ? (i ? 18 : -9) : (i ? -10 : -9))}" text-anchor="${i ? 'end' : 'start'}">${p.key === 'good' ? pct(r.value) : r.value.toLocaleString()}</text>`).join('');
+    }
+    top = b + 18;
+  });
+  const every = step < 34 ? 5 : 1, axisY = top + 2;
+  for (let y = y0; y <= y1; y += every) out += `<text x="${x(y)}" y="${axisY}" text-anchor="middle">${every === 1 ? "'" + String(y).slice(2) : y}</text>`;
+  out += `<line class="xh" id="histX" x1="0" x2="0" y1="${HIST[0].t - 6}" y2="${HIST[2].b}" visibility="hidden"/>
+    <rect id="histHit" x="${mL}" y="0" width="${Wd - mL - mR}" height="${axisY}" fill="transparent"/>`;
+  svg.setAttribute('viewBox', `0 0 ${Wd} ${axisY + 6}`); svg.setAttribute('height', axisY + 6);
+  svg.innerHTML = out;
+  HX = {x, y0, y1, mL, step};
+  const g = P.good, n = P.lane_km, s = P.spending;
+  const avg = s.filter(r => r.year <= 2025).reduce((a, r) => a + r.value, 0) / s.filter(r => r.year <= 2025).length;
+  svg.setAttribute('aria-label', `From ${y0} to ${y1} the road network grew from ${n[0].value.toLocaleString()} to ${n[n.length - 1].value.toLocaleString()} lane-km, pavement spending averaged about $${Math.round(avg)}M a year against a break-even of $${be}M, and roads in good condition fell from ${pct(g[0].value)} in ${g[0].year} to ${pct(g[g.length - 1].value)} in ${g[g.length - 1].year}.`);
+}
+function histHover(e) {
+  if (!HX) return;
+  const svg = $('hist'), r = svg.getBoundingClientRect(), px = (e.clientX - r.left) * (svg.viewBox.baseVal.width / r.width);
+  const y = Math.max(HX.y0, Math.min(HX.y1, HX.y0 + Math.floor((px - HX.mL) / HX.step)));
+  const xh = $('histX'); xh.setAttribute('x1', HX.x(y)); xh.setAttribute('x2', HX.x(y)); xh.setAttribute('visibility', 'visible');
+  const at = k => P[k].find(q => q.year === y), approx = q => q && q.read ? 'about ' : '';
+  const g = at('good'), n = at('lane_km'), s = at('spending');
+  showTip($('histTip'), $('histBox'), e, `<b>${y}</b>` +
+    (g ? `<br>${approx(g)}${pct(g.value)} of roads in good condition` : '') +
+    (n ? `<br>${approx(n)}${n.value.toLocaleString()} lane-km of road` : '') +
+    (s ? `<br>${approx(s)}$${s.value}M on pavement${s.status === 'approved' ? ' (approved budget)' : ''}, $${(P.break_even - s.value).toFixed(0)}M short of break-even` : ''));
+}
+function renderThen() {
+  const g = P.good, n = P.lane_km, s = P.spending.filter(r => r.year <= 2025);
+  const avg = s.reduce((a, r) => a + r.value, 0) / s.length, grow = n[n.length - 1].value / n[0].value - 1;
+  $('thenTake').innerHTML = `From ${n[0].year} to ${n[n.length - 1].year} Calgary built <strong>${pct(grow)} more road</strong>. Pavement spending averaged about <strong>$${Math.round(avg)}M a year</strong>, less than half the $${P.break_even}M it takes just to keep roads from getting worse. Every year below that line adds to the backlog, and the share of roads in good condition fell from ${pct(g[0].value)} to ${pct(g[g.length - 1].value)}. Surprise.`;
+  const c = P.per_lane_km, max = Math.max(...c.cities.map(x => x.value)) * 1.05;
+  $('cities').innerHTML = c.cities.map(x => `<div class="nm"><b>${x.city}</b></div><div class="track"><div class="bar" style="width:${(100 * x.value / max).toFixed(1)}%;background:var(${x.city === 'Calgary' ? '--o2' : '--u0'})"></div><div class="line" style="left:${(100 * c.average / max).toFixed(1)}%"></div></div><div class="v">${dollars(x.value)}</div>`).join('')
+    + `<div class="key"><span><i style="background:var(--o2)"></i>Calgary</span><span><i style="background:var(--u0)"></i>Other cities</span><span><i class="dash"></i>Average, ${dollars(c.average)} per lane-km</span></div>`;
+}
+
+// ---- 3. the gap -------------------------------------------------------------
+const DESC = {historic: 'What we averaged, 2011 to 2025', budget_2026: 'Approved for 2026', break_even: 'Just stops the decline',
+  proposed_budget: 'The City\'s proposal, 2027 to 2030 average', recommended: 'Reached in 10 years, one of the City\'s options', high: 'Reached in 10 years: the Canadian average',
+  crack_seal: 'Only works on roads still in good shape', repave: 'Only works on roads not yet in poor shape',
+  best: 'Best practice: 2% of what the roads are worth', reconstruction: 'Rebuild every road as it wears out'};
+function renderLadder() {
+  const be = P.break_even * 1e6;
+  const rows = [...S.scenarios.map(s => ({id: s.id, label: s.label, v: cityCost(s)})),
+    {id: 'best', label: 'Asset management best practice', v: P.best_practice * 1e6}].sort((a, b) => a.v - b.v);
+  const max = rows[rows.length - 1].v * 1.02;
+  $('ladder').innerHTML = rows.map(r => `<div class="nm"><b>${esc(r.label)}</b><small>${esc(DESC[r.id] || '')}</small>${r.id === S.current ? '<em>City\'s proposal</em>' : ''}</div>
+    <div class="track"><div class="bar" style="width:${(100 * r.v / max).toFixed(1)}%;background:var(${r.v < be ? '--o1' : '--u0'})"></div><div class="line" style="left:${(100 * be / max).toFixed(1)}%"></div></div>
+    <div class="v">${money(r.v)}<small>a year</small></div>`).join('')
+    + `<div class="key"><span><i style="background:var(--o1)"></i>Below break-even: roads keep getting worse</span><span><i style="background:var(--u0)"></i>At or above break-even</span><span><i class="dash"></i>Break-even, $${P.break_even}M</span></div>`;
+}
+function renderProposal() {
+  const be = P.break_even, yrs = P.spending.filter(r => r.year >= 2026), prop = PROPOSAL_YEARS();
+  const short = prop.filter(r => r.value < be), avg = prop.reduce((a, r) => a + r.value, 0) / prop.length;
+  $('propLead').innerHTML = `The City proposes $${prop.map(r => r.value).join('M, $')}M for pavement in ${prop[0].year} to ${prop[prop.length - 1].year}. That averages $${Math.round(avg)}M a year, above break-even. But the average hides the timing: ${short.map(r => `${r.year} is $${be - r.value}M short`).join(' and ')}, so the roads keep getting worse for the first ${short.length === 2 ? 'two years' : short.length + ' years'}. The money arrives at the end, when a later Council could keep it in roads or cut it.`;
+  const Wd = Math.round($('propBox').clientWidth) - 28; if (Wd <= 0) return;
+  const h = 190, t = 22, b = t + h, mL = 40, step = (Wd - mL) / yrs.length, Y = v => b - v / 160 * h, bw = Math.min(64, step * 0.6);
+  let out = [0, 50, 100, 150].map(v => `<line class="grid" x1="${mL}" x2="${Wd}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${mL - 6}" y="${Y(v) + 4}" text-anchor="end">$${v}M</text>`).join('');
+  out += yrs.map((r, i) => { const cx = mL + (i + 0.5) * step;
+    return `<g class="pb" data-y="${r.year}">${vbar(cx - bw / 2, Y(r.value), bw, b - Y(r.value), r.value < be ? '--o1' : '--u0')}
+      <text class="lbl" x="${cx}" y="${Math.abs(Y(r.value) - 6 - Y(be)) < 16 ? Y(r.value) + 17 : Y(r.value) - 6}" text-anchor="middle">$${r.value}M</text>
+      <text x="${cx}" y="${b + 16}" text-anchor="middle">${r.year}</text><text x="${cx}" y="${b + 30}" text-anchor="middle">${r.status}</text>
+      <rect x="${cx - step / 2}" y="${t}" width="${step}" height="${h}" fill="transparent"/></g>`; }).join('');
+  out += `<line class="ref" x1="${mL}" x2="${Wd}" y1="${Y(be)}" y2="${Y(be)}"/><text class="lbl" x="${mL + 6}" y="${Y(be) - 6}">Break-even $${be}M</text>`;
+  const svg = $('prop');
+  svg.setAttribute('viewBox', `0 0 ${Wd} ${b + 36}`); svg.setAttribute('height', b + 36); svg.innerHTML = out;
+  svg.setAttribute('aria-label', 'Pavement spending: ' + yrs.map(r => `${r.year} ${r.status} $${r.value}M`).join(', ') + `. Break-even is $${be}M.`);
+}
+function propHover(e) {
+  const g = e.target.closest('.pb'); if (!g) { $('propTip').hidden = true; return; }
+  const y = +g.dataset.y, r = spend(y), m = P.mobility_proposed.find(q => q.year === y), d = r.value - P.break_even;
+  showTip($('propTip'), $('propBox'), e, `<b>${y}, ${r.status}</b><br>$${r.value}M on pavement<br>${d < 0 ? '$' + -d + 'M short of' : '$' + d + 'M above'} break-even` + (m ? `<br>${pct(r.value / m.total)} of Mobility's $${m.total}M budget` : ''));
+}
+function renderSpark() {
+  const m = P.mobility_proposed, sh = m.map(q => spend(q.year).value / q.total), svg = $('spark');
+  const Wd = Math.round(svg.getBoundingClientRect().width) || 300, h = 64, pad = 30, lo = 0, hi = 0.3;
+  const x = i => pad + i * (Wd - 2 * pad) / (m.length - 1), Y = v => h - 14 - (v - lo) / (hi - lo) * (h - 24);
+  svg.setAttribute('viewBox', `0 0 ${Wd} ${h}`);
+  svg.innerHTML = `<path class="ln" stroke="var(--accent)" d="${sh.map((v, i) => (i ? 'L' : 'M') + x(i) + ',' + Y(v)).join('')}"/>`
+    + sh.map((v, i) => `<circle class="dot" cx="${x(i)}" cy="${Y(v)}" r="${i === 0 || i === sh.length - 1 ? 5 : 3.5}" fill="var(--accent)"/><text x="${x(i)}" y="${h}" text-anchor="middle">${m[i].year}</text>`).join('')
+    + `<text class="lbl" x="${x(0)}" y="${Y(sh[0]) - 9}" text-anchor="middle">${pct(sh[0])}</text><text class="lbl" x="${x(sh.length - 1)}" y="${Y(sh[sh.length - 1]) - 9}" text-anchor="middle">${pct(sh[sh.length - 1])}</text>`;
+  svg.setAttribute('aria-label', 'Pavement as a share of Mobility\'s budget: ' + sh.map((v, i) => `${m[i].year} ${pct(v)}`).join(', '));
+  $('sparkNum').textContent = `${pct(sh[0])} → ${pct(sh[sh.length - 1])}`;
+  const total = m.reduce((a, q) => a + q.total, 0);
+  $('sparkText').textContent = `Mobility's proposed budget, operating and capital, totals $${total.toLocaleString()}M over the four years. By ${m[m.length - 1].year} pavement alone takes ${pct(sh[sh.length - 1])} of it, leaving less for ${S.mobility_items.slice(0, 3).join(', ')} and the rest.`;
+}
+
+// ---- 4. can property tax pay for it? ---------------------------------------
+const TARGETS = ['break_even', 'recommended', 'high', 'repave', 'best', 'reconstruction'];
+function renderTax() {
+  const years = PROPOSAL_YEARS().map(r => r.year);
+  if (!$('taxTabs').children.length) {
+    $('taxTabs').innerHTML = years.map(y => `<button type="button" data-y="${y}">${y}</button>`).join('') + '<button type="button" data-y="avg">Four-year average</button>';
+    $('taxTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { state.year = b.dataset.y === 'avg' ? 'avg' : +b.dataset.y; renderTax(); } });
+  }
+  document.querySelectorAll('#taxTabs button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.y) === String(state.year)));
+  const base = (state.year === 'avg' ? cityCost(plan(S.current)) : spend(state.year).value * 1e6);
+  const when = state.year === 'avg' ? 'an average year' : state.year;
+  const rows = TARGETS.map(id => id === 'best' ? {id, label: 'Asset management best practice', v: P.best_practice * 1e6} : {id, label: plan(id).label, v: cityCost(plan(id))})
+    .map(r => ({...r, extra: r.v - base, up: Math.max(0, r.v - base) / tot.rev}));
+  // keep one scale across the years, so switching years shows the change
+  const worst = Math.max(...TARGETS.map(id => id === 'best' ? P.best_practice * 1e6 : cityCost(plan(id)))) - Math.min(...PROPOSAL_YEARS().map(r => r.value * 1e6));
+  const max = worst / tot.rev * 1.02;
+  $('taxRows').innerHTML = rows.map(r => `<div class="nm"><b>${esc(r.label)}</b><small>${esc(DESC[r.id])}, ${money(r.v)} a year</small></div>
+    ${r.extra <= 0 ? `<div class="covered">Already covered by the proposal</div><div class="v">+0%</div>` :
+      `<div class="track"><div class="bar" style="width:${(100 * r.up / max).toFixed(1)}%;background:var(--o2)"></div></div>
+      <div class="v">+${pct(r.up)} tax<small>${perHome(r.up)} a year, typical home</small></div>`}`).join('');
+  const be = rows[0], fix = rows.find(r => r.id === 'high'), full = rows[rows.length - 1];
+  const next = BP && BP.proposed && BP.proposed.year === state.year ? ` That is on top of the ${pct(BP.proposed.increase)} more property tax the City's whole proposed ${state.year} budget already needs.` : '';
+  $('taxLead').innerHTML = `In ${when} the City plans to spend <b>${money(base)}</b> on pavement. ` +
+    (be.extra > 0 ? `Just to break even would take ${money(be.extra)} more: <b>+${pct(be.up)}</b> on property tax, about ${perHome(be.up).slice(1)} a year for a typical home. ` : `That is above break-even. `) +
+    (fix.extra > 0 ? `Getting to 60% of roads in good condition, a bit better than ${P.good[0].year}, would take <b>+${pct(fix.up)}</b>. ` : '') +
+    `Rebuilding every road as it wears out would take <b>+${pct(full.up)}</b>, ${perHome(full.up).slice(1)} a year more for a typical home.${next}`;
+  $('taxNote').textContent = `Each increase is the extra money over the City's planned pavement spending for ${when}, divided by the ${money(tot.rev)} the City raises in municipal property tax in ${S.tax_year}. The typical home is assessed at ${dollars(S.typical_home_value)} and pays ${dollars(homeTax())} in municipal tax today.`;
+}
+
+// ---- the map and the plans ---------------------------------------------------
+function render() {
+  const sc = plan(state.scenario);
+  H.forEach(h => { h.cost = cost(h, sc); });
+  renderAbout(sc); renderCompare(sc); renderBars(sc); renderWays(sc); renderWards(sc); renderBudget(sc); renderWorked();
+  if (!ready) return;
+  H.forEach(h => map.setFeatureState({source: 'hex', id: h.id}, {c: cls(h)}));
+  map.setFilter('hex-sel', ['==', ['get', 'id'], state.sel ? state.sel.id : -1]);
+}
+function renderOptions() {
+  $('options').innerHTML = S.scenarios.map(s => `<label class="opt${s.id === S.current ? ' proposed' : ''}"><input type="radio" name="scenario" value="${s.id}"${s.id === state.scenario ? ' checked' : ''}>
+    <b>${esc(s.label)}</b>${s.id === S.current ? '<span class="tag">City\'s proposal</span>' : ''}</label>`).join('');
+  $('options').addEventListener('change', e => pick(e.target.value));
+}
+function pick(id) {
+  state.scenario = id;
+  document.querySelectorAll('#options input').forEach(i => { i.checked = i.value === id; });
+  render();
+}
+// neighbourhood hexagons (not parks or special districts) and how many of them roads alone overrun
+function overrun(sc) {
+  const ord = H.filter(h => !h.special && h.rev > 0);
+  return [ord.filter(h => cost(h, sc) > h.rev * S.mobility_share).length, ord.length];
+}
+function renderCompare(sc) {
+  const mob = tot.rev * S.mobility_share;
+  $('compare').innerHTML = `<thead><tr><th>Plan</th><th>A year citywide</th><th>Per tax dollar</th><th>Share of mobility budget, or overrun</th><th>Tax increase on top of the proposal</th><th>Per median household</th><th>Hexagons overrun</th></tr></thead><tbody>`
+    + S.scenarios.map(s => { const c = cityCost(s), r = c / mob, up = taxRise(s), [o, n] = overrun(s);
+      return `<tr${s.id === sc.id ? ' class="on"' : ''}><td><button type="button" data-plan="${s.id}">${esc(s.label)}</button></td><td>${money(c)}</td><td>${cents(c / tot.rev)}</td>
+        <td class="${r > 1 ? 'over' : 'under'}">${r > 1 ? pct(r - 1) + ' overrun' : pct(r)}</td><td>${up <= 0.0005 ? 'none' : '+' + pct(up)}</td><td>${up <= 0.0005 ? '$0' : perHome(up)}</td><td>${o.toLocaleString()} of ${n.toLocaleString()}</td></tr>`; }).join('') + '</tbody>';
+}
+$('compare').addEventListener('click', e => { const b = e.target.closest('button[data-plan]'); if (b) { pick(b.dataset.plan); $('options').scrollIntoView({block: 'nearest'}); } });
+function renderAbout(sc) {
+  const c = cityCost(sc), share = c / tot.rev, mob = S.mobility_share;
+  const [over, ord] = overrun(sc);
+  const range = sc.kind === 'budget' ? '' : ` <span class="hint">(${money(cityCost({...sc, low: sc.low, high: sc.low}))} to ${money(cityCost({...sc, low: sc.high}))})</span>`;
+  $('about').innerHTML = `<h2>${esc(sc.label)}</h2><p>${esc(sc.summary)}</p>
+    ${sc.consequence ? `<div class="alert" role="note"><b>What this means</b><p>${esc(sc.consequence)}</p></div>` : ''}
+    ${sc.sources.length ? `<div class="sources">Source: ${sc.sources.map(x => `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}</a>`).join('')}</div>` : ''}
+    <div class="stats">
+      <div class="stat"><b>${money(c)}</b><span>a year citywide${range}</span></div>
+      <div class="stat"><b>${cents(share)}</b><span>of every property tax dollar, against ${cents(mob)} for all of mobility</span></div>
+      <div class="stat"><b>${taxRise(sc) <= 0.0005 ? '0%' : '+' + pct(taxRise(sc))}</b><span>property tax increase on top of the City's proposal, in an average year</span></div>
+      <div class="stat"><b>${perHome(taxRise(sc))}</b><span>a year more for the median household</span></div>
+      <div class="stat"><b>${over.toLocaleString()} <small style="font-size:.55em;font-weight:600">of ${ord.toLocaleString()}</small></b><span>neighbourhood hexagons where roads alone overrun the mobility budget</span></div>
+    </div>`;
+}
+function renderBars(sc) {
+  const mob = S.mobility_share;
+  const rows = ORDER.map(s => { const g = H.filter(h => h.st === s); return [s, g.reduce((a, h) => a + h.cost, 0) / g.reduce((a, h) => a + h.rev, 0)]; });
+  const max = Math.max(...rows.map(r => r[1]), mob) * 1.08;
+  const res = rows.filter(r => !['CENTRE CITY', 'EMPLOYMENT', 'BUILDING OUT'].includes(r[0])).sort((a, b) => a[1] - b[1]), lo = res[0], hi = res[res.length - 1];
+  $('bars-take').innerHTML = `Under this plan, the ${nice(lo[0]).toLowerCase()} neighbourhoods need <strong>${cents(lo[1])}</strong> of each tax dollar for their roads; the ${nice(hi[0]).toLowerCase()} suburbs need <strong>${cents(hi[1])}</strong>, ${(hi[1] / lo[1]).toFixed(1)} times as much. Pavement costs the same per square metre everywhere; what differs is how much tax each street carries.`;
+  $('bars').innerHTML = rows.map(([s, v]) => `<div>${nice(s)}</div><div class="track"><div class="bar" style="width:${(100 * v / max).toFixed(1)}%;background:var(${v > mob ? '--o2' : '--u0'})"></div><div class="line" style="left:${(100 * mob / max).toFixed(1)}%"></div></div><div class="v">${cents(v)}</div>`).join('')
+    + `<div class="key"><span><i style="background:var(--u0)"></i>Fits within the mobility budget</span><span><i style="background:var(--o2)"></i>Overruns it</span><span><i style="background:var(--ink);width:3px"></i>Mobility budget, ${cents(mob)} per tax dollar</span></div>`;
+}
+function renderWays(sc) {
+  const now = plan(S.current), nowCost = cityCost(now), c = cityCost(sc), gap = c - nowCost;
+  const home = homeTax(), up = gap / tot.rev, be = P.break_even * 1e6;
+  const short = PROPOSAL_YEARS().filter(r => r.value * 1e6 < be), poor = pct(P.condition_2024.poor);
+  const behind = short.length ? `It spends ${short.map(r => `$${r.value}M in ${r.year}`).join(' and ')}, below the ${money(be)} break-even, so the roads keep getting worse before they start to improve.` : '';
+  if (gap <= 0.5e6) {
+    $('gap-intro').textContent = sc.id === now.id
+      ? `This is the City's proposal: ${money(nowCost)} a year on average from ${PROPOSAL_YEARS()[0].year}. ${behind}`
+      : `This plan spends ${money(-gap)} a year less than the City's proposal of ${money(nowCost)}.`;
+    $('ways').innerHTML = `<div class="way decline"><h3>${c < be ? 'The streets keep falling apart' : 'Behind first, caught up later'}</h3><p>${c < be ? `Below the ${money(be)} break-even, pavement keeps getting worse every year.` : behind} In 2024, ${poor} of Calgary's roads were already in poor condition. Pick a bigger plan to see what fixing them would take.</p></div>`;
+    return;
+  }
+  $('gap-intro').innerHTML = `This plan costs ${money(c)} a year, which is <strong>${money(gap)} more</strong> than the City's proposal of ${money(nowCost)}. There are only four ways to close a gap like that, and only one of them lasts.`;
+  $('ways').innerHTML = `
+    <div class="way best"><span class="kicker">The lasting fix</span><h3>Make our land more productive</h3><div class="num">+${pct(up)}</div>
+      <p>${pct(up)} more taxable property value, from more households and more businesses on the streets we already have. New homes and shops on existing roads add tax without adding pavement, so the gap closes and stays closed.</p></div>
+    <div class="way"><span class="kicker">A stopgap</span><h3>Raise the tax rate</h3><div class="num">+${pct(up)}</div>
+      <p>About ${money(home * up)} more a year on the median home (${money(home)} today). It pays this year's bill, but the roads keep ageing, and the rate has to keep climbing to keep up.</p></div>
+    <div class="way"><span class="kicker">A stopgap</span><h3>Cut something else</h3><div class="num">${money(gap)}</div>
+      <p>Keep taxes where they are and move this much property tax a year from other City services into roads. Mobility's share of each tax dollar would have to grow from ${cents(S.mobility_share)} to ${cents(S.mobility_share + up)}, and parks, transit, recreation or other services would get less.</p></div>
+    <div class="way decline"><span class="kicker">What happens by default</span><h3>Settle for the proposal</h3><div class="num">${money(nowCost)}</div>
+      <p>Spend what the City proposes and accept that the roads won't reach this plan's condition. ${behind}</p></div>`;
+}
+function renderWards(sc) {
+  const mob = S.mobility_share, nums = [...new Set(H.map(h => h.ward))].sort((a, b) => a - b);
+  const rows = nums.map(n => { const g = H.filter(h => h.ward === n), rev = g.reduce((a, h) => a + h.rev, 0), c = g.reduce((a, h) => a + h.cost, 0);
+    return {n, hexes: g.length, rev, c, share: c / rev, ratio: c / (rev * mob)}; });
+  $('wards').innerHTML = `<thead><tr><th>Ward</th><th>Property tax</th><th>Road pavement and repair</th><th>Per tax dollar</th><th>Share of mobility budget, or overrun</th></tr></thead><tbody>`
+    + rows.map(r => `<tr><td><button type="button" data-ward="${r.n}">Ward ${r.n}</button></td><td>${money(r.rev)}</td><td>${money(r.c)}</td><td>${cents(r.share)}</td>
+      <td class="${r.ratio > 1 ? 'over' : 'under'}">${r.ratio > 1 ? pct(r.ratio - 1) + ' overrun' : pct(r.ratio)}</td></tr>`).join('') + '</tbody>';
+}
+$('wards').addEventListener('click', e => { const b = e.target.closest('button[data-ward]'); if (!b || !ready) return;
+  const n = +b.dataset.ward; let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  H.filter(h => h.ward === n).forEach(h => rings(h.geom).forEach(p => p[0].forEach(([x, y]) => { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); })));
+  map.fitBounds([[x0, y0], [x1, y1]], {padding: 30}); $('map').scrollIntoView({behavior: 'smooth', block: 'center'}); });
+function renderBudget(sc) {
+  const h = state.sel, el = $('budget');
+  if (!h) { el.innerHTML = `<h3>One hexagon's budget</h3><p class="hint">Tap any hexagon on the map, or search for an address, to see what it raises in property tax and what its roads cost under this plan.</p>`; return; }
+  const rev = h.rev, mobB = rev * S.mobility_share, r = ratio(h), items = S.mobility_items;
+  const join = w => items.length > 1 ? items.slice(0, -1).join(', ') + ' ' + w + ' ' + items[items.length - 1] : items[0];
+  const range = sc.kind === 'budget' ? '' : ` <small>(${money(cost(h, sc, 'low'))}–${money(cost(h, sc, 'high'))})</small>`;
+  let verdict;
+  if (rev <= 0) verdict = `<div class="verdict over"><b>No tax base</b><span>Nothing in this hexagon pays property tax, so the cost of its roads falls on the rest of the city.</span></div>`;
+  else if (r > 1) verdict = `<div class="verdict over"><b>${pct(r - 1)} overrun</b><span>Roads alone need ${money(h.cost - mobB)} more than this hexagon's whole mobility budget. Nothing is left for ${join('or')}.</span></div>`;
+  else verdict = `<div class="verdict under"><b>${money(mobB - h.cost)} left</b><span>Roads use ${pct(r)} of this hexagon's mobility budget. The rest will have to fund ${join('and')}.</span></div>`;
+  const fill = r == null ? 0 : Math.min(r, 1);
+  el.innerHTML = `<h3>One hexagon's budget</h3>
+    <div><h4>This hexagon is in ${esc(h.name || 'an unnamed area')}</h4><div class="tag">Only this one 800 m hexagon, not the whole neighbourhood · Ward ${h.ward} · ${nice(h.st)}${h.special ? ' · not expected to pay for itself' : ''}</div></div>
+    <dl class="ledger">
+      <div class="sec">Revenue: municipal property tax</div>
+      <dt>Residential</dt><dd>${money(h.rev_res)}</dd>
+      <dt>Commercial and other</dt><dd>${money(h.rev_com)}</dd>
+      <dt class="tot">Total revenue</dt><dd class="tot">${money(rev)}</dd>
+      <div class="sec">Expense: ${esc(sc.label.toLowerCase())}</div>
+      <dt>Road pavement and repair</dt><dd>${money(h.cost)}${range}</dd>
+      <dt>Per tax dollar</dt><dd>${rev > 0 ? cents(h.cost / rev) : 'n/a'}</dd>
+      <div class="sec divide">Compared with the mobility budget</div>
+      <div class="sub">Mobility gets ${cents(S.mobility_share)} of every tax dollar.</div>
+      <dt>Mobility budget for this hex</dt><dd>${money(mobB)}</dd>
+      <dt>Share needed by roads</dt><dd>${r == null ? 'n/a' : pct(r)}</dd>
+    </dl>
+    ${r == null ? '' : `<div class="meter" aria-hidden="true"><div class="track"><div class="fill" style="width:${(100 * fill).toFixed(1)}%;background:var(${r > 1 ? '--bad' : '--good'})"></div></div>
+      <div class="cap"><span>$0</span><span>${r > 1 ? 'Mobility budget used up' : 'Mobility budget ' + money(mobB)}</span></div></div>`}
+    ${verdict}
+    <a class="hint" href="#data">Check this hexagon's numbers yourself</a>`;
+}
+// ---- 6. check one number: follows the hexagon picked on the map ---------------
+function renderWorked() {
+  // a city budget plan, so the arithmetic is one multiplication and one division
+  const sc = plan(state.scenario).kind === 'budget' ? plan(state.scenario) : plan(S.current);
+  const ord = H.filter(h => !h.special && h.rev > 0).sort((a, b) => a.rev - b.rev);
+  const h = state.sel && state.sel.rev > 0 ? state.sel : ord[Math.floor(ord.length / 2)], c = cost(h, sc), B = sc.low;
+  $('workedLead').innerHTML = `Take hexagon <b>${h.id}</b> in ${esc(h.name || 'an unnamed area')}${state.sel ? ', the one picked on the map' : ', a typical one (pick any hexagon on the map to use it instead)'}, under <b>${esc(sc.label.toLowerCase())}</b>. Open <code>calgary-hexagons.csv</code> and find the row where Hexagon is ${h.id}.`;
+  $('worked').innerHTML = `<li>Its <b>total municipal tax</b> is ${dollars(h.rev)}. Its <b>mobility budget</b> is ${(S.mobility_share * 100).toFixed(2)}% of that: ${dollars(h.rev)} × ${S.mobility_share} = <b>${dollars(h.rev * S.mobility_share)}</b>.</li>
+    <li>Its <b>pavement counted</b> is ${Math.round(h.pm2).toLocaleString()} m²: ${Math.round(h.m2).toLocaleString()} m² of its own streets plus ${Math.round(h.pm2 - h.m2).toLocaleString()} m², its equal share of the main roads. Add up that column for the whole city and you get ${Math.round(tot.pm2).toLocaleString()} m².</li>
+    <li>The plan spends ${money(B)} a year citywide, so this hexagon's share is ${money(B)} × ${Math.round(h.pm2).toLocaleString()} ÷ ${Math.round(tot.pm2).toLocaleString()} = <b>${dollars(c)}</b>. That is the "Road cost: ${esc(sc.label)}" column.</li>
+    <li>${dollars(c)} ÷ ${dollars(h.rev * S.mobility_share)} = <b>${pct(c / (h.rev * S.mobility_share))}</b> of the mobility budget. ${c > h.rev * S.mobility_share ? 'Roads alone cost more than the whole of it.' : 'The rest is left for everything else mobility pays for.'}</li>`;
+}
+
+// ---- map -----------------------------------------------------------------
+const rings = g => (g.type === 'MultiPolygon' ? g.coordinates : [g.coordinates]);
+function inside([px, py], geom) {
+  return rings(geom).some(poly => { const r = poly[0]; let hit = false;
+    for (let i = 0, j = r.length - 1; i < r.length; j = i++) { const [xi, yi] = r[i], [xj, yj] = r[j];
+      if ((yi > py) !== (yj > py) && px < (xj - xi) * (py - yi) / (yj - yi) + xi) hit = !hit; }
+    return hit; });
+}
+function select(h, toggle) {
+  if (!h) return; state.sel = toggle && state.sel === h ? null : h; render();
+  if (state.sel && innerWidth < 880) $('budget').scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start'});
+}
+function startMap(geojson) {
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  H.forEach(h => rings(h.geom).forEach(poly => poly[0].forEach(([x, y]) => {
+    x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); })));
+  bounds = [[x0, y0], [x1, y1]];
+  mapboxgl.accessToken = MAPBOX_TOKEN;
+  map = new mapboxgl.Map({container: 'map', style: 'mapbox://styles/mapbox/' + (dark() ? 'dark-v11' : 'light-v11'),
+    bounds, fitBoundsOptions: {padding: 16}, maxBounds: [[x0 - 0.35, y0 - 0.25], [x1 + 0.35, y1 + 0.25]],
+    minZoom: 8, cooperativeGestures: true});
+  map.addControl(new mapboxgl.NavigationControl({showCompass: false}), 'top-right');
+  map.on('error', e => { console.error(e.error || e); if (!ready) $('maphint').textContent = 'The map could not be loaded.'; });
+  map.on('load', () => {
+    map.addSource('hex', {type: 'geojson', data: geojson, promoteId: 'id'});
+    // Basemap: drop place, landmark and water names (street names stay), and soften the roads.
+    const layers = map.getStyle().layers;
+    layers.forEach(l => {
+      if (l.type === 'symbol' && /place|poi|airport|natural|water|transit|settlement/.test(l.id + ' ' + (l['source-layer'] || '')))
+        map.setLayoutProperty(l.id, 'visibility', 'none');
+      else if (l['source-layer'] === 'road' && l.type === 'line') map.setPaintProperty(l.id, 'line-opacity', 0.45);
+      else if (l['source-layer'] === 'road' && l.type === 'symbol') map.setPaintProperty(l.id, 'text-opacity', 0.75);
+    });
+    // hexes go under the roads, so streets draw over the colour
+    const under = (layers.find(l => l['source-layer'] === 'road' || l.type === 'symbol') || {}).id;
+    const fill = ['match', ['coalesce', ['feature-state', 'c'], 6]];
+    COLORS.forEach((c, i) => fill.push(i, css(c)));
+    fill.push(css('--special'));
+    map.addLayer({id: 'hex-fill', type: 'fill', source: 'hex', paint: {'fill-color': fill, 'fill-opacity': 0.88}}, under);
+    map.addLayer({id: 'hex-line', type: 'line', source: 'hex', paint: {'line-color': css('--hexline'), 'line-width': 0.6, 'line-opacity': 0.6}}, under);
+    map.addSource('wards', {type: 'geojson', data: W});
+    map.addLayer({id: 'ward-line', type: 'line', source: 'wards', filter: ['==', ['get', 'kind'], 'outline'],
+      paint: {'line-color': css('--ward'), 'line-width': ['interpolate', ['linear'], ['zoom'], 9, 1.4, 13, 2.6]}});
+    map.addLayer({id: 'ward-label', type: 'symbol', source: 'wards', filter: ['==', ['get', 'kind'], 'label'],
+      layout: {'text-field': ['get', 'label'], 'text-size': 12, 'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'], 'text-allow-overlap': false},
+      paint: {'text-color': css('--ward'), 'text-halo-color': css('--surface'), 'text-halo-width': 1.6}});
+    map.addLayer({id: 'hex-sel', type: 'line', source: 'hex', filter: ['==', ['get', 'id'], -1], paint: {'line-color': css('--select'), 'line-width': 3}});
+    map.on('click', 'hex-fill', e => select(byId.get(String(e.features[0].properties.id)), true));
+    const tip = $('tip');
+    map.on('mousemove', 'hex-fill', e => { const h = byId.get(String(e.features[0].properties.id)); if (!h) return;
+      map.getCanvas().style.cursor = 'pointer';
+      const r = ratio(h);
+      tip.textContent = `${h.name || nice(h.st)}: ` + (h.special ? nice(h.st).toLowerCase() : r == null ? 'no tax base' : r > 1 ? `${pct(r - 1)} over the mobility budget` : `${pct(r)} of the mobility budget`);
+      tip.hidden = false; tip.style.left = Math.min(e.originalEvent.clientX + 12, innerWidth - 250) + 'px'; tip.style.top = (e.originalEvent.clientY + 14) + 'px'; });
+    map.on('mouseleave', 'hex-fill', () => { map.getCanvas().style.cursor = ''; tip.hidden = true; });
+    ready = true; $('maphint').textContent = 'Tap a hexagon for its budget. Use two fingers to move the map.'; render();
+  });
+}
+$('search').addEventListener('submit', e => { e.preventDefault();
+  const q = $('q').value.trim(); if (!q || !ready) return;
+  const url = 'https://api.mapbox.com/search/geocode/v6/forward?q=' + encodeURIComponent(q) + '&limit=1&country=ca&bbox=' + bounds.flat().join(',') +
+    '&proximity=' + map.getCenter().toArray().join(',') + '&access_token=' + MAPBOX_TOKEN;
+  fetch(url).then(r => r.json()).then(g => { const f = g.features && g.features[0];
+    if (!f) { $('maphint').textContent = 'No match found in Calgary for that search.'; return; }
+    const pt = f.geometry.coordinates, h = H.find(x => inside(pt, x.geom));
+    $('maphint').textContent = h ? 'Showing ' + (f.properties.name || q) : 'That place is outside the mapped area.';
+    map.flyTo({center: pt, zoom: 12.5, essential: true}); if (h) select(h, false);
+  }).catch(() => { $('maphint').textContent = 'Search is unavailable right now.'; });
+});
+
+// ---- start ---------------------------------------------------------------
+const get = f => fetch('data/' + f, {cache: 'no-cache'}).then(r => r.json());
+Promise.all(['scenarios.json', 'hexes.geojson', 'wards.geojson', 'pavement.json'].map(get)).then(([s, g, w, p]) => {
+  S = s; W = w; P = p; state.scenario = S.default;
+  H = g.features.map(f => ({...f.properties, st: f.properties.structure || 'OTHER', rev: f.properties.rev_res + f.properties.rev_com, geom: f.geometry}));
+  byId = new Map(H.map(h => [String(h.id), h]));
+  prepare();
+  const key = i => `<span><i style="background:var(${COLORS[i]})"></i>${LABELS[i]}</span>`;
+  $('legend').innerHTML = `<b>Colour: this plan's road cost against the area's own mobility budget</b>
+    <div class="grp"><b>Blue, money left for ${S.mobility_items.slice(0, 3).join(', ')} and more:</b>${key(0)}${key(1)}</div>
+    <div class="grp"><b>Orange, roads alone cost more than the whole mobility budget:</b>${key(2)}${key(3)}${key(4)}${key(5)}</div>
+    <div class="grp"><span><i style="background:var(--special)"></i>Grey: park, undeveloped or special district</span></div>`;
+  renderNow(); renderThen(); renderLadder(); renderProposal(); renderSpark(); renderTax();
+  onResize('histBox', renderHistory); onResize('propBox', () => { renderProposal(); renderSpark(); });
+  const hist = $('hist');
+  hist.addEventListener('pointermove', histHover);
+  hist.addEventListener('pointerdown', histHover);
+  hist.addEventListener('pointerleave', () => { $('histTip').hidden = true; const xh = $('histX'); if (xh) xh.setAttribute('visibility', 'hidden'); });
+  $('prop').addEventListener('pointermove', propHover); $('prop').addEventListener('pointerdown', propHover);
+  $('prop').addEventListener('pointerleave', () => { $('propTip').hidden = true; });
+  renderOptions(); render();
+  // the City's whole proposed budget, for the tax section's context line
+  get('budget.json').then(b => { BP = b; renderTax(); }).catch(() => {});
+  try { startMap(g); } catch (err) { console.error(err); $('maphint').textContent = 'The map could not be loaded.'; }
+}).catch(err => { console.error(err); $('maphint').textContent = 'The map data could not be loaded.'; });
+</script>
+</body>
+</html>

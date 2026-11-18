@@ -1,0 +1,8 @@
+﻿Figure,Value,Notes
+Tax year,2026,
+Municipal tax rate on homes,0.0038906,multiply a home's assessed value by this
+Typical home's assessed value ($),718000,median single residential property
+Typical home's municipal tax ($),2793,
+Municipal tax from homes ($),1387742398,
+Municipal tax from businesses and other property ($),1160143282,
+Proposed 2027 increase in property tax needed,0.15,https://www.calgary.ca/our-finances/2027-budget.html

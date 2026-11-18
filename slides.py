@@ -1,4 +1,4 @@
-"""Slide images (PNG) from the website's data, with the same math as docs/index.html.
+"""Slide images (PNG) from the website's data, with the same math as docs/roads.html.
 
     uv run slides.py                       # every chart, every plan
     uv run slides.py recommended budget_2026
@@ -19,7 +19,7 @@ DATA = ROOT / "docs" / "data"
 OUT = ROOT / "slides" / "out"
 SCALE = 2  # charts are laid out at 960x540 / 540x540 and rendered at twice that
 
-# Colours and fonts from docs/index.html (light theme).
+# Colours and fonts from docs/roads.html (light theme).
 INK, MUTED, LINE, BAND, ACCENT = "#101b2d", "#586579", "#dde2ea", "#12305c", "#e8751a"
 GOOD, BAD, SPECIAL = "#1f7a8c", "#c2410c", "#d5dae2"
 DISPLAY, BODY = "Archivo", "'Source Sans 3'"  # quoted: a CSS family name can't start a word with a digit
@@ -35,7 +35,7 @@ NICE = {"CENTRE CITY": "Centre City", "INNER CITY": "Inner city", "BUILDING OUT"
         "EMPLOYMENT": "Employment area"}
 
 
-# ---- the money (mirrors prepare / cost / taxRise / ratio in docs/index.html) ----
+# ---- the money (mirrors prepare / cost / taxRise / ratio in docs/roads.html) ----
 def load():
     s = json.loads((DATA / "scenarios.json").read_text())
     hexes = json.loads((DATA / "hexes.geojson").read_text())

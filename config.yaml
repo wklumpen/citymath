@@ -75,9 +75,9 @@ site:
   mobility_budget_share: 0.0662
   # Mobility's total 2026 budget ($221M operating + $156M capital), Budget 2026 p. 76.
   mobility_budget_total: 377000000
-  # What the City spends on pavement now; "So what can we do?" measures each
+  # The City's proposed pavement budget; the tax increase and "What else could we do?" measure each
   # plan's gap against this scenario.
-  current_scenario: budget_2026
+  current_scenario: proposed_budget
   # Tax year shown on the site; match the assessment roll and tax_rates.
   tax_year: 2026
   # Median assessment of a single residential property in that roll
@@ -151,7 +151,7 @@ roads:
       summary: About what Calgary spent on pavement each year from 2011 to 2025, when the budget ran between $30M and $50M.
       consequence: "Pavement kept getting worse under this level of spending. After 10 years of funding at this rate, 26% of roads will be in good condition and 52% will be in poor condition (from 38% in good condition and 26% in poor condition in 2024)."
       sources:
-        - {title: "Pavement Quality report, p. 7", url: "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347"}
+        - {title: "Pavement quality review, Attachment 2, p. 7", url: "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347"}
         - {title: "Pavement Quality presentation, pp. 5-6", url: "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304348"}
     budget_2026:
       label: 2026 budget
@@ -194,14 +194,14 @@ roads:
       summary: Crack-seal or microsurface every road at least once every 10 years.
       consequence: "This only works if pavement never slips into the fair or poor categories (below 6 out of 10). Anything below 6 needs repaving. In 2024, 62% of roads were beyond crack filling."
       sources:
-        - {title: "Pavement Quality report, p. 4", url: "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347"}
+        - {title: "Pavement quality review, Attachment 2, p. 4", url: "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347"}
     repave:
       label: Repave every 12-17 years
       cost_per_m2_year: {low: 2.92, high: 4.17}
       summary: Repave every road every 12 to 17 years.
       consequence: "Mill and fill. This only works if pavement never slips into the poor category (below 4 out of 10). Anything below 4 needs to be rebuilt. In 2024, 26% of roads were beyond repaving."
       sources:
-        - {title: "Pavement Quality report, p. 4", url: "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347"}
+        - {title: "Pavement quality review, Attachment 2, p. 4", url: "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347"}
         - {title: "Pavement Quality presentation, p. 5", url: "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304348"}
     reconstruction:
       label: Full replacement

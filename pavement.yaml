@@ -1,0 +1,110 @@
+# Pavement history and the City's proposed 2027-2030 pavement budget, for docs/roads.html.
+# `uv run pavement.py` turns this into docs/data/pavement.json.
+#
+# Most history comes from the charts on pp. 6-8 of Attachment 2 (Background Report) to
+# IP2024-1043, the City's pavement quality review. The report prints only a few of the
+# numbers; the rest are read off its charts and marked `read: true`, good to about
+# half a point (condition), 20 lane-km (network) or $0.5M (spending).
+
+sources:
+  report:
+    title: "Pavement quality review, IP2024-1043 Attachment 2 (Background Report)"
+    url: "https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347"
+  budget_2026:
+    title: "Budget 2026 as approved, pp. 76-78"
+    url: "https://www.calgary.ca/content/dam/www/cfod/finance/documents/plans-budgets-and-financial-reports/2023-2026-service-plans-budgets/2026-budget-as-approved-dec-3-2025.pdf"
+  proposed:
+    title: "City of Calgary proposed 2027-2030 budget"
+    url: "https://pub-calgary.escribemeetings.com/FileStream.ashx?DocumentId=377372"
+
+# Condition in 2024 (report p. 6): shares of the network by condition.
+condition_2024: {good: 0.38, fair: 0.36, poor: 0.26, below_threshold: 0.032, below_threshold_lane_km: 544}
+canadian_average_good: 0.60  # report p. 9-10: "the current Canadian municipal average"
+
+# Share of roads in good condition, report p. 7 chart. Only 2015 and 2024 are printed.
+# The City changed its condition thresholds in 2021; the report says the downward trend
+# holds either way.
+good:
+  - {year: 2015, value: 0.57}
+  - {year: 2016, value: 0.537, read: true}
+  - {year: 2017, value: 0.492, read: true}
+  - {year: 2018, value: 0.421, read: true}
+  - {year: 2019, value: 0.420, read: true}
+  - {year: 2020, value: 0.415, read: true}
+  - {year: 2021, value: 0.414, read: true}
+  - {year: 2022, value: 0.410, read: true}
+  - {year: 2023, value: 0.384, read: true}
+  - {year: 2024, value: 0.38}
+
+# Road network in lane-km, report p. 7. The text gives 2011, 2025 and 2026; it also gives
+# 17,461 for 2024, but its own chart shows about 17,080 then, so the chart is used.
+lane_km:
+  - {year: 2011, value: 14870}
+  - {year: 2012, value: 14880, read: true}
+  - {year: 2013, value: 14890, read: true}
+  - {year: 2014, value: 15320, read: true}
+  - {year: 2015, value: 15760, read: true}
+  - {year: 2016, value: 15760, read: true}
+  - {year: 2017, value: 15760, read: true}
+  - {year: 2018, value: 15790, read: true}
+  - {year: 2019, value: 15900, read: true}
+  - {year: 2020, value: 15970, read: true}
+  - {year: 2021, value: 16290, read: true}
+  - {year: 2022, value: 16460, read: true}
+  - {year: 2023, value: 17070, read: true}
+  - {year: 2024, value: 17080, read: true}
+  - {year: 2025, value: 17271}
+  - {year: 2026, value: 17461}
+
+# Pavement spending, $ millions a year. 2011-2025 from the report's p. 7 chart (all
+# programs, including 5A funding and the winter maintenance reserve); the report gives
+# the average as about $40M. 2026 is the approved budget, after Council added $24M from
+# the Fiscal Stability Reserve (the report's chart, drawn before that, shows $47.6M).
+# 2027-2030 is the City's proposal.
+spending:
+  - {year: 2011, value: 31.7, read: true}
+  - {year: 2012, value: 32.8, read: true}
+  - {year: 2013, value: 35.9, read: true}
+  - {year: 2014, value: 37.6, read: true}
+  - {year: 2015, value: 39.0, read: true}
+  - {year: 2016, value: 45.5, read: true}
+  - {year: 2017, value: 38.6, read: true}
+  - {year: 2018, value: 33.6, read: true}
+  - {year: 2019, value: 32.4, read: true}
+  - {year: 2020, value: 47.7, read: true}
+  - {year: 2021, value: 43.3, read: true}
+  - {year: 2022, value: 51.6, read: true}
+  - {year: 2023, value: 43.6, read: true}
+  - {year: 2024, value: 50.1, read: true}
+  - {year: 2025, value: 49.8, read: true}
+  - {year: 2026, value: 64, status: approved}
+  - {year: 2027, value: 51, status: proposed}
+  - {year: 2028, value: 83, status: proposed}
+  - {year: 2029, value: 136, status: proposed}
+  - {year: 2030, value: 150, status: proposed}
+
+break_even: 88  # $M a year that holds condition steady, report p. 9
+# Asset management best practice: 2% of asset value a year, report p. 8.
+best_practice: 300
+
+# Mobility's proposed budget, $ millions (operating, capital), supplied by Willem from the
+# proposed 2027-2030 budget. The four years total $2,090M.
+mobility_proposed:
+  - {year: 2027, operating: 259, capital: 113, total: 372}
+  - {year: 2028, operating: 284, capital: 221, total: 504}
+  - {year: 2029, operating: 307, capital: 307, total: 614}
+  - {year: 2030, operating: 326, capital: 274, total: 600}
+
+# Annual pavement investment per lane-km, $, from the 2018 ARA report as charted on
+# report p. 8. All read off the chart except the average, which is printed.
+per_lane_km:
+  average: 10205
+  cities:
+    - {city: Calgary, value: 1900}
+    - {city: Vancouver, value: 2800}
+    - {city: Halifax, value: 8300}
+    - {city: Regina, value: 11200}
+    - {city: Montreal, value: 12300}
+    - {city: Toronto, value: 12800}
+    - {city: Winnipeg, value: 14400}
+    - {city: Edmonton, value: 17600}

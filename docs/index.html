@@ -3,23 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<!-- Send the full page address to Mapbox: its token is restricted to this site's /citymath path,
-     and browsers otherwise send only the domain. -->
-<meta name="referrer" content="no-referrer-when-downgrade">
-<title>Calgary Street Math</title>
-<meta name="description" content="What Calgary's pavement plans cost each neighbourhood, set against the property tax it raises.">
-<link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.css">
+<title>How Do We Pay for Calgary?</title>
+<meta name="description" content="An independent, plain-language guide to how Calgary pays for what it does and what it owns, with deep dives behind the headlines, starting with our roads.">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600&display=swap">
 <style>
-/* Layout: navy masthead; then the working screen: scenario picker and the map, with the
-   tapped hexagon's budget beside the map (below it on phones). Evidence chart and notes follow.
-   Map colour is diverging around one line: the mobility budget. Teal fits, orange overruns. */
 :root {
   --bg: #f4f6f9; --surface: #ffffff; --ink: #101b2d; --muted: #586579; --line: #dde2ea;
   --band: #12305c; --band-ink: #ffffff; --band-muted: #b9c8de; --accent: #e8751a;
   --u0: #1f7a8c; --u1: #9fd3db; --o0: #fbd3a6; --o1: #f29b4b; --o2: #d1611a; --o3: #8a3608;
   --good: #1f7a8c; --bad: #c2410c;
   --special: #d5dae2; --hexline: #ffffff; --select: #101b2d; --ward: #12305c;
+  --s1: #e8751a; --s2: #6250d6; --s3: #1baf7a; --s4: #2a78d6; --s5: #e87ba4; --pot: #7a8698;
   --display: "Archivo", "Arial Narrow", Arial, sans-serif;
   --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
 }
@@ -28,12 +22,14 @@
   --band: #0e2547; --band-ink: #ffffff; --band-muted: #a9bbd6; --accent: #f08a35;
   --u0: #5cc3d3; --u1: #24606b; --o0: #6b3a12; --o1: #b3561a; --o2: #e8822e; --o3: #fdc58c;
   --good: #5cc3d3; --bad: #f29b4b;
+  --s1: #d95926; --s2: #9085e9; --s3: #199e70; --s4: #3987e5; --s5: #d55181; --pot: #7d8ba0;
   --special: #263143; --hexline: #0b131f; --select: #ffffff; --ward: #c9d6ea; color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #0b131f; --surface: #121d2d; --ink: #e9eef5; --muted: #9aa8ba; --line: #24334b;
   --band: #0e2547; --band-ink: #ffffff; --band-muted: #a9bbd6; --accent: #f08a35;
   --u0: #5cc3d3; --u1: #24606b; --o0: #6b3a12; --o1: #b3561a; --o2: #e8822e; --o3: #fdc58c;
   --good: #5cc3d3; --bad: #f29b4b;
+  --s1: #d95926; --s2: #9085e9; --s3: #199e70; --s4: #3987e5; --s5: #d55181; --pot: #7d8ba0;
   --special: #263143; --hexline: #0b131f; --select: #ffffff; --ward: #c9d6ea; color-scheme: dark }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -147,23 +143,179 @@ main.wrap { padding-block: 20px 40px; display: flex; flex-direction: column; gap
 .way.best { border-color: var(--good); background: color-mix(in srgb, var(--good) 8%, var(--surface)); }
 .way .kicker { font: 700 12px var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .way.best .kicker { color: var(--good); }
-.way.decline { border-color: color-mix(in srgb, var(--accent) 55%, var(--surface)); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
-.tablewrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
-table.wards { width: 100%; border-collapse: collapse; font-size: 15px; font-variant-numeric: tabular-nums; }
-.wards th, .wards td { padding: 8px 12px; text-align: right; border-top: 1px solid var(--line); white-space: nowrap; }
-.wards th:first-child, .wards td:first-child { text-align: left; }
-.wards thead th { border-top: 0; font: 700 12px var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); vertical-align: bottom; white-space: normal; }
-.wards button { font: 600 15px var(--body); color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
-.compare tr.on td { background: color-mix(in srgb, var(--band) 9%, var(--surface)); }
-.compare tr.on button { text-decoration: none; font-weight: 800; }
-.wards .over { color: var(--bad); font-weight: 700; } .wards .under { color: var(--good); font-weight: 700; }
-.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
-.notes div { display: flex; flex-direction: column; gap: 4px; font-size: 15px; color: var(--muted); }
-.notes b { color: var(--ink); font-family: var(--display); }
-#tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 13px; padding: 5px 8px; border-radius: 4px; z-index: 5; max-width: 240px; }
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
-.brand { display: block; width: fit-content; }
-.brand img { display: block; height: 52px; width: auto; }
+
+main.wrap { padding-block: 20px 40px; display: flex; flex-direction: column; gap: 28px; }
+.block { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.block h2 { font-size: 22px; font-weight: 800; }
+.block > p, .step > p { color: var(--muted); }
+.eyebrow { font: 700 13px var(--display); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.lab { display: flex; flex-direction: column; gap: 4px; font-size: 15px; }
+.lab > span { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px 12px; font-weight: 600; }
+.lab output { font-variant-numeric: tabular-nums; font-family: var(--display); font-weight: 800; }
+input[type=range] { width: 100%; accent-color: var(--band); margin: 0; }
+/* a slider with a pin at its reference value (the median home, today's split) and a way back to it */
+.rng { position: relative; display: block; padding-bottom: 18px; }
+.rng .pin { position: absolute; top: -3px; height: 22px; width: 0; border-left: 2px solid var(--accent); pointer-events: none; }
+.rng .pin b { position: absolute; top: 22px; left: -1px; transform: translateX(-50%); line-height: 1; font: 700 11px var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--bad); white-space: nowrap; }
+.lab > span button { font: 600 13px var(--body); padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); cursor: pointer; margin-left: auto; }
+.lab > span button:disabled { opacity: .45; cursor: default; }
+.stat b { display: block; font-family: var(--display); font-weight: 800; font-size: clamp(20px, 5vw, 27px); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.stat span { font-size: 13px; color: var(--muted); line-height: 1.3; display: block; }
+.stack { display: flex; height: 34px; border-radius: 4px; overflow: hidden; border: 1px solid var(--line); background: var(--bg); }
+.stack i { display: block; height: 100%; }
+.cap { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; flex-wrap: wrap; }
+.verdict { font-size: 15px; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--line); display: flex; gap: 8px; align-items: baseline; }
+.verdict b { font-family: var(--display); white-space: nowrap; }
+.verdict.over b { color: var(--bad); } .verdict.under b { color: var(--good); }
+.nums { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.nums div { border: 1px solid var(--line); border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 2px; }
+.nums b { font: 800 24px var(--display); font-variant-numeric: tabular-nums; }
+.nums span { font-size: 14px; color: var(--muted); }
+.whatif { border: 1px dashed var(--muted); border-radius: 6px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.whatif > p { color: var(--muted); }
+.flags { display: flex; flex-wrap: wrap; gap: 6px; }
+span.flag { font: 700 11px var(--display); letter-spacing: .07em; text-transform: uppercase; color: var(--ink); border: 1px solid var(--muted); border-radius: 4px; padding: 2px 6px; white-space: nowrap; }
+.nums .flags { margin-top: 4px; }
+#chgOut { white-space: nowrap; }
+.sim { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+@media (min-width: 880px) { .sim { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.reset { font: 600 15px var(--body); align-self: flex-start; padding: 8px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); cursor: pointer; }
+.notes { color: var(--muted); font-size: 15px; display: flex; flex-direction: column; gap: 8px; }
+
+/* the rate: Strong, AB */
+.block > h3.sub { font-size: 18px; font-weight: 800; letter-spacing: 0; text-transform: none; color: var(--ink); border-top: 1px solid var(--line); padding-top: 16px; margin-top: 4px; }
+.formula { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 6px; background: color-mix(in srgb, var(--band) 7%, var(--surface)); }
+.formula div { display: flex; align-items: center; gap: 6px 10px; flex-wrap: wrap; }
+.formula b { font-family: var(--display); font-weight: 800; }
+.frac { display: inline-flex; flex-direction: column; text-align: center; }
+.frac i { font-style: normal; padding: 2px 6px; }
+.frac i + i { border-top: 2px solid var(--ink); }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.tabs button { font: 600 14px var(--body); padding: 7px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); cursor: pointer; }
+.tabs button:hover { border-color: color-mix(in srgb, var(--band) 40%, var(--line)); }
+.tabs button[aria-pressed=true] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+.streets { display: flex; flex-direction: column; gap: 14px; }
+.street { display: flex; flex-direction: column; gap: 6px; }
+.street .homes { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.home { display: flex; flex-direction: column; align-items: center; padding: 6px 2px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); font-variant-numeric: tabular-nums; line-height: 1.2; }
+.home svg { width: 26px; height: 24px; fill: currentColor; }
+.home.small svg { width: 20px; height: 18px; margin-top: 6px; }
+.home small { font-size: 12px; }
+.home b { font: 800 clamp(13px, 3.6vw, 15px) var(--display); color: var(--ink); }
+.home em { font: 700 10px var(--display); font-style: normal; letter-spacing: .07em; text-transform: uppercase; color: var(--bad); }
+.home.hi { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 9%, var(--surface)); }
+.home.hi svg { color: var(--accent); }
+.road { font: 700 12px var(--display); letter-spacing: .05em; text-transform: uppercase; padding: 4px 8px; border-radius: 3px; background: var(--special); color: var(--ink); }
+.road.new { outline: 2px solid var(--accent); outline-offset: -2px; }
+.road.due { background: var(--bad); color: var(--surface); }
+.townside { display: flex; flex-direction: column; gap: 12px; }
+.townside h3 { font-size: 20px; font-weight: 800; }
+.townside > p { color: var(--muted); }
+.townside .nums { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.townside .nums b { font-size: clamp(19px, 5vw, 24px); }
+.stepnav { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
+.stepnav button:disabled { opacity: .45; cursor: default; }
+.cmp { width: 100%; border-collapse: collapse; font-size: 15px; font-variant-numeric: tabular-nums; }
+.cmp th, .cmp td { text-align: right; padding: 7px 8px; border-bottom: 1px solid var(--line); }
+.cmp th:first-child { text-align: left; padding-left: 0; }
+.cmp thead th { font: 700 13px var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.cmp tbody th { font-weight: 400; color: var(--muted); }
+.cmp td { font-weight: 600; }
+
+/* start here: what the city does, what the city owns */
+.pair { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@media (min-width: 720px) { .pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.side { border: 1px solid var(--line); border-top: 5px solid var(--band); border-radius: 6px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+.side.owns { border-top-color: var(--accent); }
+.side h3 { font-size: clamp(22px, 3vw, 26px); font-weight: 800; }
+.side .num { font: 800 clamp(30px, 7vw, 42px) var(--display); font-variant-numeric: tabular-nums; line-height: 1.05; }
+.side .num small { display: block; font: 400 15px var(--body); color: var(--muted); padding-top: 4px; }
+.side p { color: var(--muted); }
+.side p b { color: var(--ink); }
+.owned { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px 20px; align-items: center; padding: 14px 16px; border-radius: 6px; background: color-mix(in srgb, var(--accent) 12%, var(--surface)); border-left: 5px solid var(--accent); }
+@media (min-width: 720px) { .owned { grid-template-columns: auto minmax(0, 1fr); } }
+.owned b { font: 800 clamp(30px, 7vw, 42px) var(--display); line-height: 1.05; }
+.block > p.plain { color: var(--ink); font-size: 17px; }
+.bars.bill { padding: 12px 14px; gap: 6px 12px; }
+.bars.bill .bar { background: var(--s1); }
+@media (max-width: 480px) { .bars.bill { font-size: 14px; gap: 6px 8px; } }
+
+/* follow the money: the budget as flows */
+.flowwrap { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 980px) { .flowwrap { grid-template-columns: minmax(0, 1fr) 320px; align-items: start; } }
+.flowbox { position: relative; min-width: 0; }
+.flow { display: block; width: 100%; overflow: visible; }
+.flow text { font: 13px var(--body); fill: var(--ink); }
+.flow.narrow text { font-size: 12px; }
+.flow .nm { font-weight: 600; }
+.flow .val, .flow .head { fill: var(--muted); }
+.flow .head { font: 700 11px var(--display); letter-spacing: .07em; text-transform: uppercase; }
+.flow .halo { paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; }
+.flow .lk { fill: none; opacity: .4; transition: opacity .15s; }
+.flow.focus .lk { opacity: .1; }
+.flow.focus .lk.on { opacity: .75; }
+.flow .nd { cursor: pointer; }
+.flow .nd:focus { outline: none; }
+.flow .nd:focus-visible .hit { stroke: var(--accent); stroke-width: 3px; }
+.flow .nd .hit { fill: transparent; }
+.flow .nd.picked .bar { stroke: var(--ink); stroke-width: 2px; }
+.flow.focus .nd:not(.on) text { opacity: .45; }
+.tip { position: absolute; z-index: 2; pointer-events: none; max-width: 240px; padding: 6px 9px; border-radius: 6px; background: var(--ink); color: var(--surface); font-size: 13px; line-height: 1.3; }
+.tip b { font-family: var(--display); }
+#flowInfo { display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; }
+#flowInfo h3 { font-size: 20px; font-weight: 800; }
+#flowInfo .num { font: 800 30px var(--display); font-variant-numeric: tabular-nums; line-height: 1.1; }
+#flowInfo .num small { display: block; font: 400 14px var(--body); color: var(--muted); padding-top: 3px; }
+#flowInfo p, #flowInfo li { color: var(--muted); font-size: 15px; }
+#flowInfo li b { color: var(--ink); }
+#flowInfo ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; }
+#flowInfo .more { font-weight: 600; align-self: flex-start; }
+.stack.split { height: 18px; border: 0; background: none; gap: 2px; }
+.stack.split i { border-radius: 2px; min-width: 2px; }
+.ledger i.sw { display: inline-block; width: 11px; height: 11px; border-radius: 2px; margin-right: 6px; }
+details.tbl summary { cursor: pointer; font-weight: 600; font-size: 15px; }
+details.tbl .cmp { margin-top: 8px; }
+details.tbl .cmp .grp th { text-align: left; font: 700 13px var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding-top: 14px; }
+details.tbl .scroll { overflow-x: auto; }
+html { scroll-behavior: smooth; }
+.navlink a[aria-current] { text-decoration: none; color: var(--accent); }
+.draft { align-items: center; }
+
+/* masthead: the Strong Towns Calgary mark beside the headline */
+.herogrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px 44px; align-items: center; padding-block: 14px 6px; }
+@media (min-width: 760px) { .herogrid { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); } }
+.brandbig { display: block; }
+.brandbig img { display: block; width: 100%; max-width: 380px; height: auto; }
+@media (max-width: 759px) { .brandbig img { max-width: 230px; margin-inline: auto; } }
+.byline { color: var(--band-muted); font-size: 15px; border-top: 1px solid color-mix(in srgb, var(--band-muted) 30%, transparent); padding-top: 12px; margin-top: 6px; }
+.byline b { color: var(--band-ink); font-weight: 600; }
+.herotext { display: flex; flex-direction: column; gap: 12px; }
+.herotext h1 { font-size: clamp(38px, 6.4vw, 72px); }
+
+/* why this exists */
+.heard { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 12px; }
+.heard > div { border: 1px solid var(--line); border-top: 5px solid var(--accent); border-radius: 6px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.heard b { font: 800 clamp(28px, 6vw, 38px) var(--display); font-variant-numeric: tabular-nums; line-height: 1.05; }
+.heard > div > span { color: var(--ink); }
+.heard a { font-size: 13px; color: var(--muted); margin-top: auto; padding-top: 4px; }
+.signs, .dives { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 12px; }
+.sign, .dive { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 6px; text-decoration: none; background: color-mix(in srgb, var(--band) 5%, var(--surface)); }
+a.sign:hover, a.dive:hover { border-color: var(--band); }
+.sign b { font: 800 20px var(--display); }
+.sign span:last-child, .dive p { color: var(--muted); }
+.dive h3 { font-size: clamp(22px, 3vw, 26px); font-weight: 800; }
+.dive .num { font: 800 clamp(30px, 7vw, 42px) var(--display); font-variant-numeric: tabular-nums; line-height: 1.05; color: var(--bad); }
+.dive .go { font-weight: 600; text-decoration: underline; text-underline-offset: 2px; margin-top: auto; }
+.dive.soon { background: none; border-style: dashed; }
+
+/* check our numbers */
+.files { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 12px; }
+.file { border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+.file a.dl { font: 700 16px var(--display); align-self: flex-start; }
+.file p { color: var(--muted); font-size: 15px; }
+.srclist { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; color: var(--muted); }
+.srclist a { color: var(--ink); }
+.block > h3.plainh { font-size: 18px; font-weight: 800; letter-spacing: 0; text-transform: none; color: var(--ink); }
 .sitefoot { margin-top: 8px; }
 .sitefoot .wrap { padding-block: 28px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; color: var(--band-muted); font-size: 14px; }
 .sitefoot img { display: block; height: 64px; width: auto; }
@@ -171,340 +323,486 @@ table.wards { width: 100%; border-collapse: collapse; font-size: 15px; font-vari
 </style>
 </head>
 <body>
-
 <header class="band"><div class="wrap">
-  <a class="brand" href="https://strongtownscalgary.substack.com" target="_blank" rel="noopener"><img src="stc_gold.svg" alt="Strong Towns Calgary"></a>
-  <div class="draft"><span>Calgary · <span id="year">2026</span> tax year</span><span class="navlink"><a href="pay.html">How we pay for Calgary</a> · <a href="methods.html">Methods</a></span></div>
-  <h1>The math doesn't work</h1>
-  <p class="subtitle">Calgary needs $54 billion of infrastructure over the next ten years, but has funded only half of it. That leaves us with a <strong>$27 billion shortfall</strong>.</p>
-  <p class="lede">Here we explore just one piece of that budget: the roads. <span id="thesis">Funding the City's option to put half of roads in good condition would use up most of the mobility budget just on road repair, before addressing a single sidewalk, streetlight or bike lane.</span></p>
-  <p class="lede">Spending more on roads is necessary, but it is not a solution. Most of our neighbourhoods do not raise enough tax to pay for the roads they already have. The lasting way out, without ever-higher taxes or crumbling streets, is more households and businesses on the roads we already have.</p>
-  <p class="srcline">Sources: <a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=361737" target="_blank" rel="noopener">City of Calgary, 10-year Capital Infrastructure Plan, May 2026, p. 2</a> · <a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=361684" target="_blank" rel="noopener">Report to Executive Committee EC2026-0159, p. 2</a> · <a href="https://strongtownscalgary.substack.com/p/calgary-we-are-in-a-predicament" target="_blank" rel="noopener">Strong Towns Calgary, "Calgary, we are in a predicament"</a></p>
+  <div class="draft"><span>Calgary · <span class="yr">2026</span> tax year</span><span class="navlink"><a href="./" aria-current="page">How we pay for Calgary</a> · <a href="roads.html">Roads</a></span></div>
+  <div class="herogrid">
+    <a class="brandbig" href="https://strongtownscalgary.substack.com" target="_blank" rel="noopener"><img src="stc_gold.svg" alt="Strong Towns Calgary"></a>
+    <div class="herotext">
+      <h1>How do we pay for Calgary?</h1>
+      <p class="subtitle">A <strong>$27 billion</strong> infrastructure shortfall. A proposed tax increase. Roads in worse shape than a decade ago. What does it all mean?</p>
+      <p class="lede">An independent, plain-language look at how the City pays for what it does and what it owns, with deep dives into the numbers behind the headlines.</p>
+    </div>
+  </div>
+  <p class="byline">A Strong Towns Calgary project created by <b>Willem Klumpenhouwer</b> and <b>Nathan Hawryluk</b>.</p>
 </div></header>
 
 <main class="wrap">
-  <section class="block picker" aria-labelledby="pick-h">
-    <div class="pickcol"><div class="eyebrow" id="pick-h">Choose a pavement plan</div>
-    <div class="options" id="options" role="radiogroup" aria-label="Pavement plan"></div></div>
-    <div class="about" id="about"></div>
-  </section>
-
-  <section class="work">
-    <div class="block mapcard">
-      <div class="maphead"><h2>Where roads alone use up the area's mobility budget</h2><span id="maphint">Loading map…</span></div>
-      <form class="search" id="search">
-        <input id="q" type="search" placeholder="Find an address or neighbourhood" aria-label="Find an address or neighbourhood" autocomplete="off">
-        <button type="submit">Find</button>
-      </form>
-      <div id="map" role="application" aria-label="Map of Calgary in hexagons, coloured by how this plan's road cost compares with each area's share of the mobility budget"></div>
-      <div class="legend" id="legend"></div>
+  <section class="block" id="why">
+    <div class="eyebrow">Why this exists</div>
+    <h2>You may have been hearing a lot about the City's money</h2>
+    <p class="plain">Here are some examples.</p>
+    <div class="heard">
+      <div><b>$27 billion</b><span>of infrastructure Calgary needs over the next ten years but hasn't funded: half of the $54 billion it needs.</span><a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=361737" target="_blank" rel="noopener">10-year Capital Infrastructure Plan, May 2026, p. 2</a></div>
+      <div><b id="whyTax">+15%</b><span>more property tax in the City's proposed <span class="next">2027</span> budget, now before Council.</span><a id="whyTaxSrc" href="https://www.calgary.ca/our-finances/2027-budget.html" target="_blank" rel="noopener">Proposed <span class="next">2027</span> budget</a></div>
+      <div><b>57% → 38%</b><span>of Calgary's roads in good condition, from 2015 to 2024.</span><a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=304347" target="_blank" rel="noopener">Pavement quality review, IP2024-1043 Attachment 2, p. 7</a></div>
     </div>
-    <div class="block" id="budget" aria-live="polite"></div>
+    <p class="plain">The question we want to ask at Strong Towns Calgary is: how did we get here, and what can we do about it? The answers are spread across budget documents, council reports and spreadsheets that many of us will never read.</p>
+    <p class="plain">This plain-language guide from Strong Towns Calgary attempts to make sense of how our city's budget works, and how we got to the situation we are in today. We start with an explainer of how the City's budget works: where the money comes from, where it goes and how your tax bill is set. Then we take deep dives into single pieces of the budget, starting with our roads. Every number comes from the City's own documents, and you can download the data and check our work.</p>
+    <div class="signs">
+      <a class="sign" href="#start"><span class="eyebrow">Start here</span><b>How the budget works</b><span>What the City does, what it owns, and how your tax bill is set. ↓</span></a>
+      <a class="sign" href="roads.html"><span class="eyebrow">Deep dive</span><b>Roads: the math doesn't work</b><span>Where our roads are, how they got there, and what fixing them would take. →</span></a>
+    </div>
   </section>
 
-  <section class="evidence" id="compare-sec">
-    <h2>Every plan side by side</h2>
-    <p>What each pavement plan costs, and how much of the mobility budget it leaves for everything else. Select a plan to show it on the map.</p>
-    <div class="tablewrap"><table class="wards compare" id="compare"></table></div>
+  <section class="block" id="start">
+    <div class="eyebrow">Start here</div>
+    <h2>A city does things, and a city owns things</h2>
+    <p class="plain">Calgary is two things at once. It is a set of services: someone answers 911, drives the bus, clears the snow and picks up the garbage. And it is an enormous collection of stuff: roads, pipes, bridges, buses, fire halls and rec centres. We pay for both, but not in the same way, and the City keeps two separate budgets to do it.</p>
+    <div class="pair">
+      <div class="side does">
+        <div class="eyebrow">The operating budget</div>
+        <h3>What the city does</h3>
+        <div class="num"><span id="opNum">$4.6 billion</span><small>a year to run services</small></div>
+        <p>Mostly people and running costs: police officers, firefighters, bus drivers, snow plows, lifeguards, the lights in the library.</p>
+        <p><b>At home, this is</b> groceries, gas and the power bill.</p>
+        <p><b>Paid mostly from</b> property tax and fees.</p>
+      </div>
+      <div class="side owns">
+        <div class="eyebrow">The capital budget</div>
+        <h3>What the city owns</h3>
+        <div class="num"><span id="capNum">$3.7 billion</span><small>this year to build, buy and replace things</small></div>
+        <p>Things that last for decades: water pipes, roads, bridges, buses and trains, fire halls, rec centres.</p>
+        <p><b>At home, this is</b> the house, the car and a new roof.</p>
+        <p><b>Paid mostly from</b> borrowing, savings and grants.</p>
+      </div>
+    </div>
+    <p class="plain">The two are tied together. Everything the city builds has to be run, repaired and one day replaced, and the list of what we own gets longer every year.</p>
+    <div class="owned"><b>$155 billion</b><span>is what the City says it would cost to replace everything it owns today, mostly roads and pipes. That is roughly $100,000 for every person in Calgary.</span></div>
+    <p class="plain">So the question behind every budget is not only what we want. It is whether we can afford to keep what we already have. The rest of this page follows the money, then shows where your own tax bill goes and how the rate is set.</p>
   </section>
 
-  <section class="evidence" id="options-sec">
-    <h2>So what can we do?</h2>
-    <p id="gap-intro"></p>
-    <div class="ways" id="ways"></div>
+  <section class="block" id="money">
+    <div class="eyebrow">1 · Follow the money</div>
+    <h2>Where the money comes from, and where it goes</h2>
+    <p>Pick a budget. Money flows from left to right: where it comes from, then what it pays for. The thicker the band, the more money. Tap any piece to see what it is.</p>
+    <div class="tabs" id="flowTabs"></div>
+    <p class="plain" id="flowLead"></p>
+    <div class="flowwrap">
+      <div class="flowbox" id="flowBox"><svg class="flow" id="flow" role="group"></svg><div class="tip" id="flowTip" hidden></div></div>
+      <div id="flowInfo" aria-live="polite"></div>
+    </div>
+    <details class="tbl"><summary>See these numbers as a table</summary><div class="scroll" id="flowTable"></div></details>
+    <p class="hint">Figures are the City's approved budget for <span class="yr">2026</span>: <a id="flowDoc" href="https://www.calgary.ca/our-finances/budget.html">Budget 2026</a> for where the money comes from, and the City's <a id="flowData" href="https://data.calgary.ca/">open budget data</a> for spending. Spending on services is counted after money moved between City departments is taken out.</p>
   </section>
 
-  <section class="evidence">
-    <h2>More homes and businesses per street means roads that pay for themselves</h2>
-    <p>Cents of every property tax dollar this plan needs for roads, by type of neighbourhood. The black line is the mobility budget's share. Parks, undeveloped land and special districts such as the airport are left out.</p>
-    <div class="bars" id="bars"></div>
-    <p id="bars-take"></p>
+  <section class="block" id="s1">
+    <div class="eyebrow">2 · Your bill</div>
+    <h2>What does one home pay, and where does it go?</h2>
+    <p>The City's tax is your home's assessed value times a rate. The province collects its own tax on the same bill. This is only the City's part.</p>
+    <div class="lab"><span><label for="home">Assessed value of the home</label><button type="button" id="homeReset"></button><output id="homeOut" for="home"></output></span><span class="rng"><input id="home" type="range" min="200000" max="2000000" step="1000"><i class="pin" id="homePin"><b>Median</b></i></span></div>
+    <div class="nums" id="bill"></div>
+    <div class="cap"><span>Where this home's City tax goes in a year</span></div>
+    <div class="bars bill" id="billBars"></div>
+    <p class="hint">Property tax is not tracked to a service, so this splits your bill the same way the shared pot is split above. Water is not on the list, and waste and recycling barely is, because your utility bill pays for them.</p>
   </section>
 
-  <section class="evidence" id="wards-sec">
-    <h2>By ward</h2>
-    <p>Each ward's hexagons added up under this plan. A hexagon belongs to the ward its centre falls in, so the outlines on the map follow the hexagon grid, not the exact legal boundary. Select a ward to zoom to it.</p>
-    <div class="tablewrap"><table class="wards" id="wards"></table></div>
+  <section class="block" id="rate">
+    <div class="eyebrow">3 · The rate</div>
+    <h2>Where does the tax rate come from?</h2>
+    <p>The City does not pick a rate and see what it raises. It works the other way round: Council decides how much money the City needs from property tax, then divides that by the value of everything that can be taxed. The rate is whatever comes out.</p>
+    <div class="formula">
+      <div><b>The rate</b><span>=</span><span class="frac"><i>Money needed from property tax</i><i>Total assessed value of all taxable property</i></span></div>
+      <div><b>Your bill</b><span>=</span><span>Your assessed value × the rate</span></div>
+    </div>
+    <p class="hint">Rates are often quoted in mills. A mill is a thousandth: 5 mills means $5 of tax for every $1,000 of assessed value.</p>
+    <p>To see what that does to a tax bill, take a made-up town of ten homes: <b>Strong, Alberta</b>. Step through what happens as the town changes.</p>
+    <div class="tabs" id="townTabs"></div>
+    <div class="sim">
+      <div class="streets" id="streets"></div>
+      <div class="townside" aria-live="polite">
+        <h3 id="townTitle"></h3>
+        <p id="townText"></p>
+        <div class="nums" id="townNums"></div>
+        <div class="stepnav"><button class="reset" id="townBack" type="button">Back</button><button class="reset" id="townNext" type="button">Next</button><span id="townStep"></span></div>
+      </div>
+    </div>
+    <p class="hint">On each home: its assessed value, then its tax bill for the year.</p>
+
+    <h3 class="sub">Now scale it up to Calgary</h3>
+    <p>Calgary works the same way, with more zeros. These are the figures for homes in <span class="yr">2026</span>.</p>
+    <table class="cmp">
+      <thead><tr><th scope="col"></th><th scope="col">Strong, AB</th><th scope="col">Calgary, AB</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">The pie: tax needed from homes</th><td>$25,000</td><td id="cPie"></td></tr>
+        <tr><th scope="row">The base: total assessed value of homes</th><td>$5M</td><td id="cBase"></td></tr>
+        <tr><th scope="row">The rate</th><td>5.00 mills</td><td id="cRate"></td></tr>
+        <tr><th scope="row">A typical home</th><td>$500K pays $2,500</td><td id="cHome"></td></tr>
+        <tr><th scope="row">Your slice of the pie</th><td>1 in 10</td><td id="cSlice"></td></tr>
+      </tbody>
+    </table>
+
+    <h3 class="sub">One more step: Calgary cuts the pie in two first</h3>
+    <p>Before any rate is set, Council decides how much of the pie comes from homes and how much from businesses. Each side then gets its own rate from its own total value. Today homes pay about <b id="splitNow"></b> of the pie. Move the split and see what it does to a home's bill.</p>
+    <div class="lab"><span><label for="split">Share of the pie paid by homes</label><button type="button" id="splitReset"></button><output id="splitOut" for="split"></output></span><span class="rng"><input id="split" type="range" min="40" max="70" step="0.1"><i class="pin" id="splitPin"><b>Today</b></i></span></div>
+    <div class="nums" id="splitNums"></div>
+    <p class="hint" id="splitRule"></p>
+
+    <h3 class="sub" id="proposed">What the City is proposing for <span class="next"></span></h3>
+    <p>The City's proposed budget for <span class="next"></span> needs <b id="propUp"></b> more property tax from the properties that already exist. That is the top of the fraction getting bigger. It is a proposal, not a decision: <span id="propWhen"></span>.</p>
+    <div class="nums" id="propNums"></div>
+    <p class="hint" id="propWhy"></p>
+    <div class="whatif">
+      <div class="flags"><span class="flag">What if</span><span class="flag">Estimated arithmetic</span></div>
+      <p>What would that do to the home in <a href="#s1">Your bill</a>? It depends on how the home's value changes compared with everyone else's. You may not know its new assessed value yet, so try a few.</p>
+      <div class="lab"><span><label for="chg">Change in the home's value next year</label><button type="button" id="chgReset"></button><output id="chgOut" for="chg"></output></span><span class="rng"><input id="chg" type="range" min="-15" max="10" step="0.5"><i class="pin" id="chgPin"><b>Typical</b></i></span></div>
+      <div class="nums" id="ifNums"></div>
+      <p class="hint" id="ifNote"></p>
+    </div>
   </section>
 
-  <section class="notes">
-    <div><b>Full methods</b><p>The formulas, data sources and assumptions behind every number are on the <a href="methods.html">methods page</a>.</p></div>
-    <div><b>What is counted</b><p>Road pavement only. The mobility budget also pays for <span id="items-note"></span>, and the city budget pays for pipes, transit, parks, police and much more.</p></div>
-    <div><b>Revenue</b><p>The <span class="yr">2026</span> assessment roll times the <span class="yr">2026</span> municipal tax rates. Hospitals, schools, parks and other exempt property are removed. Checked against 2025, the same method lands within about 1% of the City's reported total.</p></div>
-    <div><b>Road cost</b><p>Citywide budgets are shared out by each area's paved area. Per-square-metre plans use street lengths from OpenStreetMap and widths measured on sampled streets. Main roads everyone uses are pooled citywide.</p></div>
-    <div><b>Median household</b><p>The median <span class="yr">2026</span> assessment of a single residential property, <span id="home-note"></span>, and the municipal property tax on it.</p></div>
-    <div><b>Mobility budget</b><p>Here, the mobility budget means mobility's share of property tax: <span id="mob-note"></span>. That is the City's own breakdown from its <a href="https://www.calgary.ca/property-owners/taxes/calculator.html" target="_blank" rel="noopener">property tax calculator</a>, where Mobility is 3.87% of the whole bill, or 6.6% once the provincial share is set aside. Each area is measured against what its own taxes put toward mobility. The City's full Mobility budget is larger (<span id="mob-total"></span> in <span class="yr">2026</span>) because it also draws on fees, grants and other revenue. We leave those out because property tax is the lever the city and each neighbourhood control.</p></div>
+  <section class="block" id="dives">
+    <div class="eyebrow">Deep dives</div>
+    <h2>One piece of the budget at a time</h2>
+    <p>The budget is big. Each deep dive takes one piece of it, shows where it stands and asks whether the math works.</p>
+    <div class="dives">
+      <a class="dive" href="roads.html"><span class="eyebrow">Deep dive 1 · Roads</span><h3>The math doesn't work</h3><div class="num">57% → 38%</div>
+        <p>of Calgary's roads in good condition, from 2015 to 2024. For years we spent less than half of what it takes to keep our roads in shape. What would fixing them take, and can property tax pay for it?</p><span class="go">Read the deep dive →</span></a>
+      <div class="dive soon"><span class="eyebrow">More coming soon</span><h3>More deep dives are on the way</h3>
+        <p>Roads are one piece of what the City owns. We will take on more of it, one piece at a time.</p></div>
+    </div>
+  </section>
+
+  <section class="block" id="data">
+    <div class="eyebrow">Check our numbers</div>
+    <h2>Download the data and check our work</h2>
+    <p>The numbers on this page are in these spreadsheets. They open in Excel, Google Sheets or Numbers, with no code needed.</p>
+    <div class="files">
+      <div class="file"><a class="dl" href="downloads/calgary-budget-flows.csv" download>calgary-budget-flows.csv</a>
+        <p>Every flow in the two budget diagrams: where the money comes from and what it pays for, in $ millions. Add up the rows going to a service to get the total shown in the diagram.</p></div>
+      <div class="file"><a class="dl" href="downloads/calgary-property-tax.csv" download>calgary-property-tax.csv</a>
+        <p>The tax rate on homes, the typical home, what homes and businesses pay in total, and the increase the City is proposing.</p></div>
+    </div>
+    <h3 class="plainh">Check one number yourself</h3>
+    <p id="checkHome"></p>
+    <h3 class="plainh">Sources</h3>
+    <ul class="srclist">
+      <li><a id="srcDoc" href="https://www.calgary.ca/our-finances/budget.html" target="_blank" rel="noopener">City of Calgary, Budget 2026 as approved</a>: where the money comes from, the tax rate and Mobility's budget.</li>
+      <li><a id="srcData" href="https://data.calgary.ca/" target="_blank" rel="noopener">City of Calgary open data, 2023–2026 budget</a>: spending by service.</li>
+      <li><a id="srcProp" href="https://www.calgary.ca/our-finances/2027-budget.html" target="_blank" rel="noopener">City of Calgary, proposed 2027 budget</a>: the proposed increase and the City's typical home.</li>
+      <li><a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=361737" target="_blank" rel="noopener">City of Calgary, 10-year Capital Infrastructure Plan, May 2026</a> and <a href="https://pub-calgary.escribemeetings.com/filestream.ashx?DocumentId=361684" target="_blank" rel="noopener">Report to Executive Committee EC2026-0159</a>: the $54 billion need and the $27 billion shortfall (p. 2 of each). See also <a href="https://strongtownscalgary.substack.com/p/calgary-we-are-in-a-predicament" target="_blank" rel="noopener">Strong Towns Calgary, "Calgary, we are in a predicament"</a>.</li>
+      <li>City of Calgary, 2026 Corporate Asset Management Plan: the $155 billion replacement value.</li>
+      <li><a href="https://data.calgary.ca/browse?q=property%20assessments%20parcel" target="_blank" rel="noopener">City of Calgary open data, property assessments (parcel)</a>: the typical home and the tax raised from homes and businesses.</li>
+      <li>The roads deep dive lists its own sources, data and <a href="roads.html#methods">methods</a>.</li>
+    </ul>
+  </section>
+
+  <section class="notes block">
+    <div class="eyebrow">How this works, and what it leaves out</div>
+    <p><b>The budget diagrams</b> use the City's approved 2026 budget. Spending by service is from the City's open budget data, grouped into plain-language categories. Where the money comes from is from the budget document. Each service's own fees and other revenue are shown going to that service, because that is how the budget counts them. Outside the utilities this is bookkeeping, not a legal earmark. Property tax and other general revenue cover the rest. Money moved in and out of reserves is shown as one net amount. The $155 billion replacement value is from the City's 2026 Corporate Asset Management Plan.</p>
+    <p>Not here yet: the province's tax, what debt costs over time, and how timing across years changes things. This page is a first iteration; what would you want to move next?</p>
+    <p>Sources and downloads are under <a href="#data">Check our numbers</a>.</p>
   </section>
 </main>
 <footer class="band sitefoot"><div class="wrap">
   <a href="https://strongtownscalgary.substack.com" target="_blank" rel="noopener"><img src="stc_gold.svg" alt="Strong Towns Calgary"></a>
   <p>A Strong Towns Calgary project. Created by <b>Willem Klumpenhouwer</b> and <b>Nathan Hawryluk</b>.</p>
 </div></footer>
-<div id="tip" hidden></div>
 
-<script src="https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.js"></script>
 <script>
-const MAPBOX_TOKEN = 'pk.eyJ1Ijoid2tsdW1wZW4iLCJhIjoiY211eWVyeXg5MGlqcTJ4b3RycWJwOHRkMCJ9.uF0fIM1cJwxGwrEdw0_-EA';  // public token
-const ORDER = ['CENTRE CITY','INNER CITY','1950s','1960s/1970s','1980s/1990s','2000s','2010s','2020s','BUILDING OUT','EMPLOYMENT'];
-const NICE = {'CENTRE CITY':'Centre City','INNER CITY':'Inner city','BUILDING OUT':'Still building out','EMPLOYMENT':'Employment area','OTHER':'Special district','PARKS':'Park','UNDEVELOPED':'Undeveloped'};
-// Map classes: road cost as a multiple of the area's mobility budget.
-const STEPS = [0.5, 1, 2, 4, 8];
-const COLORS = ['--u0', '--u1', '--o0', '--o1', '--o2', '--o3'];
-const LABELS = ['Roads use under half', 'Roads use half to all of it', 'Up to 100% overrun', '100–300% overrun', '300–700% overrun', 'Over 700% overrun'];
-
 const $ = id => document.getElementById(id);
-const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-const dark = () => { const t = document.documentElement.dataset.theme; return t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches; };
-const nice = s => NICE[s] || s;
 const money = v => { const a = Math.abs(v), s = v < 0 ? '−$' : '$';
-  return a >= 1e9 ? s + (a / 1e9).toFixed(2) + 'B' : a >= 1e6 ? s + (a / 1e6).toFixed(a >= 1e8 ? 0 : 1) + 'M' : a >= 1e4 ? s + Math.round(a / 1e3) + 'K' : s + Math.round(a).toLocaleString(); };
-const cents = v => v == null || !isFinite(v) ? 'n/a' : v >= 1 ? '$' + v.toFixed(2) : (v * 100 < 10 ? (v * 100).toFixed(1) : Math.round(v * 100)) + '¢';
-const pct = v => v == null || !isFinite(v) ? 'n/a' : (v * 100 < 10 ? (v * 100).toFixed(1) : Math.round(v * 100).toLocaleString()) + '%';
-const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'})[c]);
+  return a >= 1e9 ? s + (a / 1e9).toFixed(2) + 'B' : a >= 1e6 ? s + (a / 1e6).toFixed(a >= 1e8 ? 0 : 1) + 'M' : s + Math.round(a).toLocaleString(); };
+const pct = v => (v * 100 < 10 ? (v * 100).toFixed(1) : Math.round(v * 100)) + '%';
+const sgn = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v) + '%';
+let T, P; // property tax figures and next year's proposal, from budget.json
+const seg = (parts) => parts.map(([w, c]) => `<i style="width:${Math.max(0, w * 100).toFixed(2)}%;background:var(${c})"></i>`).join('');
 
-let S = null, W = null, H = [], byId = new Map(), map = null, ready = false, bounds = null, tot = {};
-const state = {scenario: null, sel: null};
+function renderBill() {
+  const v = +$('home').value, tax = v * T.res_rate, w = whatIf();
+  $('homeOut').textContent = money(v);
+  $('bill').innerHTML = `<div><b>${dollars(tax)}</b><span>City property tax a year (${(T.res_rate * 100).toFixed(4)}% of value)</span></div>
+    <div><b>${dollars(tax / 12)}</b><span>a month</span></div>
+    <div><b>about ${dollars(Math.round((w.next - tax) / 10) * 10)}</b><span>more a year in ${P.year}, if the City's <a href="#proposed">proposed budget</a> passes and the home's value ${Math.abs(w.c) < 0.05 ? 'does not change' : 'changes by ' + sgn1(w.c)}</span><span class="flags"><span class="flag">What if</span><span class="flag">Estimated arithmetic</span></span></div>`;
+  // the shared pot's split, largest first
+  const out = B.views.operating.links.filter(l => l.s === 'pot').sort((a, b) => b.v - a.v), all = tot(out);
+  const name = Object.fromEntries(B.views.operating.nodes.map(n => [n.id, n.label]));
+  $('billBars').innerHTML = out.map(l => `<span>${esc(name[l.t])}</span><div class="track"><div class="bar" style="width:${(l.v / out[0].v * 100).toFixed(1)}%"></div></div><span class="v">${dollars(tax * l.v / all)}</span>`).join('');
+}
 
-// ---- the money -----------------------------------------------------------
-function prepare() {
-  // each hexagon's pavement: its own local streets plus its slice of the shared main roads
-  const n = H.length, area = H.reduce((a, h) => a + h.area_ha, 0), rev = H.reduce((a, h) => a + h.rev, 0);
-  const sh = H.reduce((a, h) => a + h.m2_sh, 0), shy = H.reduce((a, h) => a + h.m2y_sh, 0);
-  H.forEach(h => {
-    const w = {equal: 1 / n, area: h.area_ha / area, revenue: h.rev / rev}[S.shared_basis];
-    h.pm2 = h.m2 + (w == null ? h.m2_sh : w * sh);
-    h.pm2y = h.m2y + (w == null ? h.m2y_sh : w * shy);
+// Strong, AB: a made-up town used to show where a tax rate comes from. Each step
+// gives what the town needs from property tax and the homes on each street
+// (values in $ thousands). Rates and bills are worked out from these.
+const homes = (n, v = 500, flag) => Array.from({length: n}, () => ({v: v * 1000, flag}));
+const TOWN = [
+  {tab: 'Start', need: 25000, title: 'Strong needs $25,000 to run',
+    text: 'Ten homes, each assessed at $500,000. Council adds up what the town needs from property tax, then divides it by the total value of the homes. That gives the rate. Every home pays the same.',
+    streets: [{name: 'First Street', homes: homes(5)}, {name: 'Second Street', homes: homes(5)}]},
+  {tab: 'Every value rises', need: 25000, title: 'Every home’s value goes up 10%',
+    text: 'The town still needs $25,000, so the rate falls to match. Nobody’s bill changes. A higher assessment does not, on its own, mean a higher tax bill.',
+    streets: [{name: 'First Street', homes: homes(5, 550)}, {name: 'Second Street', homes: homes(5, 550)}]},
+  {tab: 'One value rises', need: 25000, title: 'One home’s value goes up',
+    text: 'Only one home is reassessed, to $600,000. Its bill goes up, and the other nine each pay a little less. What moves your bill is how your value changed compared with everyone else’s.',
+    streets: [{name: 'First Street', homes: [...homes(2), ...homes(1, 600, 'up'), ...homes(2)]}, {name: 'Second Street', homes: homes(5)}]},
+  {tab: 'The town grows out', need: 27000, title: 'The town grows out',
+    text: 'Five new homes go up on a new street, built by the developer and handed over to the town. Running Strong now costs $27,000, shared among 15 homes. Growth looks like a tax cut.',
+    streets: [{name: 'First Street', homes: homes(5)}, {name: 'Second Street', homes: homes(5)}, {name: 'Third Street: new', road: 'new', homes: homes(5, 500, 'new')}]},
+  {tab: 'The bill comes due', need: 40000, title: 'The new street’s bill comes due',
+    text: 'Years later Third Street wears out. The developer built it, but replacing it is the town’s job. Rebuilding the street and the pipes under it costs $260,000. Spread over 20 years, that is $13,000 a year on top of the $27,000. Every home now pays more than it did before the town grew, and First and Second Street will need the same one day.',
+    streets: [{name: 'First Street', homes: homes(5)}, {name: 'Second Street', homes: homes(5)}, {name: 'Third Street: needs replacing', road: 'due', homes: homes(5)}]},
+  {tab: 'Or it grows in', need: 27000, title: 'Or the town grows in instead',
+    text: 'Go back to the ten homes and add five smaller ones, assessed at $400,000 each, on the two streets Strong already has. The town needs the same $27,000 as when it grew out, but there is no new street to replace later. When First and Second Street do need rebuilding, 15 homes share the cost instead of 10.',
+    streets: [{name: 'First Street', homes: [...homes(5), ...homes(3, 400, 'new')]}, {name: 'Second Street', homes: [...homes(5), ...homes(2, 400, 'new')]}]},
+];
+const HOUSE = '<svg viewBox="0 0 24 22" aria-hidden="true"><path d="M12 1 1 10h3v11h16V10h3z"/></svg>';
+const dollars = v => '$' + Math.round(v).toLocaleString();
+let step = 0;
+
+function renderTown() {
+  const st = TOWN[step], all = st.streets.flatMap(s => s.homes);
+  const total = all.reduce((a, h) => a + h.v, 0), rate = st.need / total;
+  // follow one of the original ten homes from step to step
+  const first = TOWN[0], bill0 = 500000 * first.need / first.streets.flatMap(s => s.homes).reduce((a, h) => a + h.v, 0);
+  const mine = all[0].v, bill = Math.round(mine * rate), diff = bill - Math.round(bill0);
+  $('streets').innerHTML = st.streets.map(s => `<div class="street"><div class="homes">${s.homes.map(h =>
+    `<div class="home${h.flag ? ' hi' : ''}${h.v < 500000 ? ' small' : ''}">${HOUSE}<small>$${h.v / 1000}K</small><b>${dollars(h.v * rate)}</b>${h.flag ? `<em>${h.flag}</em>` : ''}</div>`).join('')}</div>
+    <div class="road${s.road ? ' ' + s.road : ''}">${s.name}</div></div>`).join('');
+  $('townTitle').textContent = st.title; $('townText').textContent = st.text;
+  $('townNums').innerHTML = `<div><b>${dollars(st.need)}</b><span>needed from property tax</span></div>
+    <div><b>${dollars(total)}</b><span>total assessed value, ${all.length} homes</span></div>
+    <div><b>${(rate * 1000).toFixed(2)} mills</b><span>${dollars(st.need)} ÷ ${dollars(total)} = ${rate.toFixed(5)}</span></div>
+    <div><b>${dollars(bill)}</b><span>tax on a ${dollars(mine)} home${step ? ', ' + (diff ? dollars(Math.abs(diff)) + (diff > 0 ? ' more than' : ' less than') : 'the same as') + ' at the start' : ''}</span></div>`;
+  document.querySelectorAll('#townTabs button').forEach((b, i) => b.setAttribute('aria-pressed', i === step));
+  $('townBack').disabled = step === 0; $('townNext').disabled = step === TOWN.length - 1;
+  $('townStep').textContent = `Step ${step + 1} of ${TOWN.length}`;
+}
+function goTown(i) { step = Math.max(0, Math.min(TOWN.length - 1, i)); renderTown(); }
+$('townTabs').innerHTML = TOWN.map(s => `<button type="button">${s.tab}</button>`).join('');
+document.querySelectorAll('#townTabs button').forEach((b, i) => b.addEventListener('click', () => goTown(i)));
+$('townBack').addEventListener('click', () => goTown(step - 1));
+$('townNext').addEventListener('click', () => goTown(step + 1));
+renderTown();
+
+// Calgary's residential side, set beside Strong, and the residential / non-residential split
+const HOMES = 500000; // rough count of Calgary homes, for "your slice"
+let resRev = 0, split0 = 0;
+const sgn1 = v => Math.abs(v) < 0.05 ? 'no change' : (v > 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '%';
+
+function renderCalgary() {
+  const v = T.typical_home_value;
+  $('cPie').textContent = money(resRev);
+  $('cBase').textContent = '$' + Math.round(resRev / T.res_rate / 1e9) + 'B';
+  $('cRate').textContent = (T.res_rate * 1000).toFixed(2) + ' mills';
+  $('cHome').textContent = `$${Math.round(v / 1000)}K pays ${dollars(v * T.res_rate)}`;
+  $('cSlice').textContent = 'about 1 in ' + HOMES.toLocaleString();
+  $('splitNow').textContent = (split0 * 100).toFixed(1) + '%';
+  $('splitRule').textContent = `Every point of the pie moved onto homes raises each home's bill by about ${(1 / split0).toFixed(1)}%, with no change in the budget.`;
+}
+
+// Next year's proposal. The City has not published a rate, so this works one out from its
+// example of a typical home: that home's tax over its value, next year against this year.
+const rateUp = () => (P.home_monthly_tax[1] / P.home_value[1]) / (P.home_monthly_tax[0] / P.home_value[0]);
+// the home in "Your bill" next year, if its value changes by the what-if slider
+function whatIf() {
+  const v = +$('home').value, c = +$('chg').value, rate = T.res_rate * rateUp();
+  return {v, c, rate, now: v * T.res_rate, next: v * (1 + c / 100) * rate};
+}
+function renderProposed() {
+  const [v0, v1] = P.home_value, [m0, m1] = P.home_monthly_tax, typical = Math.round((v1 / v0 - 1) * 200) / 2;
+  document.querySelectorAll('.next').forEach(e => { e.textContent = P.year; });
+  $('propUp').textContent = pct(P.increase); $('propWhen').textContent = P.decision;
+  $('propNums').innerHTML = `<div><b>+${pct(P.increase)}</b><span>more tax needed from existing properties</span></div>
+    <div><b>$${m0} → $${m1}</b><span>a month on the City's typical home, $${m1 - m0} more</span></div>
+    <div><b>about +${Math.round((rateUp() - 1) * 100)}%</b><span>the rate on homes</span><span class="flags"><span class="flag">Estimated arithmetic</span></span></div>`;
+  $('propWhy').innerHTML = `Why the rate rises more than the money needed: the City's typical home is assessed at ${dollars(v0)} in ${P.year - 1} and ${dollars(v1)} in ${P.year}. When values fall, the rate has to climb further to raise the same money. The City has not published a ${P.year} rate. This one is our estimated arithmetic from the example in its <a href="${P.source}">proposed ${P.year} budget</a>.`;
+
+  const w = whatIf(), up = w.next - w.now;
+  $('chgOut').textContent = sgn1(w.c) + (w.c === typical ? ' (typical)' : '');
+  $('ifNums').innerHTML = `<div><b>${dollars(w.now)} → ${dollars(w.next)}</b><span>City tax a year on a home assessed at ${money(w.v)} today</span></div>
+    <div><b>${sgn1(up / w.now * 100)}</b><span>${dollars(Math.abs(up))} ${up < 0 ? 'less' : 'more'} a year, ${dollars(Math.abs(up) / 12)} a month</span></div>
+    <div><b>about ${(w.rate * 1000).toFixed(2)} mills</b><span>the ${P.year} rate on homes, up from ${(T.res_rate * 1000).toFixed(2)}</span></div>`;
+  $('ifNote').textContent = `Every home gets the same rate, so the home's own value decides the rest. A home that lost more value than most sees a smaller increase. A home that held its value sees the full rise in the rate. The real rate is set after Council decides the budget and the new assessments are final.`;
+}
+
+// A slider with a pin at its reference value. Dragging within 2% of the range of the pin snaps
+// onto it, and the button beside the label puts it back.
+function pinned(id, ref, label, render) {
+  const el = $(id), min = +el.min, max = +el.max, btn = $(id + 'Reset'), f = (ref - min) / (max - min);
+  $(id + 'Pin').style.left = `calc(8px + (100% - 16px) * ${f.toFixed(4)})`;
+  btn.textContent = label;
+  const sync = () => { btn.disabled = Math.abs(+el.value - ref) < 1e-9; render(); };
+  el.value = ref;
+  el.addEventListener('input', () => { if (Math.abs(+el.value - ref) < (max - min) * 0.02) el.value = ref; sync(); });
+  btn.addEventListener('click', () => { el.value = ref; sync(); el.focus(); });
+  btn.disabled = true;
+}
+
+function renderSplit() {
+  const sh = +$('split').value / 100, k = sh / split0, v = T.typical_home_value;
+  $('splitOut').textContent = (sh * 100).toFixed(1) + '%' + (Math.abs(sh - split0) < 0.0005 ? ' (today)' : '');
+  $('splitNums').innerHTML = `<div><b>${dollars(v * T.res_rate * k)}</b><span>tax on a typical $${v.toLocaleString()} home (${sgn1((k - 1) * 100)})</span></div>
+    <div><b>${(T.res_rate * k * 1000).toFixed(2)} mills</b><span>the rate on homes</span></div>
+    <div><b>${sgn1(((1 - sh) / (1 - split0) - 1) * 100)}</b><span>on every business's tax bill</span></div>`;
+}
+
+// The budget as flows: where the money comes from on the left, what it pays for on the
+// right. Three columns, laid out by hand. Nodes marked `ghost` are not drawn: they carry
+// money the budget counts against one service (fees, water bills) past the pot to that service.
+let B, view = 'operating', picked = null, G = null, flowW = 0;
+const mil = v => money(v * 1e6).replace(/\.0(?=[MB])/, ''), tot = a => a.reduce((x, y) => x + y.v, 0);
+const esc = t => String(t).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const POT = {pot: 'The shared pot', fees: 'Its own fees and other revenue', water: 'Water bills'};
+
+function layout(V, W) {
+  const wide = W >= 620, nodeW = 12, pad = 8, top = 30, H = 640, mL = wide ? 150 : 0, mR = wide ? 200 : 0;
+  const x = [mL, (mL + W - mR - nodeW) / 2, W - mR - nodeW];
+  const N = Object.fromEntries(V.nodes.map(n => [n.id, {...n, in: [], out: []}])), nodes = Object.values(N);
+  const links = V.links.map(l => ({...l, S: N[l.s], T: N[l.t]}));
+  links.forEach(l => { l.S.out.push(l); l.T.in.push(l); });
+  nodes.forEach(n => { n.v = Math.max(tot(n.in), tot(n.out)); });
+  const cols = [0, 1, 2].map(c => nodes.filter(n => n.col === c));
+  const k = Math.min(...cols.map(c => (H - pad * (c.length - 1)) / tot(c)));
+  cols.forEach((c, i) => {
+    const used = tot(c) * k, gap = c.length > 1 ? (H - used) / (c.length - 1) : 0;
+    let y = top + (c.length > 1 ? 0 : (H - used) / 2);
+    c.forEach(n => { n.x = x[i]; n.y = y; n.h = n.v * k; y += n.h + gap; });
   });
-  tot = {rev, pm2: H.reduce((a, h) => a + h.pm2, 0)};
+  // stack each node's bands in the order of the nodes they join, so bands cross as little as possible
+  links.forEach(l => { l.h = l.v * k; l.c = l.S.ghost ? N[l.S.ghost].color : l.S.color || 'pot'; });
+  nodes.forEach(n => {
+    let y = n.y; n.out.sort((a, b) => a.T.y - b.T.y).forEach(l => { l.y0 = y + l.h / 2; y += l.h; });
+    y = n.y; n.in.sort((a, b) => a.S.y - b.S.y).forEach(l => { l.y1 = y + l.h / 2; y += l.h; });
+  });
+  return {N, nodes, links, wide, nodeW, W, height: top + H + 6};
 }
-function cost(h, sc, end) {  // end: 'low' | 'high' | undefined for the midpoint
-  const rate = end ? sc[end] : (sc.low + sc.high) / 2;
-  if (sc.kind === 'budget') return rate * h.pm2 / tot.pm2;
-  return rate * (sc.kind === 'life' ? h.pm2y : h.pm2);
-}
-function cityCost(sc) { return H.reduce((a, h) => a + cost(h, sc), 0); }
-// Property tax increase needed to pay for a plan, if the extra over today's spending
-// came only from a higher tax rate and nothing else changed.
-function taxRise(sc) { return (cityCost(sc) - cityCost(S.scenarios.find(s => s.id === S.current))) / tot.rev; }
-const rise = v => v <= 0.0005 ? 'no increase' : '+' + pct(v) + ' tax';
-const perHome = v => '+$' + Math.round(Math.max(0, v) * S.typical_home_value * S.res_rate).toLocaleString();
-function ratio(h) { return h.rev > 0 ? h.cost / (h.rev * S.mobility_share) : null; }
-function cls(h) { if (h.special || h.rev <= 0) return 6; const r = ratio(h); let i = 0; while (i < STEPS.length && r >= STEPS[i]) i++; return i; }
 
-// ---- rendering -----------------------------------------------------------
-function render() {
-  const sc = S.scenarios.find(s => s.id === state.scenario);
-  H.forEach(h => { h.cost = cost(h, sc); });
-  renderAbout(sc); renderCompare(sc); renderBars(sc); renderWays(sc); renderWards(sc); renderBudget(sc);
-  if (!ready) return;
-  H.forEach(h => map.setFeatureState({source: 'hex', id: h.id}, {c: cls(h)}));
-  map.setFilter('hex-sel', ['==', ['get', 'id'], state.sel ? state.sel.id : -1]);
+// the bands lit up for a node: its own, plus the ones that carry its money past the pot
+const bands = n => new Set([...n.in, ...n.out, ...n.out.flatMap(l => l.T.ghost ? l.T.out : [])]);
+// where a node's money comes from or goes, looking through the ghosts
+const origins = n => n.in.map(l => ({id: l.S.ghost || l.S.id, v: l.v}));
+const targets = n => n.out.flatMap(l => l.T.ghost ? l.T.out : [l]).map(l => ({id: l.t, label: l.label || l.T.label, v: l.v}));
+
+function renderFlow() {
+  const V = B.views[view], W = Math.round($('flowBox').clientWidth);
+  if (!W) return;
+  flowW = W; G = layout(V, W);
+  const {nodes, links, wide, nodeW} = G, svg = $('flow');
+  const edge = n => n.x + (n.ghost ? nodeW / 2 : 0);
+  const band = (l, i) => { const x0 = edge(l.S) + (l.S.ghost ? 0 : nodeW), x1 = edge(l.T), xm = (x0 + x1) / 2;
+    return `<path class="lk" data-i="${i}" d="M${x0.toFixed(1)},${l.y0.toFixed(1)}C${xm.toFixed(1)},${l.y0.toFixed(1)} ${xm.toFixed(1)},${l.y1.toFixed(1)} ${x1.toFixed(1)},${l.y1.toFixed(1)}" stroke="var(--${l.c})" stroke-width="${Math.max(1, l.h).toFixed(1)}"/>`; };
+  const label = n => {
+    const cy = n.y + n.h / 2, nm = esc(n.label), val = mil(n.v);
+    if (n.col === 1) return `<text class="halo" x="${n.x + nodeW / 2}" y="${n.y - 9}" text-anchor="middle"><tspan class="nm">${nm}</tspan> <tspan class="val">${val}</tspan></text>`;
+    const out = wide ? (n.col ? 1 : -1) : (n.col ? -1 : 1), lx = out > 0 ? n.x + nodeW + 7 : n.x - 7, anchor = out > 0 ? 'start' : 'end';
+    if (n.col === 0 && n.h >= 34) return `<text class="halo" x="${lx}" y="${cy - 3}" text-anchor="${anchor}"><tspan class="nm">${nm}</tspan><tspan class="val" x="${lx}" dy="16">${val}</tspan></text>`;
+    return `<text class="halo" x="${lx}" y="${cy + 4.5}" text-anchor="${anchor}"><tspan class="nm">${nm}</tspan> <tspan class="val">${val}</tspan></text>`;
+  };
+  const real = nodes.filter(n => !n.ghost);
+  svg.setAttribute('viewBox', `0 0 ${W} ${G.height}`); svg.setAttribute('height', G.height);
+  svg.setAttribute('class', 'flow' + (wide ? '' : ' narrow'));
+  svg.setAttribute('aria-label', `The ${V.name}: where the money comes from and what it pays for. The same numbers are in the table below.`);
+  svg.innerHTML = `<text class="head" x="${wide ? G.N[real[0].id].x + nodeW : 0}" y="11" text-anchor="${wide ? 'end' : 'start'}">${V.heads[0]}</text>
+    <text class="head" x="${wide ? real[real.length - 1].x : W}" y="11" text-anchor="${wide ? 'start' : 'end'}">${V.heads[1]}</text>
+    <g>${links.map(band).join('')}</g>
+    ${real.map(n => `<g class="nd" data-id="${n.id}" tabindex="0" role="button" aria-label="${esc(n.label)}, ${mil(n.v)}. Show details.">
+      <rect class="hit" x="${n.col === 1 ? n.x - 14 : wide ? (n.col ? n.x : 0) : n.x - (n.col ? 150 : 0)}" y="${n.y - Math.max(0, 22 - n.h) / 2}" width="${n.col === 1 ? nodeW + 28 : wide ? (n.col ? W - n.x : n.x + nodeW) : nodeW + 150}" height="${Math.max(22, n.h)}" rx="3"/>
+      <rect class="bar" x="${n.x}" y="${n.y.toFixed(1)}" width="${nodeW}" height="${Math.max(2, n.h).toFixed(1)}" rx="2" fill="var(--${n.color || 'pot'})"/>${label(n)}</g>`).join('')}`;
+  focusFlow(picked);
 }
-function renderOptions() {
-  $('options').innerHTML = S.scenarios.map(s => `<label class="opt${s.id === 'proposed_budget' ? ' proposed' : ''}"><input type="radio" name="scenario" value="${s.id}"${s.id === state.scenario ? ' checked' : ''}>
-    <b>${esc(s.label)}</b>${s.id === 'proposed_budget' ? '<span class="tag">City\'s proposal</span>' : ''}</label>`).join('');
-  $('options').addEventListener('change', e => pick(e.target.value));
+
+function focusFlow(id) {
+  const svg = $('flow'), n = id && G.N[id], on = n ? bands(n) : null;
+  svg.classList.toggle('focus', !!n);
+  svg.querySelectorAll('.lk').forEach(p => p.classList.toggle('on', !!on && on.has(G.links[+p.dataset.i])));
+  const lit = new Set(n ? [n.id, ...[...on].flatMap(l => [l.S.ghost || l.s, l.t])] : []);
+  svg.querySelectorAll('.nd').forEach(g => { g.classList.toggle('on', lit.has(g.dataset.id)); g.classList.toggle('picked', g.dataset.id === picked); });
 }
-function pick(id) {
-  state.scenario = id;
-  document.querySelectorAll('#options input').forEach(i => { i.checked = i.value === id; });
-  render();
-}
-// neighbourhood hexagons (not parks or special districts) and how many of them roads alone overrun
-function overrun(sc) {
-  const ord = H.filter(h => !h.special && h.rev > 0);
-  return [ord.filter(h => cost(h, sc) > h.rev * S.mobility_share).length, ord.length];
-}
-function renderCompare(sc) {
-  const mob = tot.rev * S.mobility_share;
-  $('compare').innerHTML = `<thead><tr><th>Plan</th><th>A year citywide</th><th>Per tax dollar</th><th>Share of mobility budget, or overrun</th><th>Tax increase needed</th><th>Per median household</th><th>Hexagons overrun</th></tr></thead><tbody>`
-    + S.scenarios.map(s => { const c = cityCost(s), r = c / mob, up = taxRise(s), [o, n] = overrun(s);
-      return `<tr${s.id === sc.id ? ' class="on"' : ''}><td><button type="button" data-plan="${s.id}">${esc(s.label)}</button></td><td>${money(c)}</td><td>${cents(c / tot.rev)}</td>
-        <td class="${r > 1 ? 'over' : 'under'}">${r > 1 ? pct(r - 1) + ' overrun' : pct(r)}</td><td>${up <= 0.0005 ? 'none' : '+' + pct(up)}</td><td>${up <= 0.0005 ? '$0' : perHome(up)}</td><td>${o.toLocaleString()} of ${n.toLocaleString()}</td></tr>`; }).join('') + '</tbody>';
-}
-$('compare').addEventListener('click', e => { const b = e.target.closest('button[data-plan]'); if (b) pick(b.dataset.plan); });
-function renderAbout(sc) {
-  const c = cityCost(sc), share = c / tot.rev, mob = S.mobility_share;
-  const [over, ord] = overrun(sc);
-  const range = sc.kind === 'budget' ? '' : ` <span class="hint">(${money(cityCost({...sc, kind: sc.kind, low: sc.low, high: sc.low}))} to ${money(cityCost({...sc, low: sc.high}))})</span>`;
-  $('about').innerHTML = `<h2>${esc(sc.label)}</h2><p>${esc(sc.summary)}</p>
-    ${sc.consequence ? `<div class="alert" role="note"><b>What this means</b><p>${esc(sc.consequence)}</p></div>` : ''}
-    ${sc.sources.length ? `<div class="sources">Source: ${sc.sources.map(x => `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}</a>`).join('')}</div>` : ''}
-    <div class="stats">
-      <div class="stat"><b>${money(c)}</b><span>a year citywide${range}</span></div>
-      <div class="stat"><b>${cents(share)}</b><span>of every property tax dollar, against ${cents(mob)} for all of mobility</span></div>
-      <div class="stat"><b>${taxRise(sc) <= 0.0005 ? '0%' : '+' + pct(taxRise(sc))}</b><span>property tax increase needed to pay for it, if nothing else changes</span></div>
-      <div class="stat"><b>${perHome(taxRise(sc))}</b><span>a year more for the median household</span></div>
-      <div class="stat"><b>${over.toLocaleString()} <small style="font-size:.55em;font-weight:600">of ${ord.toLocaleString()}</small></b><span>neighbourhood hexagons where roads alone overrun the mobility budget</span></div>
-    </div>`;
-}
-function renderBars(sc) {
-  const mob = S.mobility_share;
-  const rows = ORDER.map(s => { const g = H.filter(h => h.st === s); return [s, g.reduce((a, h) => a + h.cost, 0) / g.reduce((a, h) => a + h.rev, 0)]; });
-  const max = Math.max(...rows.map(r => r[1]), mob) * 1.08;
-  const res = rows.filter(r => !['CENTRE CITY', 'EMPLOYMENT', 'BUILDING OUT'].includes(r[0])).sort((a, b) => a[1] - b[1]), lo = res[0], hi = res[res.length - 1];
-  $('bars-take').innerHTML = `Under this plan, the ${nice(lo[0]).toLowerCase()} neighbourhoods need <strong>${cents(lo[1])}</strong> of each tax dollar for their roads; the ${nice(hi[0]).toLowerCase()} suburbs need <strong>${cents(hi[1])}</strong>, ${(hi[1] / lo[1]).toFixed(1)} times as much. Pavement costs the same per square metre everywhere; what differs is how much tax each street carries.`;
-  $('bars').innerHTML = rows.map(([s, v]) => `<div>${nice(s)}</div><div class="track"><div class="bar" style="width:${(100 * v / max).toFixed(1)}%;background:var(${v > mob ? '--o2' : '--u0'})"></div><div class="line" style="left:${(100 * mob / max).toFixed(1)}%"></div></div><div class="v">${cents(v)}</div>`).join('')
-    + `<div class="key"><span><i style="background:var(--u0)"></i>Fits within the mobility budget</span><span><i style="background:var(--o2)"></i>Overruns it</span><span><i style="background:var(--ink);width:3px"></i>Mobility budget, ${cents(mob)} per tax dollar</span></div>`;
-}
-function renderWays(sc) {
-  const now = S.scenarios.find(s => s.id === S.current), nowCost = cityCost(now), c = cityCost(sc), gap = c - nowCost;
-  const home = S.typical_home_value * S.res_rate, up = gap / tot.rev, brk = S.scenarios.find(s => s.id === 'break_even');
-  if (gap <= 0.5e6) {
-    $('gap-intro').textContent = sc.id === now.id
-      ? `This is what the City is spending now: ${money(nowCost)} a year. It is not enough to stop the decline.`
-      : `This plan spends ${money(-gap)} a year less than the ${money(nowCost)} the City is spending now.`;
-    $('ways').innerHTML = `<div class="way decline"><h3>The streets keep falling apart</h3><p>${brk ? `Below the ${money(cityCost(brk))} break-even, pavement keeps getting worse every year.` : 'Pavement keeps getting worse every year.'} In 2024, 29% of Calgary's pavement was already in poor condition. Pick a bigger plan to see what fixing it would take.</p></div>`;
+
+const rows = list => `<dl class="ledger">${list.map(([k, v, c]) => `<dt>${c ? `<i class="sw" style="background:var(--${c})"></i>` : ''}${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl>`;
+
+function renderInfo() {
+  const V = B.views[view], n = picked && G.N[picked], box = $('flowInfo');
+  if (!n) {
+    box.innerHTML = `<div class="eyebrow">Things to notice</div><ul>${V.takeaways.map(([a, b]) => `<li><b>${esc(a)}</b> ${esc(b)}</li>`).join('')}</ul><p>Tap any piece of the diagram to see what it is.</p>`;
     return;
   }
-  $('gap-intro').innerHTML = `This plan costs ${money(c)} a year, which is <strong>${money(gap)} more</strong> than the ${money(nowCost)} the City is spending now. There are only four ways to close a gap like that, and only one of them lasts.`;
-  $('ways').innerHTML = `
-    <div class="way best"><span class="kicker">The lasting fix</span><h3>Make our land more productive</h3><div class="num">+${pct(up)}</div>
-      <p>${pct(up)} more taxable property value, from more households and more businesses on the streets we already have. New homes and shops on existing roads add tax without adding pavement, so the gap closes and stays closed.</p></div>
-    <div class="way"><span class="kicker">A stopgap</span><h3>Raise the tax rate</h3><div class="num">+${pct(up)}</div>
-      <p>About ${money(home * up)} more a year on the median home (${money(home)} today). It pays this year's bill, but the roads keep ageing, and the rate has to keep climbing to keep up.</p></div>
-    <div class="way"><span class="kicker">A stopgap</span><h3>Cut something else</h3><div class="num">${money(gap)}</div>
-      <p>Keep taxes where they are and move this much property tax a year from other City services into roads. Mobility's share of each tax dollar would have to grow from ${cents(S.mobility_share)} to ${cents(S.mobility_share + up)}, and parks, transit, recreation or other services would get less.</p></div>
-    <div class="way decline"><span class="kicker">What happens by default</span><h3>Let the streets fall apart</h3><div class="num">${money(nowCost)}</div>
-      <p>Keep spending what we spend now and accept the decline. ${brk ? `It is below the ${money(cityCost(brk))} break-even, so` : 'So'} pavement keeps getting worse every year. In 2024, 29% of Calgary's pavement was already in poor condition.</p></div>`;
-}
-function renderWards(sc) {
-  const mob = S.mobility_share, nums = [...new Set(H.map(h => h.ward))].sort((a, b) => a - b);
-  const rows = nums.map(n => { const g = H.filter(h => h.ward === n), rev = g.reduce((a, h) => a + h.rev, 0), c = g.reduce((a, h) => a + h.cost, 0);
-    return {n, hexes: g.length, rev, c, share: c / rev, ratio: c / (rev * mob)}; });
-  $('wards').innerHTML = `<thead><tr><th>Ward</th><th>Property tax</th><th>Road pavement and repair</th><th>Per tax dollar</th><th>Share of mobility budget, or overrun</th></tr></thead><tbody>`
-    + rows.map(r => `<tr><td><button type="button" data-ward="${r.n}">Ward ${r.n}</button></td><td>${money(r.rev)}</td><td>${money(r.c)}</td><td>${cents(r.share)}</td>
-      <td class="${r.ratio > 1 ? 'over' : 'under'}">${r.ratio > 1 ? pct(r.ratio - 1) + ' overrun' : pct(r.ratio)}</td></tr>`).join('') + '</tbody>';
-}
-$('wards').addEventListener('click', e => { const b = e.target.closest('button[data-ward]'); if (!b || !ready) return;
-  const n = +b.dataset.ward; let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-  H.filter(h => h.ward === n).forEach(h => rings(h.geom).forEach(p => p[0].forEach(([x, y]) => { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); })));
-  map.fitBounds([[x0, y0], [x1, y1]], {padding: 30}); $('map').scrollIntoView({behavior: 'smooth', block: 'center'}); });
-function renderBudget(sc) {
-  const h = state.sel, el = $('budget');
-  if (!h) { el.innerHTML = `<h3>One hexagon's budget</h3><p class="hint">Tap any hexagon on the map, or search for an address, to see what it raises in property tax and what its roads cost under this plan.</p>`; return; }
-  const rev = h.rev, mobB = rev * S.mobility_share, r = ratio(h), items = S.mobility_items;
-  const join = w => items.length > 1 ? items.slice(0, -1).join(', ') + ' ' + w + ' ' + items[items.length - 1] : items[0];
-  const range = sc.kind === 'budget' ? '' : ` <small>(${money(cost(h, sc, 'low'))}–${money(cost(h, sc, 'high'))})</small>`;
-  let verdict;
-  if (rev <= 0) verdict = `<div class="verdict over"><b>No tax base</b><span>Nothing in this hexagon pays property tax, so the cost of its roads falls on the rest of the city.</span></div>`;
-  else if (r > 1) verdict = `<div class="verdict over"><b>${pct(r - 1)} overrun</b><span>Roads alone need ${money(h.cost - mobB)} more than this hexagon's whole mobility budget. Nothing is left for ${join('or')}.</span></div>`;
-  else verdict = `<div class="verdict under"><b>${money(mobB - h.cost)} left</b><span>Roads use ${pct(r)} of this hexagon's mobility budget. The rest will have to fund ${join('and')}.</span></div>`;
-  const fill = r == null ? 0 : Math.min(r, 1);
-  el.innerHTML = `<h3>One hexagon's budget</h3>
-    <div><h4>This hexagon is in ${esc(h.name || 'an unnamed area')}</h4><div class="tag">Only this one 800 m hexagon, not the whole neighbourhood · Ward ${h.ward} · ${nice(h.st)}${h.special ? ' · not expected to pay for itself' : ''}</div></div>
-    <dl class="ledger">
-      <div class="sec">Revenue: municipal property tax</div>
-      <dt>Residential</dt><dd>${money(h.rev_res)}</dd>
-      <dt>Commercial and other</dt><dd>${money(h.rev_com)}</dd>
-      <dt class="tot">Total revenue</dt><dd class="tot">${money(rev)}</dd>
-      <div class="sec">Expense: ${esc(sc.label.toLowerCase())}</div>
-      <dt>Road pavement and repair</dt><dd>${money(h.cost)}${range}</dd>
-      <dt>Per tax dollar</dt><dd>${rev > 0 ? cents(h.cost / rev) : 'n/a'}</dd>
-      <div class="sec divide">Compared with the mobility budget</div>
-      <div class="sub">Mobility gets ${cents(S.mobility_share)} of every tax dollar.</div>
-      <dt>Mobility budget for this hex</dt><dd>${money(mobB)}</dd>
-      <dt>Share needed by roads</dt><dd>${r == null ? 'n/a' : pct(r)}</dd>
-    </dl>
-    ${r == null ? '' : `<div class="meter" aria-hidden="true"><div class="track"><div class="fill" style="width:${(100 * fill).toFixed(1)}%;background:var(${r > 1 ? '--bad' : '--good'})"></div></div>
-      <div class="cap"><span>$0</span><span>${r > 1 ? 'Mobility budget used up' : 'Mobility budget ' + money(mobB)}</span></div></div>`}
-    ${verdict}`;
-}
-
-// ---- map -----------------------------------------------------------------
-const rings = g => (g.type === 'MultiPolygon' ? g.coordinates : [g.coordinates]);
-function inside([px, py], geom) {
-  return rings(geom).some(poly => { const r = poly[0]; let hit = false;
-    for (let i = 0, j = r.length - 1; i < r.length; j = i++) { const [xi, yi] = r[i], [xj, yj] = r[j];
-      if ((yi > py) !== (yj > py) && px < (xj - xi) * (py - yi) / (yj - yi) + xi) hit = !hit; }
-    return hit; });
-}
-function select(h, toggle) {
-  if (!h) return; state.sel = toggle && state.sel === h ? null : h; render();
-  if (state.sel && innerWidth < 880) $('budget').scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start'});
-}
-function startMap(geojson) {
-  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-  H.forEach(h => rings(h.geom).forEach(poly => poly[0].forEach(([x, y]) => {
-    x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); })));
-  bounds = [[x0, y0], [x1, y1]];
-  mapboxgl.accessToken = MAPBOX_TOKEN;
-  map = new mapboxgl.Map({container: 'map', style: 'mapbox://styles/mapbox/' + (dark() ? 'dark-v11' : 'light-v11'),
-    bounds, fitBoundsOptions: {padding: 16}, maxBounds: [[x0 - 0.35, y0 - 0.25], [x1 + 0.35, y1 + 0.25]],
-    minZoom: 8, cooperativeGestures: true});
-  map.addControl(new mapboxgl.NavigationControl({showCompass: false}), 'top-right');
-  map.on('error', e => { console.error(e.error || e); if (!ready) $('maphint').textContent = 'The map could not be loaded.'; });
-  map.on('load', () => {
-    map.addSource('hex', {type: 'geojson', data: geojson, promoteId: 'id'});
-    // Basemap: drop place, landmark and water names (street names stay), and soften the roads.
-    const layers = map.getStyle().layers;
-    layers.forEach(l => {
-      if (l.type === 'symbol' && /place|poi|airport|natural|water|transit|settlement/.test(l.id + ' ' + (l['source-layer'] || '')))
-        map.setLayoutProperty(l.id, 'visibility', 'none');
-      else if (l['source-layer'] === 'road' && l.type === 'line') map.setPaintProperty(l.id, 'line-opacity', 0.45);
-      else if (l['source-layer'] === 'road' && l.type === 'symbol') map.setPaintProperty(l.id, 'text-opacity', 0.75);
-    });
-    // hexes go under the roads, so streets draw over the colour
-    const under = (layers.find(l => l['source-layer'] === 'road' || l.type === 'symbol') || {}).id;
-    const fill = ['match', ['coalesce', ['feature-state', 'c'], 6]];
-    COLORS.forEach((c, i) => fill.push(i, css(c)));
-    fill.push(css('--special'));
-    map.addLayer({id: 'hex-fill', type: 'fill', source: 'hex', paint: {'fill-color': fill, 'fill-opacity': 0.88}}, under);
-    map.addLayer({id: 'hex-line', type: 'line', source: 'hex', paint: {'line-color': css('--hexline'), 'line-width': 0.6, 'line-opacity': 0.6}}, under);
-    map.addSource('wards', {type: 'geojson', data: W});
-    map.addLayer({id: 'ward-line', type: 'line', source: 'wards', filter: ['==', ['get', 'kind'], 'outline'],
-      paint: {'line-color': css('--ward'), 'line-width': ['interpolate', ['linear'], ['zoom'], 9, 1.4, 13, 2.6]}});
-    map.addLayer({id: 'ward-label', type: 'symbol', source: 'wards', filter: ['==', ['get', 'kind'], 'label'],
-      layout: {'text-field': ['get', 'label'], 'text-size': 12, 'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'], 'text-allow-overlap': false},
-      paint: {'text-color': css('--ward'), 'text-halo-color': css('--surface'), 'text-halo-width': 1.6}});
-    map.addLayer({id: 'hex-sel', type: 'line', source: 'hex', filter: ['==', ['get', 'id'], -1], paint: {'line-color': css('--select'), 'line-width': 3}});
-    map.on('click', 'hex-fill', e => select(byId.get(String(e.features[0].properties.id)), true));
-    const tip = $('tip');
-    map.on('mousemove', 'hex-fill', e => { const h = byId.get(String(e.features[0].properties.id)); if (!h) return;
-      map.getCanvas().style.cursor = 'pointer';
-      const r = ratio(h);
-      tip.textContent = `${h.name || nice(h.st)}: ` + (h.special ? nice(h.st).toLowerCase() : r == null ? 'no tax base' : r > 1 ? `${pct(r - 1)} over the mobility budget` : `${pct(r)} of the mobility budget`);
-      tip.hidden = false; tip.style.left = Math.min(e.originalEvent.clientX + 12, innerWidth - 250) + 'px'; tip.style.top = (e.originalEvent.clientY + 14) + 'px'; });
-    map.on('mouseleave', 'hex-fill', () => { map.getCanvas().style.cursor = ''; tip.hidden = true; });
-    ready = true; $('maphint').textContent = 'Tap a hexagon for its budget. Use two fingers to move the map.'; render();
-  });
-}
-$('search').addEventListener('submit', e => { e.preventDefault();
-  const q = $('q').value.trim(); if (!q || !ready) return;
-  const url = 'https://api.mapbox.com/search/geocode/v6/forward?q=' + encodeURIComponent(q) + '&limit=1&country=ca&bbox=' + bounds.flat().join(',') +
-    '&proximity=' + map.getCenter().toArray().join(',') + '&access_token=' + MAPBOX_TOKEN;
-  fetch(url).then(r => r.json()).then(g => { const f = g.features && g.features[0];
-    if (!f) { $('maphint').textContent = 'No match found in Calgary for that search.'; return; }
-    const pt = f.geometry.coordinates, h = H.find(x => inside(pt, x.geom));
-    $('maphint').textContent = h ? 'Showing ' + (f.properties.name || q) : 'That place is outside the mapped area.';
-    map.flyTo({center: pt, zoom: 12.5, essential: true}); if (h) select(h, false);
-  }).catch(() => { $('maphint').textContent = 'Search is unavailable right now.'; });
-});
-
-// ---- start ---------------------------------------------------------------
-Promise.all(['scenarios.json', 'hexes.geojson', 'wards.geojson'].map(f => fetch('data/' + f, {cache: 'no-cache'}).then(r => r.json()))).then(([s, g, w]) => {
-  S = s; W = w; state.scenario = S.default;
-  H = g.features.map(f => ({...f.properties, st: f.properties.structure || 'OTHER', rev: f.properties.rev_res + f.properties.rev_com, geom: f.geometry}));
-  byId = new Map(H.map(h => [String(h.id), h]));
-  prepare();
-  const key = i => `<span><i style="background:var(${COLORS[i]})"></i>${LABELS[i]}</span>`;
-  $('legend').innerHTML = `<b>Colour: this plan's road cost against the area's own mobility budget</b>
-    <div class="grp"><b>Blue, money left for ${S.mobility_items.slice(0, 3).join(', ')} and more:</b>${key(0)}${key(1)}</div>
-    <div class="grp"><b>Orange, roads alone cost more than the whole mobility budget:</b>${key(2)}${key(3)}${key(4)}${key(5)}</div>
-    <div class="grp"><span><i style="background:var(--special)"></i>Grey: park, undeveloped or special district</span></div>`;
-  $('year').textContent = S.tax_year; document.querySelectorAll('.yr').forEach(e => { e.textContent = S.tax_year; });
-  $('home-note').textContent = '$' + S.typical_home_value.toLocaleString();
-  $('items-note').textContent = S.mobility_items.join(', ');
-  $('mob-note').textContent = cents(S.mobility_share) + ' of every dollar, or ' + money(tot.rev * S.mobility_share) + ' citywide';
-  $('mob-total').textContent = money(S.mobility_total);
-  const rec = S.scenarios.find(s => s.id === 'recommended'), full = S.scenarios.find(s => s.id === 'reconstruction');
-  if (rec) {
-    const mob = tot.rev * S.mobility_share;
-    $('thesis').textContent = `Funding the City's option to put half of roads in good condition would use up ${pct(cityCost(rec) / mob)} of the mobility budget just on road repair, before addressing a single sidewalk, streetlight or bike lane.`;
+  let h = `<div class="eyebrow">${n.col === 0 ? V.heads[0] : n.col === 2 ? V.heads[1] : 'In the middle'}</div><h3>${esc(n.label)}</h3>
+    <div class="num">${mil(n.v)}<small>${pct(n.v / V.total)} of the ${V.name}</small></div><p>${esc(n.desc)}</p>`;
+  const from = origins(n);
+  if (n.col === 2 && view === 'operating') {
+    h += `<div class="eyebrow">Who pays for it</div><div class="stack split" role="img" aria-label="Split of who pays">${seg(from.map(o => [o.v / n.v, '--' + (o.id === 'pot' ? 'pot' : G.N[o.id].color)]))}</div>
+      ${rows(from.map(o => [POT[o.id], `${mil(o.v)} <small>${pct(o.v / n.v)}</small>`, o.id === 'pot' ? 'pot' : G.N[o.id].color]))}`;
   }
-  renderOptions(); render();
-  try { startMap(g); } catch (err) { console.error(err); $('maphint').textContent = 'The map could not be loaded.'; }
-}).catch(err => { console.error(err); $('maphint').textContent = 'The map data could not be loaded.'; });
+  const to = n.col < 2 ? targets(n).sort((a, b) => b.v - a.v) : [];
+  if (to.length > 1) h += `<div class="eyebrow">Where it goes</div>${rows(to.map(t => [t.label, mil(t.v)]))}`;
+  if (n.items) h += `<div class="eyebrow">Largest pieces in ${B.year}</div>${rows(n.items.map(([k, v]) => [k, mil(v)]))}`;
+  if (n.link) h += `<a class="more" href="${n.link.href}">${esc(n.link.text)} →</a>`;
+  if (n.view) h += `<button class="reset" type="button" data-view="${n.view}">See the ${B.views[n.view].name}</button>`;
+  box.innerHTML = h + `<button class="reset" type="button" data-view="">Back to the overview</button>`;
+}
+
+function renderFlowTable() {
+  const V = B.views[view], split = view === 'operating', real = G.nodes.filter(n => !n.ghost);
+  const row = n => `<tr><th scope="row">${esc(n.label)}</th><td>${mil(n.v)}</td><td>${pct(n.v / V.total)}</td>${split ? `<td>${n.col === 2 ? mil(tot(n.in.filter(l => l.s === 'pot'))) : ''}</td>` : ''}</tr>`;
+  const grp = (t, c) => `<tr class="grp"><th scope="colgroup" colspan="${split ? 4 : 3}">${t}</th></tr>${real.filter(n => n.col === c).map(row).join('')}`;
+  $('flowTable').innerHTML = `<table class="cmp"><thead><tr><th scope="col"></th><th scope="col">Amount</th><th scope="col">Share</th>${split ? '<th scope="col">From the shared pot</th>' : ''}</tr></thead>
+    <tbody>${grp(V.heads[0], 0)}${grp(V.heads[1], 2)}</tbody></table>`;
+}
+
+function setFlow(v, id) {
+  view = v; picked = id || null;
+  document.querySelectorAll('#flowTabs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.view === view));
+  $('flowLead').textContent = B.views[view].lead;
+  renderFlow(); renderInfo(); renderFlowTable();
+}
+function pick(id) {
+  picked = id === picked ? null : id; focusFlow(picked); renderInfo();
+  // on a phone the details open below the diagram: bring them into view
+  const box = $('flowInfo');
+  if (picked && box.getBoundingClientRect().top > innerHeight - 120) box.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+}
+
+fetch('data/budget.json', {cache: 'no-cache'}).then(r => r.json()).then(b => {
+  B = b; T = B.tax; P = B.proposed;
+  document.querySelectorAll('.yr').forEach(e => { e.textContent = T.year; });
+  resRev = T.homes; split0 = Math.round(T.homes / (T.homes + T.businesses) * 1000) / 1000;
+  const typical = Math.round((P.home_value[1] / P.home_value[0] - 1) * 200) / 2;
+  pinned('home', T.typical_home_value, `Back to the median, ${money(T.typical_home_value)}`, () => { renderBill(); renderProposed(); });
+  pinned('chg', typical, `Back to typical, ${sgn1(typical)}`, () => { renderBill(); renderProposed(); });
+  pinned('split', split0 * 100, `Back to today, ${(split0 * 100).toFixed(1)}%`, renderSplit);
+  renderBill(); renderCalgary(); renderSplit(); renderProposed();
+  const spent = V => tot(V.links.filter(l => l.t !== 'reserve' && V.nodes.find(n => n.id === l.t).col === 2));
+  $('opNum').textContent = '$' + (spent(B.views.operating) / 1000).toFixed(1) + ' billion';
+  $('capNum').textContent = '$' + (spent(B.views.capital) / 1000).toFixed(1) + ' billion';
+  $('flowDoc').href = B.document; $('flowData').href = B.dataset;
+  $('srcDoc').href = B.document; $('srcData').href = B.dataset; $('srcProp').href = $('whyTaxSrc').href = P.source;
+  $('whyTax').textContent = '+' + pct(P.increase);
+  const v = T.typical_home_value;
+  $('checkHome').innerHTML = `Open <code>calgary-property-tax.csv</code>. A home's City tax is its assessed value times the rate on homes. For the typical home: ${dollars(v)} × ${T.res_rate} = <b>${dollars(v * T.res_rate)}</b> a year, the figure in <a href="#s1">Your bill</a>. The rate itself is the tax needed from homes divided by their total value, as <a href="#rate">The rate</a> explains.`;
+  $('flowTabs').innerHTML = Object.entries(B.views).map(([k, V]) => `<button type="button" data-view="${k}">${V.tab}: the ${V.name}</button>`).join('');
+  $('flowTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setFlow(b.dataset.view); });
+  const svg = $('flow'), tip = $('flowTip'), node = e => e.target.closest('.nd');
+  svg.addEventListener('click', e => { const g = node(e); if (g) pick(g.dataset.id); else if (picked) pick(picked); });
+  svg.addEventListener('keydown', e => { const g = node(e); if (g && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); pick(g.dataset.id); } });
+  svg.addEventListener('focusin', e => { const g = node(e); if (g) focusFlow(g.dataset.id); });
+  svg.addEventListener('focusout', () => focusFlow(picked));
+  // hover: light up one piece and say what it is
+  svg.addEventListener('pointermove', e => {
+    if (e.pointerType !== 'mouse') return;
+    const g = node(e), lk = e.target.closest('.lk'), l = lk && G.links[+lk.dataset.i], V = B.views[view];
+    if (!g && !l) { tip.hidden = true; focusFlow(picked); return; }
+    if (g) { const n = G.N[g.dataset.id]; focusFlow(n.id); tip.innerHTML = `<b>${esc(n.label)}</b><br>${mil(n.v)} · ${pct(n.v / V.total)} of the ${V.name}`; }
+    else { const a = l.S.ghost ? G.N[l.S.ghost] : l.S, b = l.T.ghost ? null : l.T;
+      svg.classList.add('focus'); svg.querySelectorAll('.lk').forEach(p => p.classList.toggle('on', p === lk));
+      tip.innerHTML = `<b>${mil(l.v)}</b><br>${esc(a.label)}${b ? ' → ' + esc(l.label || b.label) : ', counted against the services that collect it'}`; }
+    tip.hidden = false;
+    const r = $('flowBox').getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    tip.style.left = Math.max(0, Math.min(x + 14, r.width - tip.offsetWidth)) + 'px'; tip.style.top = (y + 16) + 'px';
+  });
+  svg.addEventListener('pointerleave', () => { tip.hidden = true; focusFlow(picked); });
+  $('flowInfo').addEventListener('click', e => { const b = e.target.closest('button[data-view]'); if (!b) return; if (b.dataset.view) setFlow(b.dataset.view); else pick(picked); });
+  new ResizeObserver(() => { if (Math.round($('flowBox').clientWidth) !== flowW) renderFlow(); }).observe($('flowBox'));
+  setFlow(view);
+}).catch(err => { console.error(err); $('flowLead').textContent = 'Budget data unavailable.'; });
 </script>
 </body>
 </html>
